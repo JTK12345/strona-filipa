@@ -1,0 +1,159 @@
+@import "tailwindcss";
+
+:root {
+  --background: #efe7d3;
+  --foreground: #3e4335;
+  --muted: #6c715f;
+  --border: #a6a089;
+  --card: #f4edda;
+  --accent: #5a614c;
+  --accent-foreground: #f8f3e7;
+  --soft: #e8dfc8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body::selection {
+  background: #d9cfb5;
+  color: var(--foreground);
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.site-shell {
+  min-height: 100vh;
+}
+
+.container-main {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+.section {
+  padding: 5rem 0;
+}
+
+.section-title {
+  font-size: clamp(2rem, 3vw, 3.3rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  margin: 0 0 1rem;
+}
+
+.section-lead {
+  font-size: 1.05rem;
+  line-height: 1.85;
+  color: var(--muted);
+  max-width: 760px;
+}
+
+.card-surface {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  box-shadow: none;
+}
+
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  padding: 0.95rem 1.4rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.button-primary:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
+}
+
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  padding: 0.95rem 1.4rem;
+  font-weight: 700;
+  text-decoration: none;
+  background: transparent;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.button-secondary:hover {
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.42rem 0.85rem;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.soft-panel {
+  background: linear-gradient(180deg, #e8dfc8 0%, #f4edda 100%);
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+}
+
+.section-divider {
+  height: 1px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(90, 97, 76, 0.45) 20%,
+    rgba(90, 97, 76, 0.45) 80%,
+    transparent 100%
+  );
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 4rem 0;
+  }
+
+  .container-main {
+    width: min(1120px, calc(100% - 1.25rem));
+  }
+
+  .section-title {
+    line-height: 1.08;
+  }
+  header a {
+  text-decoration: none;
+}
+}
