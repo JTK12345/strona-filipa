@@ -1,6 +1,37 @@
 # Wdrozenie na VPS
 
-## 1. Rozpakuj paczke
+## 1. Pobierz projekt z GitHuba
+
+Najwygodniej wdrazac projekt przez GitHuba, a nie przez reczne wrzucanie ZIP-a.
+
+Na VPS przejdz do katalogu, w ktorym ma dzialac projekt, na przyklad:
+
+```bash
+cd /home/ubuntu
+```
+
+Sklonuj repozytorium:
+
+```bash
+git clone https://github.com/JTK12345/strona-filipa.git
+cd strona-filipa
+```
+
+Przy kolejnych aktualizacjach nie musisz wrzucac projektu od nowa. Wystarczy:
+
+```bash
+git pull
+docker-compose up -d --build
+```
+
+Jesli serwer ma nowszego Dockera, mozesz zamiast tego uzyc:
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+## 2. Alternatywa: rozpakuj paczke ZIP
 
 Na VPS wrzuc paczke ZIP do folderu, w ktorym ma dzialac strona, np.:
 
@@ -10,7 +41,7 @@ Na VPS wrzuc paczke ZIP do folderu, w ktorym ma dzialac strona, np.:
 
 Rozpakuj ja tak, zeby w folderze byly pliki `Dockerfile`, `docker-compose.yml`, `package.json`, katalog `app` itd.
 
-## 2. Utworz plik .env
+## 3. Utworz plik .env
 
 Skopiuj przyklad:
 
@@ -40,7 +71,7 @@ Wazne:
 - Klucz `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
-## 3. Uruchom strone
+## 4. Uruchom strone
 
 ```bash
 docker compose up -d --build
@@ -52,7 +83,7 @@ Jesli serwer uzywa starego Dockera:
 docker-compose up -d --build
 ```
 
-## 4. Sprawdz status
+## 5. Sprawdz status
 
 ```bash
 docker compose ps
@@ -75,7 +106,7 @@ docker compose exec strona printenv | grep SMTP
 
 Jesli serwer uzywa starego Dockera, zamiast `docker compose` uzyj `docker-compose`.
 
-## 5. Reverse Proxy i sieci Dockera
+## 6. Reverse Proxy i sieci Dockera
 
 Jesli strona dziala lokalnie w kontenerze, ale nie otwiera sie przez domene, czestym powodem jest brak wspolnej sieci Dockera z reverse proxy, np. Nginx Proxy Managerem.
 
@@ -128,7 +159,7 @@ Na starszym Dockerze:
 docker-compose up -d --build
 ```
 
-## 6. Sprawdz naglowki po wdrozeniu
+## 7. Sprawdz naglowki po wdrozeniu
 
 ```bash
 curl -I https://profil-ciala.jtk.ovh/
