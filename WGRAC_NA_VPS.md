@@ -63,6 +63,7 @@ Lokalnie na VPS aplikacja dziala na:
 
 ```txt
 http://127.0.0.1:3000
+```
 
 Jesli formularze dalej nie wysylaja:
 
@@ -71,9 +72,63 @@ docker compose logs -f
 docker compose exec strona printenv | grep TURNSTILE
 docker compose exec strona printenv | grep SMTP
 ```
+
+Jesli serwer uzywa starego Dockera, zamiast `docker compose` uzyj `docker-compose`.
+
+## 5. Reverse Proxy i sieci Dockera
+
+Jesli strona dziala lokalnie w kontenerze, ale nie otwiera sie przez domene, czestym powodem jest brak wspolnej sieci Dockera z reverse proxy, np. Nginx Proxy Managerem.
+
+Objaw:
+
+- aplikacja dziala w kontenerze,
+- proxy jest uruchomione,
+- ale proxy nie moze polaczyc sie z Twoim kontenerem po nazwie.
+
+Tymczasowe obejscie:
+
+```bash
+docker network connect proxy_default strona-filipa_strona_1
 ```
 
-## 5. Sprawdz naglowki po wdrozeniu
+To rozwiazanie jest tylko chwilowe. Po `docker compose down` i ponownym uruchomieniu kontenera polaczenie z ta siecia moze zniknac.
+
+Trwale rozwiazanie:
+
+W `docker-compose.yml` dodaj aplikacje do tej samej sieci co proxy. Przykladowo:
+
+```yml
+services:
+  strona:
+    networks:
+      - default
+      - proxy_default
+
+networks:
+  proxy_default:
+    external: true
+```
+
+Po takiej zmianie Docker sam podlaczy kontener do zewnetrznej sieci proxy przy starcie.
+
+Jesli uzywasz Nginx Proxy Managera, zwykle ustawiasz tam:
+
+- `Forward Hostname`: nazwe kontenera, np. `strona-filipa_strona_1`
+- `Forward Port`: `3000`
+
+Po zmianach uruchom ponownie:
+
+```bash
+docker compose up -d --build
+```
+
+Na starszym Dockerze:
+
+```bash
+docker-compose up -d --build
+```
+
+## 6. Sprawdz naglowki po wdrozeniu
 
 ```bash
 curl -I https://profil-ciala.jtk.ovh/
