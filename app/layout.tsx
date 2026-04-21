@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ScrollProgress } from "@/components/ScrollProgress";
 import { siteConfig } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="pl">
       <body>
+        <ScrollProgress />
         <div className="site-shell">
           <Navbar />
           <main>{children}</main>

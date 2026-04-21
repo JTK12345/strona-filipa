@@ -1,0 +1,20 @@
+Na VPS-ie wejdź do folderu projektu i wpisz:
+
+cd /sciezka/do/twojego/projektu
+docker compose up -d --build
+Jeśli projekt jest np. w /var/www/strona, to:
+
+cd /var/www/strona
+docker compose up -d --build
+Potem sprawdź, czy działa:
+
+docker compose ps
+Logi aplikacji:
+
+docker compose logs -f
+Strona będzie dostępna na:
+
+http://ADRES_VPS:3000
+Jeśli masz starszą wersję Dockera i komenda docker compose nie działa, spróbuj:
+
+docker-compose up -d --build

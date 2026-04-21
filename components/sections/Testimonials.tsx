@@ -9,8 +9,8 @@ export function Testimonials() {
           Zaufanie buduje się nie obietnicami, tylko realną zmianą i dobrą współpracą.
         </h2>
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <article key={testimonial.author} className="card-surface p-7">
+          {testimonials.map((testimonial, index) => (
+            <article key={`${testimonial.author}-${index}`} className="card-surface p-7">
               <p className="text-lg leading-8 text-[var(--foreground)]">“{testimonial.text}”</p>
               <p className="mt-6 font-semibold">{testimonial.author}</p>
               <p className="text-sm text-[var(--muted)]">{testimonial.role}</p>

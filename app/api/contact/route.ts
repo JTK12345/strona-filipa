@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
+import { readProtectedFormData, readProtectedJson } from "@/app/api/_utils/form-security";
 
 export const runtime = "nodejs";
 
@@ -37,16 +38,63 @@ function getSmtpConfig() {
   };
 }
 
+function isFormPost(req: Request) {
+  const contentType = req.headers.get("content-type") ?? "";
+
+  return (
+    contentType.includes("application/x-www-form-urlencoded") ||
+    contentType.includes("multipart/form-data")
+  );
+}
+
+function createRedirectUrl(req: Request, contact: "sent" | "missing" | "error") {
+  const url = new URL(req.url);
+  url.pathname = "/";
+  url.search = `?contact=${contact}`;
+  url.hash = "kontakt";
+  return url;
+}
+
 export async function POST(req: Request) {
+  const fallbackMode = isFormPost(req);
+
   try {
-    const body = (await req.json()) as ContactBody;
+    let body: ContactBody;
+
+    if (fallbackMode) {
+      const protectedFormData = await readProtectedFormData(req);
+
+      if (protectedFormData.error) {
+        return NextResponse.redirect(createRedirectUrl(req, "error"), 303);
+      }
+
+      const formData = protectedFormData.formData;
+      body = {
+        name: formData?.get("name"),
+        phone: formData?.get("phone"),
+        message: formData?.get("message"),
+      };
+    } else {
+      const protectedJson = await readProtectedJson<ContactBody>(req);
+
+      if (protectedJson.error) {
+        return protectedJson.error;
+      }
+
+      body = protectedJson.body;
+    }
+
     const name = getString(body.name);
     const phone = getString(body.phone);
     const message = getString(body.message);
 
     if (!name || !phone || !message) {
+      if (fallbackMode) {
+        return NextResponse.redirect(createRedirectUrl(req, "missing"), 303);
+      }
+
       return NextResponse.json(
-        { error: "Uzupełnij wszystkie pola formularza." },
+        { error: "Uzupe\u0142nij wszystkie pola formularza." },
         { status: 400 }
       );
     }
@@ -55,6 +103,10 @@ export async function POST(req: Request) {
 
     if (!smtp.host || !smtp.user || !smtp.pass || !smtp.from) {
       console.error("Brak konfiguracji SMTP dla formularza kontaktowego.");
+
+      if (fallbackMode) {
+        return NextResponse.redirect(createRedirectUrl(req, "error"), 303);
+      }
 
       return NextResponse.json(
         { error: "Formularz nie jest jeszcze skonfigurowany." },
@@ -75,31 +127,39 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: smtp.from,
       to: recipientEmail,
-      subject: `Nowe zgłoszenie z formularza: ${name}`,
+      subject: `Nowe zg\u0142oszenie z formularza: ${name}`,
       text: [
-        "Nowe zgłoszenie z formularza kontaktowego.",
+        "Nowe zg\u0142oszenie z formularza kontaktowego.",
         "",
-        `Imię: ${name}`,
+        `Imi\u0119: ${name}`,
         `Telefon: ${phone}`,
         "",
-        "Wiadomość:",
+        "Wiadomo\u015b\u0107:",
         message,
       ].join("\n"),
       html: `
-        <h1>Nowe zgłoszenie z formularza kontaktowego</h1>
-        <p><strong>Imię:</strong> ${escapeHtml(name)}</p>
+        <h1>Nowe zg\u0142oszenie z formularza kontaktowego</h1>
+        <p><strong>Imi\u0119:</strong> ${escapeHtml(name)}</p>
         <p><strong>Telefon:</strong> ${escapeHtml(phone)}</p>
-        <p><strong>Wiadomość:</strong></p>
+        <p><strong>Wiadomo\u015b\u0107:</strong></p>
         <p>${escapeHtml(message).replaceAll("\n", "<br />")}</p>
       `,
     });
 
+    if (fallbackMode) {
+      return NextResponse.redirect(createRedirectUrl(req, "sent"), 303);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Błąd wysyłki formularza kontaktowego:", error);
+    console.error("B\u0142\u0105d wysy\u0142ki formularza kontaktowego:", error);
+
+    if (fallbackMode) {
+      return NextResponse.redirect(createRedirectUrl(req, "error"), 303);
+    }
 
     return NextResponse.json(
-      { error: "Nie udało się wysłać wiadomości." },
+      { error: "Nie uda\u0142o si\u0119 wys\u0142a\u0107 wiadomo\u015bci." },
       { status: 500 }
     );
   }

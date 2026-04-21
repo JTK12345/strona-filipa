@@ -3,7 +3,7 @@ export const siteConfig = {
   metaTitle: "Świadomy Profil Ciała | Holistyczna opieka nad zdrowiem w Gdyni",
   metaDescription:
     "Filip Proniewicz pomaga odzyskać sprawność poprzez terapię manualną, ruch, edukację i pracę nad przyczyną problemu. Gdynia.",
-  bookingUrl: "#kontakt",
+  bookingUrl: "/umow-konsultacje",
   heroDescription:
     "Indywidualna praca z ciałem oparta na medycynie, ruchu, terapii manualnej i edukacji. Celem jest nie tylko ulga w bólu, ale trwała poprawa zdrowia, sprawności i codziennego funkcjonowania.",
   heroHighlights: [
