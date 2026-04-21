@@ -35,6 +35,7 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
   );
   const [shouldRender, setShouldRender] = useState(true);
   const [configError, setConfigError] = useState(false);
+  const [widgetError, setWidgetError] = useState(false);
 
   useEffect(() => {
     onVerifyRef.current = onVerify;
@@ -75,6 +76,7 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
 
         setSiteKey(nextSiteKey);
         setConfigError(!nextSiteKey);
+        setWidgetError(false);
       } catch {
         if (!cancelled) {
           setConfigError(true);
@@ -114,6 +116,20 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
   }, [siteKey]);
 
   useEffect(() => {
+    if (!shouldRender || !siteKey || scriptReady) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setWidgetError(true);
+    }, 8000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [scriptReady, shouldRender, siteKey]);
+
+  useEffect(() => {
     if (
       !shouldRender ||
       !siteKey ||
@@ -124,18 +140,26 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
       return;
     }
 
-    widgetIdRef.current = window.turnstile.render(containerRef.current, {
-      sitekey: siteKey,
-      callback: (token) => {
-        onVerifyRef.current(token);
-      },
-      "expired-callback": () => {
-        onExpireRef.current?.();
-      },
-      "error-callback": () => {
-        onExpireRef.current?.();
-      },
-    });
+    try {
+      setWidgetError(false);
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: (token) => {
+          setWidgetError(false);
+          onVerifyRef.current(token);
+        },
+        "expired-callback": () => {
+          onExpireRef.current?.();
+        },
+        "error-callback": () => {
+          setWidgetError(true);
+          onExpireRef.current?.();
+        },
+      });
+    } catch {
+      setWidgetError(true);
+      return;
+    }
 
     return () => {
       if (widgetIdRef.current && window.turnstile) {
@@ -168,6 +192,12 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
   return (
     <div className="grid gap-2">
       <div ref={containerRef} />
+      {widgetError ? (
+        <p className="text-sm font-semibold text-red-700">
+          Nie udalo sie zaladowac zabezpieczenia formularza. Najczesciej powoduje to
+          blokada skryptow w przegladarce albo brak poprawnie dodanej domeny w Cloudflare Turnstile.
+        </p>
+      ) : null}
       <p className="text-sm text-[var(--muted)]">
         Zabezpieczenie formularza chroni przed automatycznym spamem.
       </p>

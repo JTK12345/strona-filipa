@@ -64,6 +64,11 @@ export function ContactForm() {
       return;
     }
 
+    if (process.env.NODE_ENV === "production" && !turnstileToken) {
+      setStatus("Najpierw potwierdz zabezpieczenie antyspamowe formularza.");
+      return;
+    }
+
     setIsSending(true);
     setStatus("Wysylanie...");
 

@@ -62,6 +62,11 @@ export function WeeklyBasicReportForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (process.env.NODE_ENV === "production" && !turnstileToken) {
+      setStatus("Najpierw potwierdz zabezpieczenie antyspamowe formularza.");
+      return;
+    }
+
     setIsSending(true);
     setStatus("Wysyłanie raportu...");
 
