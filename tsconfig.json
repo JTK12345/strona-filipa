@@ -36,6 +36,9 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "backup",
+    "paczka-vps-20260420-232824",
+    "strona-do-wgrania-20260420-021739"
   ]
 }

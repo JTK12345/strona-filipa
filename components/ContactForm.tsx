@@ -1,66 +1,92 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { TurnstileField } from "@/components/TurnstileField";
 
-type ContactFormErrors = {
-  name: boolean;
-  phone: boolean;
-  message: boolean;
+type ContactFormState = {
+  name: string;
+  phone: string;
+  email: string;
+  message: string;
+  csrfToken: string;
+  website: string;
 };
 
-const emptyErrors: ContactFormErrors = {
-  name: false,
-  phone: false,
-  message: false,
+const initialForm: ContactFormState = {
+  name: "",
+  phone: "",
+  email: "",
+  message: "",
+  csrfToken: "",
+  website: "",
 };
 
 export function ContactForm() {
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    message: "",
-  });
+  const [form, setForm] = useState(initialForm);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<ContactFormErrors>(emptyErrors);
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const contactStatus = params.get("contact");
+    let cancelled = false;
 
-    if (contactStatus === "sent") {
-      setStatus("Wyslano. Dziekujemy za wiadomosc.");
-      return;
+    async function loadFormConfig() {
+      try {
+        const response = await fetch("/api/public-config", { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("config_request_failed");
+        }
+
+        const data = (await response.json()) as {
+          csrfToken?: unknown;
+          turnstileSiteKey?: unknown;
+        };
+
+        if (!cancelled) {
+          setForm((current) => ({
+            ...current,
+            csrfToken: typeof data.csrfToken === "string" ? data.csrfToken : "",
+          }));
+          setTurnstileSiteKey(
+            typeof data.turnstileSiteKey === "string" ? data.turnstileSiteKey : ""
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setStatus("Nie udalo sie przygotowac formularza. Odswiez strone i sprobuj ponownie.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConfigLoading(false);
+        }
+      }
     }
 
-    if (contactStatus === "missing") {
-      setStatus("Uzupelnij wszystkie pola formularza.");
-      return;
-    }
+    void loadFormConfig();
 
-    if (contactStatus === "error") {
-      setStatus("Nie udalo sie wyslac wiadomosci.");
-    }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  function validateForm() {
-    const nextErrors = {
-      name: !form.name.trim(),
-      phone: !form.phone.trim(),
-      message: !form.message.trim(),
-    };
-
-    setFieldErrors(nextErrors);
-    return !Object.values(nextErrors).some(Boolean);
+  function updateField(
+    field: keyof ContactFormState,
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) {
+    setForm((current) => ({
+      ...current,
+      [field]: event.target.value,
+    }));
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
 
-    if (!validateForm()) {
-      setStatus("Uzupelnij wszystkie pola formularza.");
+    if (!form.csrfToken) {
+      setStatus("Sesja formularza wygasla. Odswiez strone i sprobuj ponownie.");
       return;
     }
 
@@ -73,25 +99,28 @@ export function ContactForm() {
     setStatus("Wysylanie...");
 
     try {
-      const res = await fetch("/api/contact", {
+      const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...form, turnstileToken }),
+        body: JSON.stringify({
+          ...form,
+          turnstileToken,
+        }),
       });
 
-      if (res.ok) {
-        setStatus("Wyslano. Dziekujemy za wiadomosc.");
-        setForm({ name: "", phone: "", message: "" });
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (response.ok) {
+        setForm((current) => ({
+          ...initialForm,
+          csrfToken: current.csrfToken,
+        }));
         setTurnstileToken("");
-        setFieldErrors(emptyErrors);
+        setStatus("Wyslano. Dziekujemy za wiadomosc.");
         return;
       }
-
-      const data = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
 
       setStatus(data?.error ?? "Nie udalo sie wyslac wiadomosci.");
     } catch {
@@ -102,82 +131,98 @@ export function ContactForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      action="/api/contact"
-      method="post"
-      noValidate
-      className="mt-10 grid gap-4"
-    >
-      <div className="grid gap-2">
-        <input
-          name="name"
-          type="text"
-          placeholder="Imie"
-          value={form.name}
-          onChange={(e) => {
-            setForm({ ...form, name: e.target.value });
-            if (fieldErrors.name) {
-              setFieldErrors((current) => ({ ...current, name: false }));
-            }
-          }}
-          className="p-3 border rounded"
-          aria-invalid={fieldErrors.name}
-          required
-        />
-        {fieldErrors.name ? (
-          <p className="text-sm font-semibold text-red-700">Podaj imie.</p>
-        ) : null}
+    <form onSubmit={handleSubmit} noValidate className="mt-10 grid gap-4">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft)] p-4 text-sm leading-6 text-[var(--muted)]">
+        <p>Prosimy nie wpisywac informacji o stanie zdrowia w formularzu.</p>
+        <p className="mt-2">
+          Nie wpisuj w formularzu informacji o stanie zdrowia. Szczegoly omowimy
+          podczas kontaktu telefonicznego lub na wizycie.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-2">
+          <label className="font-semibold" htmlFor="contact-name">
+            Imie
+          </label>
+          <input
+            id="contact-name"
+            type="text"
+            value={form.name}
+            onChange={(event) => updateField("name", event)}
+            className="rounded-lg border border-[var(--border)] bg-white p-3"
+            autoComplete="name"
+            maxLength={80}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <label className="font-semibold" htmlFor="contact-phone">
+            Telefon
+          </label>
+          <input
+            id="contact-phone"
+            type="tel"
+            value={form.phone}
+            onChange={(event) => updateField("phone", event)}
+            className="rounded-lg border border-[var(--border)] bg-white p-3"
+            autoComplete="tel"
+            inputMode="tel"
+            maxLength={32}
+          />
+        </div>
       </div>
 
       <div className="grid gap-2">
+        <label className="font-semibold" htmlFor="contact-email">
+          E-mail
+        </label>
         <input
-          name="phone"
-          type="tel"
-          placeholder="Telefon"
-          value={form.phone}
-          onChange={(e) => {
-            setForm({ ...form, phone: e.target.value });
-            if (fieldErrors.phone) {
-              setFieldErrors((current) => ({ ...current, phone: false }));
-            }
-          }}
-          className="p-3 border rounded"
-          aria-invalid={fieldErrors.phone}
-          required
+          id="contact-email"
+          type="email"
+          value={form.email}
+          onChange={(event) => updateField("email", event)}
+          className="rounded-lg border border-[var(--border)] bg-white p-3"
+          autoComplete="email"
+          maxLength={160}
         />
-        {fieldErrors.phone ? (
-          <p className="text-sm font-semibold text-red-700">Podaj numer telefonu.</p>
-        ) : null}
       </div>
 
+      <p className="text-sm text-[var(--muted)]">
+        Podaj przynajmniej numer telefonu lub adres e-mail.
+      </p>
+
       <div className="grid gap-2">
+        <label className="font-semibold" htmlFor="contact-message">
+          Krotka wiadomosc
+        </label>
         <textarea
-          name="message"
-          placeholder="Wiadomosc"
+          id="contact-message"
           value={form.message}
-          onChange={(e) => {
-            setForm({ ...form, message: e.target.value });
-            if (fieldErrors.message) {
-              setFieldErrors((current) => ({ ...current, message: false }));
-            }
-          }}
-          className="p-3 border rounded"
-          aria-invalid={fieldErrors.message}
+          onChange={(event) => updateField("message", event)}
+          className="min-h-32 rounded-lg border border-[var(--border)] bg-white p-3"
           required
+          maxLength={1000}
         />
-        {fieldErrors.message ? (
-          <p className="text-sm font-semibold text-red-700">Wpisz tresc wiadomosci.</p>
-        ) : null}
       </div>
+
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        value={form.website}
+        onChange={(event) => updateField("website", event)}
+        className="hidden"
+        aria-hidden="true"
+      />
 
       <TurnstileField
+        siteKey={turnstileSiteKey}
         onVerify={setTurnstileToken}
         onExpire={() => setTurnstileToken("")}
       />
-      <input type="hidden" name="turnstileToken" value={turnstileToken} />
 
-      <button type="submit" className="button-primary" disabled={isSending}>
+      <button type="submit" className="button-primary" disabled={isSending || isConfigLoading}>
         {isSending ? "Wysylanie..." : "Wyslij"}
       </button>
 

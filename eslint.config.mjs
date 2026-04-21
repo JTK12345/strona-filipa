@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "backup/**",
+    "paczka-vps-20260420-232824/**",
+    "strona-do-wgrania-20260420-021739/**",
   ]),
 ]);
 

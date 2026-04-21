@@ -14,9 +14,11 @@ services:
       SMTP_SECURE: ${SMTP_SECURE:-}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_TO: ${MAIL_TO:-}
       MAIL_FROM: ${MAIL_FROM:-}
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      FORM_LOG_SALT: ${FORM_LOG_SALT:-}
     ports:
       - "3000:3000"
     restart: unless-stopped

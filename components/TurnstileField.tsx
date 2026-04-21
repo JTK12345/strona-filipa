@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 type TurnstileFieldProps = {
+  siteKey: string;
   onVerify: (token: string) => void;
   onExpire?: () => void;
 };
@@ -24,72 +25,25 @@ declare global {
   }
 }
 
-export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
+export function TurnstileField({ siteKey, onVerify, onExpire }: TurnstileFieldProps) {
+  const isLocalDevelopmentHost =
+    typeof window !== "undefined" &&
+    process.env.NODE_ENV !== "production" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const onVerifyRef = useRef(onVerify);
   const onExpireRef = useRef(onExpire);
-  const [siteKey, setSiteKey] = useState("");
   const [scriptReady, setScriptReady] = useState(
     typeof window !== "undefined" && Boolean(window.turnstile)
   );
-  const [shouldRender, setShouldRender] = useState(true);
-  const [configError, setConfigError] = useState(false);
+  const [shouldRender] = useState(!isLocalDevelopmentHost);
   const [widgetError, setWidgetError] = useState(false);
 
   useEffect(() => {
     onVerifyRef.current = onVerify;
     onExpireRef.current = onExpire;
   }, [onExpire, onVerify]);
-
-  useEffect(() => {
-    if (
-      process.env.NODE_ENV !== "production" &&
-      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
-    ) {
-      setShouldRender(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadConfig() {
-      try {
-        const response = await fetch("/api/public-config", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("config_request_failed");
-        }
-
-        const data = (await response.json()) as {
-          turnstileSiteKey?: unknown;
-        };
-
-        if (cancelled) {
-          return;
-        }
-
-        const nextSiteKey =
-          typeof data.turnstileSiteKey === "string" ? data.turnstileSiteKey : "";
-
-        setSiteKey(nextSiteKey);
-        setConfigError(!nextSiteKey);
-        setWidgetError(false);
-      } catch {
-        if (!cancelled) {
-          setConfigError(true);
-        }
-      }
-    }
-
-    void loadConfig();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!siteKey || window.turnstile) {
@@ -141,7 +95,6 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
     }
 
     try {
-      setWidgetError(false);
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
         callback: (token) => {
@@ -157,7 +110,9 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
         },
       });
     } catch {
-      setWidgetError(true);
+      window.setTimeout(() => {
+        setWidgetError(true);
+      }, 0);
       return;
     }
 
@@ -173,18 +128,10 @@ export function TurnstileField({ onVerify, onExpire }: TurnstileFieldProps) {
     return null;
   }
 
-  if (configError) {
+  if (!siteKey) {
     return (
       <p className="text-sm font-semibold text-red-700">
         Zabezpieczenie formularza nie zostalo poprawnie skonfigurowane na serwerze.
-      </p>
-    );
-  }
-
-  if (!siteKey) {
-    return (
-      <p className="text-sm text-[var(--muted)]">
-        Ladowanie zabezpieczenia formularza...
       </p>
     );
   }

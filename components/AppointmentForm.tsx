@@ -1,38 +1,79 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { TurnstileField } from "@/components/TurnstileField";
+import { formConfig } from "@/content/form-config";
 
 type AppointmentFormState = {
-  fullName: string;
+  name: string;
   phone: string;
   email: string;
-  visitType: string;
-  preferredDates: string;
-  goal: string;
-  previousClient: string;
-  notes: string;
+  preferredContactTime: string;
+  message: string;
+  csrfToken: string;
+  website: string;
 };
 
 const initialForm: AppointmentFormState = {
-  fullName: "",
+  name: "",
   phone: "",
   email: "",
-  visitType: "",
-  preferredDates: "",
-  goal: "",
-  previousClient: "",
-  notes: "",
+  preferredContactTime: "",
+  message: "",
+  csrfToken: "",
+  website: "",
 };
-
-const visitTypeOptions = ["Stacjonarnie", "Online", "Telefonicznie"];
-const yesNoOptions = ["Tak", "Nie"];
 
 export function AppointmentForm() {
   const [form, setForm] = useState(initialForm);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState("");
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadFormConfig() {
+      try {
+        const response = await fetch("/api/public-config", { cache: "no-store" });
+
+        if (!response.ok) {
+          throw new Error("config_request_failed");
+        }
+
+        const data = (await response.json()) as {
+          csrfToken?: unknown;
+          turnstileSiteKey?: unknown;
+        };
+
+        if (!cancelled) {
+          setForm((current) => ({
+            ...current,
+            csrfToken: typeof data.csrfToken === "string" ? data.csrfToken : "",
+          }));
+          setTurnstileSiteKey(
+            typeof data.turnstileSiteKey === "string" ? data.turnstileSiteKey : ""
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setStatus("Nie udalo sie przygotowac formularza. Odswiez strone i sprobuj ponownie.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConfigLoading(false);
+        }
+      }
+    }
+
+    void loadFormConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function updateField(
     field: keyof AppointmentFormState,
@@ -46,13 +87,19 @@ export function AppointmentForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!form.csrfToken) {
+      setStatus("Sesja formularza wygasla. Odswiez strone i sprobuj ponownie.");
+      return;
+    }
+
     if (process.env.NODE_ENV === "production" && !turnstileToken) {
       setStatus("Najpierw potwierdz zabezpieczenie antyspamowe formularza.");
       return;
     }
 
     setIsSending(true);
-    setStatus("Wysyłanie zgłoszenia...");
+    setStatus("Wysylanie zgloszenia...");
 
     try {
       const response = await fetch("/api/appointment", {
@@ -60,110 +107,125 @@ export function AppointmentForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...form, turnstileToken }),
+        body: JSON.stringify({
+          ...form,
+          turnstileToken,
+        }),
       });
 
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
       if (response.ok) {
-        setForm(initialForm);
+        setForm((current) => ({
+          ...initialForm,
+          csrfToken: current.csrfToken,
+        }));
         setTurnstileToken("");
-        setStatus("Zgłoszenie zostało wysłane. Odezwiemy się z propozycją terminu.");
+        setStatus("Zgloszenie zostalo wyslane. Odezwiemy sie, aby ustalic termin.");
         return;
       }
 
-      const data = (await response.json().catch(() => null)) as {
-        error?: string;
-      } | null;
-
-      setStatus(data?.error ?? "Nie udało się wysłać zgłoszenia.");
+      setStatus(data?.error ?? "Nie udalo sie wyslac zgloszenia.");
     } catch {
-      setStatus("Nie udało się wysłać zgłoszenia.");
+      setStatus("Nie udalo sie wyslac zgloszenia.");
     } finally {
       setIsSending(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-10 grid gap-6">
-      <Field label="Imię i nazwisko">
+    <form onSubmit={handleSubmit} noValidate className="mt-10 grid gap-6">
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--soft)] p-4 text-sm leading-6 text-[var(--muted)]">
+        <p>Prosimy nie wpisywac informacji o stanie zdrowia w formularzu.</p>
+        <p className="mt-2">
+          Nie wpisuj w formularzu informacji o stanie zdrowia. Szczegoly omowimy
+          podczas kontaktu telefonicznego lub na wizycie.
+        </p>
+      </div>
+
+      <Field
+        label={formConfig.appointmentNameLabel}
+        required={formConfig.appointmentNameRequired}
+      >
         <input
-          value={form.fullName}
-          onChange={(event) => updateField("fullName", event)}
+          value={form.name}
+          onChange={(event) => updateField("name", event)}
           className="w-full rounded-lg border border-[var(--border)] bg-white p-3"
-          required
+          required={formConfig.appointmentNameRequired}
+          autoComplete="name"
+          maxLength={80}
         />
       </Field>
 
-      <Field label="Telefon">
-        <input
-          value={form.phone}
-          onChange={(event) => updateField("phone", event)}
-          className="w-full rounded-lg border border-[var(--border)] bg-white p-3"
-          required
-        />
-      </Field>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Field label="Telefon" required={false}>
+          <input
+            type="tel"
+            value={form.phone}
+            onChange={(event) => updateField("phone", event)}
+            className="w-full rounded-lg border border-[var(--border)] bg-white p-3"
+            inputMode="tel"
+            autoComplete="tel"
+            maxLength={32}
+          />
+        </Field>
 
-      <Field label="Adres e-mail">
-        <input
-          type="email"
-          value={form.email}
-          onChange={(event) => updateField("email", event)}
-          className="w-full rounded-lg border border-[var(--border)] bg-white p-3"
-          required
-        />
-      </Field>
+        <Field label="E-mail" required={false}>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(event) => updateField("email", event)}
+            className="w-full rounded-lg border border-[var(--border)] bg-white p-3"
+            autoComplete="email"
+            maxLength={160}
+          />
+        </Field>
+      </div>
 
-      <RadioGroup
-        label="Preferowana forma konsultacji"
-        name="visitType"
-        options={visitTypeOptions}
-        value={form.visitType}
-        onChange={(event) => updateField("visitType", event)}
-      />
+      <p className="text-sm text-[var(--muted)]">
+        Podaj przynajmniej numer telefonu lub adres e-mail.
+      </p>
 
-      <Field label="W jakich dniach i godzinach możesz się spotkać?">
+      <Field label="Preferowany termin lub pora kontaktu">
         <textarea
-          value={form.preferredDates}
-          onChange={(event) => updateField("preferredDates", event)}
-          className="min-h-32 w-full rounded-lg border border-[var(--border)] bg-white p-3"
-          placeholder="Np. poniedziałek po 17:00, środa 10:00-14:00, piątek wieczorem"
-          required
-        />
-      </Field>
-
-      <Field label="Jaki jest główny cel konsultacji?">
-        <textarea
-          value={form.goal}
-          onChange={(event) => updateField("goal", event)}
-          className="min-h-32 w-full rounded-lg border border-[var(--border)] bg-white p-3"
-          required
-        />
-      </Field>
-
-      <RadioGroup
-        label="Czy jesteś już po wcześniejszej współpracy?"
-        name="previousClient"
-        options={yesNoOptions}
-        value={form.previousClient}
-        onChange={(event) => updateField("previousClient", event)}
-      />
-
-      <Field label="Dodatkowe informacje">
-        <textarea
-          value={form.notes}
-          onChange={(event) => updateField("notes", event)}
+          value={form.preferredContactTime}
+          onChange={(event) => updateField("preferredContactTime", event)}
           className="min-h-28 w-full rounded-lg border border-[var(--border)] bg-white p-3"
-          placeholder="Np. dolegliwości, preferowany kontakt, ważne ograniczenia czasowe"
+          placeholder="Np. poniedzialek po 17:00, sroda 10:00-14:00, kontakt rano"
+          required
+          maxLength={200}
         />
       </Field>
+
+      <Field label="Krotka wiadomosc" required={false}>
+        <textarea
+          value={form.message}
+          onChange={(event) => updateField("message", event)}
+          className="min-h-28 w-full rounded-lg border border-[var(--border)] bg-white p-3"
+          placeholder="Opcjonalnie: kilka slow o celu kontaktu lub preferowanej formie odpowiedzi"
+          maxLength={1000}
+        />
+      </Field>
+
+      <input
+        type="text"
+        tabIndex={-1}
+        autoComplete="off"
+        value={form.website}
+        onChange={(event) => updateField("website", event)}
+        className="hidden"
+        aria-hidden="true"
+      />
 
       <TurnstileField
+        siteKey={turnstileSiteKey}
         onVerify={setTurnstileToken}
         onExpire={() => setTurnstileToken("")}
       />
 
       <div>
-        <button className="button-primary" disabled={isSending}>
-          {isSending ? "Wysyłanie..." : "Wyślij propozycję terminów"}
+        <button className="button-primary" disabled={isSending || isConfigLoading}>
+          {isSending ? "Wysylanie..." : "Wyslij prosbe o kontakt"}
         </button>
         <p className="mt-4 text-sm font-semibold text-[var(--muted)]" aria-live="polite">
           {status}
@@ -176,56 +238,19 @@ export function AppointmentForm() {
 function Field({
   label,
   children,
+  required = true,
 }: {
   label: string;
   children: React.ReactNode;
+  required?: boolean;
 }) {
   return (
     <label className="grid gap-2">
       <span className="font-semibold">
-        {label} <span aria-hidden="true">*</span>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
       </span>
       {children}
     </label>
-  );
-}
-
-function RadioGroup({
-  label,
-  name,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  name: keyof AppointmentFormState;
-  options: string[];
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <fieldset className="grid gap-3">
-      <legend className="font-semibold">
-        {label} <span aria-hidden="true">*</span>
-      </legend>
-      <div className="grid gap-3 sm:grid-cols-3">
-        {options.map((option) => (
-          <label
-            key={option}
-            className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-white p-3"
-          >
-            <input
-              type="radio"
-              name={name}
-              value={option}
-              checked={value === option}
-              onChange={onChange}
-              required
-            />
-            <span>{option}</span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
   );
 }

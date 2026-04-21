@@ -96,9 +96,11 @@ SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=kontakt@example.com
 SMTP_PASS=twoje-haslo-smtp
+MAIL_TO=kontakt@example.com
 MAIL_FROM="Formularz kontaktowy <kontakt@example.com>"
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=tu_wklej_site_key_z_cloudflare
 TURNSTILE_SECRET_KEY=tu_wklej_secret_key_z_cloudflare
+FORM_LOG_SALT=dlugi_losowy_sekret_do_haszowania_ip
 ```
 
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to Site Key z Cloudflare Turnstile.
@@ -108,6 +110,8 @@ Wazne:
 
 - Na VPS trzymaj zmienne w pliku `.env`.
 - Klucz `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
+- `MAIL_TO` to adres, na ktory maja trafiać powiadomienia z formularzy.
+- `FORM_LOG_SALT` ustaw jako dlugi, losowy sekret i nie publikuj go publicznie.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
 ## 5. Uruchom strone

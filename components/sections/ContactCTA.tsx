@@ -11,12 +11,12 @@ export function ContactCTA() {
           </span>
 
           <h2 className="mt-6 max-w-3xl text-4xl font-bold leading-tight md:text-5xl">
-            Napisz, jeśli chcesz coś doprecyzować.
+            Napisz, jesli chcesz szybko uzyskac odpowiedz.
           </h2>
 
           <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-            Zostaw wiadomość, jeśli masz pytanie o współpracę, dojazd, zakres
-            pomocy albo przygotowanie do pierwszego spotkania.
+            Zostaw krotka wiadomosc, jesli chcesz zapytac o wspolprace, dojazd,
+            dostepnosc terminow albo organizacje pierwszej wizyty.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -29,28 +29,18 @@ export function ContactCTA() {
 
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             <div>
-              <p className="text-sm font-semibold text-[var(--muted)]">
-                Telefon
-              </p>
+              <p className="text-sm font-semibold text-[var(--muted)]">Telefon</p>
               <p className="mt-2 text-lg font-semibold">{contactData.phone}</p>
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-[var(--muted)]">
-                Adres
-              </p>
-              <p className="mt-2 text-lg font-semibold">
-                {contactData.address}
-              </p>
+              <p className="text-sm font-semibold text-[var(--muted)]">Adres</p>
+              <p className="mt-2 text-lg font-semibold">{contactData.address}</p>
             </div>
 
             <div>
-              <p className="text-sm font-semibold text-[var(--muted)]">
-                Instagram
-              </p>
-              <p className="mt-2 text-lg font-semibold">
-                @swiadomy_profil_ciala
-              </p>
+              <p className="text-sm font-semibold text-[var(--muted)]">Instagram</p>
+              <p className="mt-2 text-lg font-semibold">@swiadomy_profil_ciala</p>
             </div>
           </div>
 

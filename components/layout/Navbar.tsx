@@ -2,10 +2,9 @@ import Link from "next/link";
 import { siteConfig } from "@/content/site";
 
 const links = [
-  { href: "/#uslugi", label: "Usługi" },
+  { href: "/#uslugi", label: "Uslugi" },
   { href: "/#o-mnie", label: "O mnie" },
   { href: "/#faq", label: "FAQ" },
-  { href: "/formularze", label: "Formularze" },
   { href: "/#kontakt", label: "Kontakt" },
 ];
 
@@ -16,7 +15,7 @@ export function Navbar() {
         <Link href="/" className="min-w-0 shrink no-underline md:shrink-0">
           <div className="flex flex-col">
             <span className="text-[1.55rem] font-extrabold leading-none tracking-[-0.05em] text-[var(--foreground)] sm:text-[2.1rem]">
-              Świadomy Profil Ciała
+              Swiadomy Profil Ciala
             </span>
             <span className="mt-2 text-[0.66rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)] sm:text-[0.78rem] sm:tracking-[0.24em]">
               Holistyczna opieka nad zdrowiem
@@ -40,7 +39,7 @@ export function Navbar() {
           href={siteConfig.bookingUrl}
           className="button-primary shrink-0 px-4 py-3 text-[0.86rem] font-extrabold sm:px-7 sm:py-4 sm:text-[0.95rem]"
         >
-          Umów konsultację
+          Umow konsultacje
         </a>
       </div>
     </header>

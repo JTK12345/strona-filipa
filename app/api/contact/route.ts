@@ -1,165 +1,117 @@
-import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
-import { readProtectedFormData, readProtectedJson } from "@/app/api/_utils/form-security";
+import { createMailerTransport } from "@/app/api/_utils/mailer";
+import {
+  escapeHtml,
+  hasHeaderInjection,
+  isEmail,
+  isPhone,
+  logFormSuccess,
+  normalizeEmail,
+  normalizePhone,
+  normalizeText,
+  readProtectedJson,
+} from "@/app/api/_utils/form-security";
 
 export const runtime = "nodejs";
 
-const recipientEmail = "tomasz.drozd.eti@gmail.com";
+const eventType = "contact_submit";
+const allowedFields = [
+  "name",
+  "phone",
+  "email",
+  "message",
+  "csrfToken",
+  "turnstileToken",
+  "website",
+] as const;
 
-type ContactBody = {
-  name?: unknown;
-  phone?: unknown;
-  message?: unknown;
-};
-
-function getString(value: unknown) {
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function getSmtpConfig() {
-  const port = Number(process.env.SMTP_PORT ?? 587);
-
-  return {
-    host: process.env.SMTP_HOST,
-    port,
-    secure: process.env.SMTP_SECURE === "true" || port === 465,
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-    from: process.env.MAIL_FROM ?? process.env.SMTP_USER,
-  };
-}
-
-function isFormPost(req: Request) {
-  const contentType = req.headers.get("content-type") ?? "";
-
-  return (
-    contentType.includes("application/x-www-form-urlencoded") ||
-    contentType.includes("multipart/form-data")
-  );
-}
-
-function createRedirectUrl(req: Request, contact: "sent" | "missing" | "error") {
-  const url = new URL(req.url);
-  url.pathname = "/";
-  url.search = `?contact=${contact}`;
-  url.hash = "kontakt";
-  return url;
-}
+type ContactBody = Record<(typeof allowedFields)[number], unknown>;
 
 export async function POST(req: Request) {
-  const fallbackMode = isFormPost(req);
-
   try {
-    let body: ContactBody;
+    const protectedJson = await readProtectedJson<ContactBody>(req, {
+      allowedFields: [...allowedFields],
+      csrfField: "csrfToken",
+      honeypotField: "website",
+      turnstileField: "turnstileToken",
+      eventType,
+    });
 
-    if (fallbackMode) {
-      const protectedFormData = await readProtectedFormData(req);
-
-      if (protectedFormData.error) {
-        return NextResponse.redirect(createRedirectUrl(req, "error"), 303);
-      }
-
-      const formData = protectedFormData.formData;
-      body = {
-        name: formData?.get("name"),
-        phone: formData?.get("phone"),
-        message: formData?.get("message"),
-      };
-    } else {
-      const protectedJson = await readProtectedJson<ContactBody>(req);
-
-      if (protectedJson.error) {
-        return protectedJson.error;
-      }
-
-      body = protectedJson.body;
+    if (protectedJson.error) {
+      return protectedJson.error;
     }
 
-    const name = getString(body.name);
-    const phone = getString(body.phone);
-    const message = getString(body.message);
+    const name = normalizeText(protectedJson.body.name, { maxLength: 80 });
+    const phone = normalizePhone(protectedJson.body.phone, 32);
+    const email = normalizeEmail(protectedJson.body.email, 160);
+    const message = normalizeText(protectedJson.body.message, {
+      maxLength: 1000,
+      multiline: true,
+    });
 
-    if (!name || !phone || !message) {
-      if (fallbackMode) {
-        return NextResponse.redirect(createRedirectUrl(req, "missing"), 303);
-      }
-
+    if (!phone && !email) {
       return NextResponse.json(
-        { error: "Uzupe\u0142nij wszystkie pola formularza." },
+        { error: "Podaj numer telefonu lub adres e-mail." },
         { status: 400 }
       );
     }
 
-    const smtp = getSmtpConfig();
+    if (phone && !isPhone(phone)) {
+      return NextResponse.json({ error: "Podaj poprawny numer telefonu." }, { status: 400 });
+    }
 
-    if (!smtp.host || !smtp.user || !smtp.pass || !smtp.from) {
-      console.error("Brak konfiguracji SMTP dla formularza kontaktowego.");
+    if (email && !isEmail(email)) {
+      return NextResponse.json({ error: "Podaj poprawny adres e-mail." }, { status: 400 });
+    }
 
-      if (fallbackMode) {
-        return NextResponse.redirect(createRedirectUrl(req, "error"), 303);
-      }
+    if (!message) {
+      return NextResponse.json({ error: "Wpisz krotka wiadomosc." }, { status: 400 });
+    }
 
+    if (hasHeaderInjection(name) || hasHeaderInjection(email)) {
       return NextResponse.json(
-        { error: "Formularz nie jest jeszcze skonfigurowany." },
-        { status: 500 }
+        { error: "Nieprawidlowe dane formularza." },
+        { status: 400 }
       );
     }
 
-    const transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: smtp.port,
-      secure: smtp.secure,
-      auth: {
-        user: smtp.user,
-        pass: smtp.pass,
-      },
-    });
+    const { smtp, transporter } = createMailerTransport();
 
     await transporter.sendMail({
       from: smtp.from,
-      to: recipientEmail,
-      subject: `Nowe zg\u0142oszenie z formularza: ${name}`,
+      to: smtp.to,
+      ...(email ? { replyTo: email } : {}),
+      subject: "Nowa wiadomosc z formularza kontaktowego",
       text: [
-        "Nowe zg\u0142oszenie z formularza kontaktowego.",
+        "Nowa wiadomosc z formularza kontaktowego",
         "",
-        `Imi\u0119: ${name}`,
-        `Telefon: ${phone}`,
+        `Imie: ${name || "Nie podano"}`,
+        `Telefon: ${phone || "Nie podano"}`,
+        `E-mail: ${email || "Nie podano"}`,
         "",
-        "Wiadomo\u015b\u0107:",
+        "Wiadomosc:",
         message,
       ].join("\n"),
       html: `
-        <h1>Nowe zg\u0142oszenie z formularza kontaktowego</h1>
-        <p><strong>Imi\u0119:</strong> ${escapeHtml(name)}</p>
-        <p><strong>Telefon:</strong> ${escapeHtml(phone)}</p>
-        <p><strong>Wiadomo\u015b\u0107:</strong></p>
-        <p>${escapeHtml(message).replaceAll("\n", "<br />")}</p>
+        <h1>Nowa wiadomosc z formularza kontaktowego</h1>
+        <p><strong>Imie:</strong> ${escapeHtml(name || "Nie podano")}</p>
+        <p><strong>Telefon:</strong> ${escapeHtml(phone || "Nie podano")}</p>
+        <p><strong>E-mail:</strong> ${escapeHtml(email || "Nie podano")}</p>
+        <p><strong>Wiadomosc:</strong><br />${escapeHtml(message).replaceAll(
+          "\n",
+          "<br />"
+        )}</p>
       `,
     });
 
-    if (fallbackMode) {
-      return NextResponse.redirect(createRedirectUrl(req, "sent"), 303);
-    }
+    logFormSuccess(eventType, protectedJson.ipHash);
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("B\u0142\u0105d wysy\u0142ki formularza kontaktowego:", error);
-
-    if (fallbackMode) {
-      return NextResponse.redirect(createRedirectUrl(req, "error"), 303);
-    }
+    console.error("Blad wysylki formularza kontaktowego:", error);
 
     return NextResponse.json(
-      { error: "Nie uda\u0142o si\u0119 wys\u0142a\u0107 wiadomo\u015bci." },
+      { error: "Nie udalo sie wyslac wiadomosci." },
       { status: 500 }
     );
   }

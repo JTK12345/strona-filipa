@@ -1,8 +1,12 @@
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
-const maxBodySizeBytes = 32 * 1024;
+const maxBodySizeBytes = 16 * 1024;
 const rateLimitWindowMs = 10 * 60 * 1000;
-const maxRequestsPerWindow = 8;
+const maxRequestsPerWindow = 6;
+const ipHashSalt = process.env.FORM_LOG_SALT ?? "local-form-log-salt";
+const csrfCookieName =
+  process.env.NODE_ENV === "production" ? "__Host-csrf-token" : "csrf-token";
 
 type RateLimitEntry = {
   count: number;
@@ -12,29 +16,47 @@ type RateLimitEntry = {
 type ProtectedJsonResult<T> =
   | {
       body: T;
+      ip: string;
+      ipHash: string;
       error: null;
     }
   | {
       body: null;
+      ip: string;
+      ipHash: string;
       error: NextResponse;
     };
 
-type ProtectedFormDataResult =
-  | {
-      formData: FormData;
-      error: null;
-    }
-  | {
-      formData: null;
-      error: NextResponse;
-    };
+type ProtectionOptions = {
+  allowedFields: string[];
+  csrfField: string;
+  honeypotField: string;
+  turnstileField: string;
+  eventType: string;
+};
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 function getClientIp(req: Request) {
   const cloudflareIp = req.headers.get("cf-connecting-ip")?.trim();
+  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
 
-  return cloudflareIp || "unknown";
+  return cloudflareIp || forwarded || "unknown";
+}
+
+function hashIp(ip: string) {
+  return createHash("sha256").update(`${ipHashSalt}:${ip}`).digest("hex").slice(0, 16);
+}
+
+function logFormEvent(eventType: string, status: "success" | "error", ipHash: string) {
+  console.info(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      eventType,
+      status,
+      ipHash,
+    })
+  );
 }
 
 function isLocalDevelopmentRequest(req: Request) {
@@ -83,6 +105,10 @@ function checkRateLimit(ip: string) {
   return true;
 }
 
+function createJsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
+
 function getBodySize(req: Request) {
   const contentLength = req.headers.get("content-length");
 
@@ -94,8 +120,54 @@ function getBodySize(req: Request) {
   return Number.isFinite(size) ? size : null;
 }
 
-function createJsonError(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status });
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function getCookieValue(req: Request, name: string) {
+  const rawCookie = req.headers.get("cookie");
+
+  if (!rawCookie) {
+    return "";
+  }
+
+  const parts = rawCookie.split(";").map((part) => part.trim());
+
+  for (const part of parts) {
+    const [cookieName, ...rest] = part.split("=");
+
+    if (cookieName === name) {
+      return decodeURIComponent(rest.join("="));
+    }
+  }
+
+  return "";
+}
+
+function safeCompare(left: string, right: string) {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  if (leftBuffer.length !== rightBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function verifyCsrfToken(req: Request, token: unknown) {
+  const cookieToken = getCookieValue(req, csrfCookieName);
+
+  if (typeof token !== "string" || !token || !cookieToken) {
+    return false;
+  }
+
+  return safeCompare(token, cookieToken);
 }
 
 async function verifyTurnstile(token: unknown, ip: string) {
@@ -121,173 +193,234 @@ async function verifyTurnstile(token: unknown, ip: string) {
     method: "POST",
     body: formData,
   });
-  const data = (await response.json().catch(() => null)) as { success?: boolean } | null;
 
+  if (!response.ok) {
+    return false;
+  }
+
+  const data = (await response.json().catch(() => null)) as { success?: boolean } | null;
   return data?.success === true;
 }
 
-async function runProtectionChecks(
-  req: Request,
-  allowedContentTypes: string[],
-  turnstileToken: unknown
-) {
-  const skipTurnstile = isLocalDevelopmentRequest(req);
-  const ip = getClientIp(req);
+export function createCsrfToken() {
+  return randomBytes(32).toString("hex");
+}
 
-  if (!checkRateLimit(ip)) {
-    return {
-      error: createJsonError("Zbyt wiele zg\u0142osze\u0144. Spr\u00f3buj ponownie za kilka minut.", 429),
-      ip,
-      skipTurnstile,
-    };
+export function getCsrfCookieName() {
+  return csrfCookieName;
+}
+
+export function getCsrfCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "strict" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  };
+}
+
+export function normalizeText(
+  value: unknown,
+  {
+    maxLength,
+    multiline = false,
+  }: {
+    maxLength: number;
+    multiline?: boolean;
+  }
+) {
+  if (typeof value !== "string") {
+    return "";
   }
 
+  const withoutControlChars = value.replace(multiline ? /[^\P{C}\n\r\t]+/gu : /[^\P{C}\t]+/gu, "");
+  const normalizedWhitespace = multiline
+    ? withoutControlChars
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    : withoutControlChars.replace(/\s+/g, " ").trim();
+
+  return normalizedWhitespace.slice(0, maxLength);
+}
+
+export function normalizeEmail(value: unknown, maxLength: number) {
+  return normalizeText(value, { maxLength }).toLowerCase();
+}
+
+export function normalizePhone(value: unknown, maxLength: number) {
+  return normalizeText(value, { maxLength }).replace(/\s+/g, " ");
+}
+
+export function isEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+export function isPhone(value: string) {
+  return /^[+]?[0-9()\s-]{6,20}$/.test(value);
+}
+
+export function hasHeaderInjection(value: string) {
+  return /[\r\n]/.test(value);
+}
+
+export function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+export async function readProtectedJson<T extends Record<string, unknown>>(
+  req: Request,
+  options: ProtectionOptions
+): Promise<ProtectedJsonResult<T>> {
+  const ip = getClientIp(req);
+  const ipHash = hashIp(ip);
   const contentType = req.headers.get("content-type") ?? "";
 
-  if (!allowedContentTypes.some((value) => contentType.includes(value))) {
+  if (!contentType.includes("application/json")) {
+    logFormEvent(options.eventType, "error", ipHash);
+
     return {
-      error: createJsonError("Nieprawid\u0142owy typ zg\u0142oszenia.", 415),
+      body: null,
       ip,
-      skipTurnstile,
+      ipHash,
+      error: createJsonError("Nieprawidlowy typ zgloszenia.", 415),
     };
   }
 
   const declaredSize = getBodySize(req);
 
   if (declaredSize !== null && declaredSize > maxBodySizeBytes) {
-    return {
-      error: createJsonError("Zg\u0142oszenie jest zbyt du\u017ce.", 413),
-      ip,
-      skipTurnstile,
-    };
-  }
+    logFormEvent(options.eventType, "error", ipHash);
 
-  if (!skipTurnstile) {
-    const isHuman = await verifyTurnstile(turnstileToken, ip);
-
-    if (!isHuman) {
-      return {
-        error: createJsonError(
-          "Potwierd\u017a, \u017ce formularz nie zosta\u0142 wys\u0142any automatycznie.",
-          403
-        ),
-        ip,
-        skipTurnstile,
-      };
-    }
-  }
-
-  return {
-    error: null,
-    ip,
-    skipTurnstile,
-  };
-}
-
-function getFormDataSize(formData: FormData) {
-  let totalSize = 0;
-
-  for (const value of formData.values()) {
-    if (typeof value === "string") {
-      totalSize += new TextEncoder().encode(value).length;
-      continue;
-    }
-
-    totalSize += value.size;
-  }
-
-  return totalSize;
-}
-
-export async function readProtectedJson<T extends object>(
-  req: Request
-): Promise<ProtectedJsonResult<T>> {
-  const contentType = req.headers.get("content-type") ?? "";
-
-  if (!contentType.includes("application/json")) {
     return {
       body: null,
-      error: createJsonError("Nieprawid\u0142owy typ zg\u0142oszenia.", 415),
+      ip,
+      ipHash,
+      error: createJsonError("Zgloszenie jest zbyt duze.", 413),
     };
   }
 
   const rawBody = await req.text();
 
   if (new TextEncoder().encode(rawBody).length > maxBodySizeBytes) {
+    logFormEvent(options.eventType, "error", ipHash);
+
     return {
       body: null,
-      error: createJsonError("Zg\u0142oszenie jest zbyt du\u017ce.", 413),
+      ip,
+      ipHash,
+      error: createJsonError("Zgloszenie jest zbyt duze.", 413),
     };
   }
 
-  let body: T;
+  let body: unknown;
 
   try {
-    body = JSON.parse(rawBody) as T;
+    body = JSON.parse(rawBody);
   } catch {
+    logFormEvent(options.eventType, "error", ipHash);
+
     return {
       body: null,
-      error: createJsonError("Nieprawid\u0142owe dane formularza.", 400),
+      ip,
+      ipHash,
+      error: createJsonError("Nieprawidlowe dane formularza.", 400),
     };
   }
 
-  const protectedBody = body as T & { turnstileToken?: unknown };
-  const protection = await runProtectionChecks(req, ["application/json"], protectedBody.turnstileToken);
+  if (!isPlainObject(body)) {
+    logFormEvent(options.eventType, "error", ipHash);
 
-  if (protection.error) {
     return {
       body: null,
-      error: protection.error,
+      ip,
+      ipHash,
+      error: createJsonError("Nieprawidlowe dane formularza.", 400),
     };
   }
 
-  delete protectedBody.turnstileToken;
+  const bodyKeys = Object.keys(body);
+  const unknownFields = bodyKeys.filter((key) => !options.allowedFields.includes(key));
+
+  if (unknownFields.length > 0) {
+    logFormEvent(options.eventType, "error", ipHash);
+
+    return {
+      body: null,
+      ip,
+      ipHash,
+      error: createJsonError("Formularz zawiera nieobslugiwane pola.", 400),
+    };
+  }
+
+  if (!checkRateLimit(ip)) {
+    logFormEvent(options.eventType, "error", ipHash);
+
+    return {
+      body: null,
+      ip,
+      ipHash,
+      error: createJsonError("Zbyt wiele zgloszen. Sprobuj ponownie za kilka minut.", 429),
+    };
+  }
+
+  if (!verifyCsrfToken(req, body[options.csrfField])) {
+    logFormEvent(options.eventType, "error", ipHash);
+
+    return {
+      body: null,
+      ip,
+      ipHash,
+      error: createJsonError("Sesja formularza wygasla. Odswiez strone i sprobuj ponownie.", 403),
+    };
+  }
+
+  const honeypotValue = body[options.honeypotField];
+
+  if (typeof honeypotValue === "string" && honeypotValue.trim()) {
+    logFormEvent(options.eventType, "error", ipHash);
+
+    return {
+      body: null,
+      ip,
+      ipHash,
+      error: NextResponse.json({ ok: true }, { status: 200 }),
+    };
+  }
+
+  if (!isLocalDevelopmentRequest(req)) {
+    const isHuman = await verifyTurnstile(body[options.turnstileField], ip);
+
+    if (!isHuman) {
+      logFormEvent(options.eventType, "error", ipHash);
+
+      return {
+        body: null,
+        ip,
+        ipHash,
+        error: createJsonError(
+          "Potwierdz, ze formularz nie zostal wyslany automatycznie.",
+          403
+        ),
+      };
+    }
+  }
 
   return {
-    body,
+    body: body as T,
+    ip,
+    ipHash,
     error: null,
   };
 }
 
-export async function readProtectedFormData(req: Request): Promise<ProtectedFormDataResult> {
-  const contentType = req.headers.get("content-type") ?? "";
-
-  if (
-    !contentType.includes("application/x-www-form-urlencoded") &&
-    !contentType.includes("multipart/form-data")
-  ) {
-    return {
-      formData: null,
-      error: createJsonError("Nieprawid\u0142owy typ zg\u0142oszenia.", 415),
-    };
-  }
-
-  const formData = await req.formData();
-
-  if (getFormDataSize(formData) > maxBodySizeBytes) {
-    return {
-      formData: null,
-      error: createJsonError("Zg\u0142oszenie jest zbyt du\u017ce.", 413),
-    };
-  }
-
-  const protection = await runProtectionChecks(
-    req,
-    ["application/x-www-form-urlencoded", "multipart/form-data"],
-    formData.get("turnstileToken")
-  );
-
-  if (protection.error) {
-    return {
-      formData: null,
-      error: protection.error,
-    };
-  }
-
-  formData.delete("turnstileToken");
-
-  return {
-    formData,
-    error: null,
-  };
+export function logFormSuccess(eventType: string, ipHash: string) {
+  logFormEvent(eventType, "success", ipHash);
 }

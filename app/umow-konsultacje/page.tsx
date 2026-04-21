@@ -3,9 +3,8 @@ import Link from "next/link";
 import { AppointmentForm } from "@/components/AppointmentForm";
 
 export const metadata: Metadata = {
-  title: "Umów konsultację",
-  description:
-    "Formularz zgłoszenia preferowanych terminów konsultacji.",
+  title: "Umow wizyte",
+  description: "Formularz do umowienia wizyty lub rozmowy zwrotnej.",
 };
 
 export default function AppointmentPage() {
@@ -14,25 +13,24 @@ export default function AppointmentPage() {
       <div className="container-main">
         <div className="mb-10">
           <Link className="button-back" href="/#kontakt">
-            <span aria-hidden="true">←</span>
-            <span>Powrót</span>
+            <span aria-hidden="true">&larr;</span>
+            <span>Powrot</span>
           </Link>
         </div>
 
         <div className="soft-panel p-6 md:p-10">
-          <span className="eyebrow">Konsultacja</span>
+          <span className="eyebrow">Wizyta</span>
           <h1 className="section-title max-w-4xl">
-            Podaj terminy, w których możesz się spotkać.
+            Zostaw kontakt i napisz, kiedy najlepiej sie odezwac.
           </h1>
           <div className="section-lead grid gap-5">
             <p>
-              Wypełnij krótki formularz, a propozycje terminów trafią do osoby
-              prowadzącej. Dzięki temu łatwiej od razu dopasować wizytę do
-              Twojej dostępności.
+              Wypelnij krotki formularz, a oddzwonimy lub odpiszemy, aby ustalic
+              dogodny termin wizyty albo rozmowy.
             </p>
             <p>
-              Podaj kilka możliwych dni i godzin. Jeśli sprawa jest pilna,
-              zaznacz to w dodatkowych informacjach.
+              Wystarczy podac podstawowe dane kontaktowe i preferowana pore
+              kontaktu. Szczegoly omowimy juz bezposrednio.
             </p>
           </div>
 

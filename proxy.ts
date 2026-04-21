@@ -18,11 +18,7 @@ function createCspHeader(nonce: string, isDev: boolean) {
     ]
       .filter(Boolean)
       .join(" "),
-    [
-      "style-src",
-      "'self'",
-      isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`,
-    ].join(" "),
+    ["style-src", "'self'", isDev ? "'unsafe-inline'" : `'nonce-${nonce}'`].join(" "),
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob:",
     "font-src 'self' data:",
@@ -37,6 +33,11 @@ function createCspHeader(nonce: string, isDev: boolean) {
 }
 
 export function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/formularze" || request.nextUrl.pathname.startsWith("/formularze/")) {
+    const redirectUrl = new URL("/#kontakt", request.url);
+    return NextResponse.redirect(redirectUrl, 301);
+  }
+
   const nonce = createNonce();
   const isDev = process.env.NODE_ENV !== "production";
   const cspHeader = createCspHeader(nonce, isDev);
