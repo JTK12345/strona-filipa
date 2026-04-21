@@ -31,7 +31,46 @@ git pull
 docker compose up -d --build
 ```
 
-## 2. Alternatywa: rozpakuj paczke ZIP
+## 2. Wybierz konkretna wersje
+
+Jesli chcesz wdrozyc nie najnowszy kod z `main`, tylko konkretne wydanie, sprawdz dostepne tagi:
+
+```bash
+git fetch --tags
+git tag
+```
+
+Aby przejsc na konkretna wersje, na przyklad `v0.1.1`:
+
+```bash
+git checkout v0.1.1
+docker-compose up -d --build
+```
+
+Na nowszym Dockerze:
+
+```bash
+git checkout v0.1.1
+docker compose up -d --build
+```
+
+Jesli chcesz wrocic z powrotem na najnowszy kod z galezi `main`:
+
+```bash
+git checkout main
+git pull
+docker-compose up -d --build
+```
+
+Na nowszym Dockerze:
+
+```bash
+git checkout main
+git pull
+docker compose up -d --build
+```
+
+## 3. Alternatywa: rozpakuj paczke ZIP
 
 Na VPS wrzuc paczke ZIP do folderu, w ktorym ma dzialac strona, np.:
 
@@ -41,7 +80,7 @@ Na VPS wrzuc paczke ZIP do folderu, w ktorym ma dzialac strona, np.:
 
 Rozpakuj ja tak, zeby w folderze byly pliki `Dockerfile`, `docker-compose.yml`, `package.json`, katalog `app` itd.
 
-## 3. Utworz plik .env
+## 4. Utworz plik .env
 
 Skopiuj przyklad:
 
@@ -71,7 +110,7 @@ Wazne:
 - Klucz `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
-## 4. Uruchom strone
+## 5. Uruchom strone
 
 ```bash
 docker compose up -d --build
@@ -83,7 +122,7 @@ Jesli serwer uzywa starego Dockera:
 docker-compose up -d --build
 ```
 
-## 5. Sprawdz status
+## 6. Sprawdz status
 
 ```bash
 docker compose ps
@@ -106,7 +145,7 @@ docker compose exec strona printenv | grep SMTP
 
 Jesli serwer uzywa starego Dockera, zamiast `docker compose` uzyj `docker-compose`.
 
-## 6. Reverse Proxy i sieci Dockera
+## 7. Reverse Proxy i sieci Dockera
 
 Jesli strona dziala lokalnie w kontenerze, ale nie otwiera sie przez domene, czestym powodem jest brak wspolnej sieci Dockera z reverse proxy, np. Nginx Proxy Managerem.
 
@@ -159,7 +198,7 @@ Na starszym Dockerze:
 docker-compose up -d --build
 ```
 
-## 7. Sprawdz naglowki po wdrozeniu
+## 8. Sprawdz naglowki po wdrozeniu
 
 ```bash
 curl -I https://profil-ciala.jtk.ovh/
