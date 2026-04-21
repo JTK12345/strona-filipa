@@ -34,6 +34,12 @@ TURNSTILE_SECRET_KEY=tu_wklej_secret_key_z_cloudflare
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` to Site Key z Cloudflare Turnstile.
 `TURNSTILE_SECRET_KEY` to Secret Key z Cloudflare Turnstile.
 
+Wazne:
+
+- Na VPS trzymaj zmienne w pliku `.env`.
+- Klucz `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
+- Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
+
 ## 3. Uruchom strone
 
 ```bash
@@ -57,6 +63,14 @@ Lokalnie na VPS aplikacja dziala na:
 
 ```txt
 http://127.0.0.1:3000
+
+Jesli formularze dalej nie wysylaja:
+
+```bash
+docker compose logs -f
+docker compose exec strona printenv | grep TURNSTILE
+docker compose exec strona printenv | grep SMTP
+```
 ```
 
 ## 5. Sprawdz naglowki po wdrozeniu
