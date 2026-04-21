@@ -6,23 +6,6 @@ const securityHeaders = [
     value: "max-age=31536000; includeSubDomains; preload",
   },
   {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
-      "font-src 'self' data:",
-      "connect-src 'self' https://challenges.cloudflare.com",
-      "frame-src https://challenges.cloudflare.com",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-      "base-uri 'self'",
-      "object-src 'none'",
-      "upgrade-insecure-requests",
-    ].join("; "),
-  },
-  {
     key: "X-Frame-Options",
     value: "DENY",
   },
