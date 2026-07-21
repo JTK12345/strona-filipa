@@ -6,7 +6,7 @@ export function FAQ() {
       <div className="container-main">
         <span className="eyebrow">FAQ</span>
         <h2 className="section-title max-w-2xl">
-          Najczęstsze pytania przed pierwszą wizytą.
+          Najczęstsze pytania o kursy, konsultacje i dostęp.
         </h2>
 
         <div className="mt-10 space-y-4">

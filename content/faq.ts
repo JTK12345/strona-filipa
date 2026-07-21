@@ -1,22 +1,22 @@
 export const faqItems = [
   {
-    question: "Jak wygląda pierwsza wizyta?",
+    question: "Czy kurs zastępuje konsultację?",
     answer:
-      "Pierwsze spotkanie obejmuje dokładny wywiad, ocenę problemu, analizę ruchu oraz wstępny plan działania dopasowany do Twojej sytuacji.",
+      "Nie. Kurs może pomóc w edukacji, profilaktyce i regularnej praktyce, ale nie zastępuje indywidualnej diagnostyki ani konsultacji w sytuacji ostrego bólu, urazu lub niepokojących objawów.",
   },
   {
-    question: "Czy muszę mieć skierowanie albo badania?",
+    question: "Dla kogo będą kursy wideo?",
     answer:
-      "Nie zawsze. Jeśli masz wcześniejsze badania lub dokumentację, warto je zabrać. W razie potrzeby dostaniesz wskazówki dotyczące dalszej diagnostyki.",
+      "Dla osób, które chcą bezpieczniej wrócić do ruchu, lepiej rozumieć ciało i pracować nad napięciem, mobilnością, oddechem oraz codziennymi nawykami.",
   },
   {
-    question: "Czy dostanę zalecenia do pracy w domu?",
+    question: "Czy mogę połączyć kurs z wizytą?",
     answer:
-      "Tak. Ważną częścią współpracy jest autoterapia i ćwiczenia dobrane tak, żeby wspierały efekty między spotkaniami.",
+      "Tak. Taki model jest docelowo najciekawszy: konsultacja pomaga dobrać kierunek, a kurs lub biblioteka wspiera regularną pracę między spotkaniami.",
   },
   {
-    question: "Dla kogo jest taka forma pracy?",
+    question: "Jak będzie działał dostęp do materiałów?",
     answer:
-      "Dla osób z bólem, napięciem, ograniczeniami ruchu albo potrzebą bardziej świadomej pracy nad zdrowiem i sprawnością.",
+      "Docelowo po zakupie użytkownik zaloguje się do panelu i zobaczy swoje kursy oraz materiały premium. Obecnie strona jest przygotowana wizualnie i strukturalnie pod ten etap.",
   },
 ];

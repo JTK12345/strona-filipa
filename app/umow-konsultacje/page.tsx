@@ -3,8 +3,8 @@ import Link from "next/link";
 import { AppointmentForm } from "@/components/AppointmentForm";
 
 export const metadata: Metadata = {
-  title: "Umow wizyte",
-  description: "Formularz do umowienia wizyty lub rozmowy zwrotnej.",
+  title: "Umów konsultację",
+  description: "Formularz do umówienia konsultacji lub rozmowy zwrotnej.",
 };
 
 export default function AppointmentPage() {
@@ -14,23 +14,23 @@ export default function AppointmentPage() {
         <div className="mb-10">
           <Link className="button-back" href="/#kontakt">
             <span aria-hidden="true">&larr;</span>
-            <span>Powrot</span>
+            <span>Powrót</span>
           </Link>
         </div>
 
         <div className="soft-panel p-6 md:p-10">
-          <span className="eyebrow">Wizyta</span>
+          <span className="eyebrow">Konsultacja</span>
           <h1 className="section-title max-w-4xl">
-            Zostaw kontakt i napisz, kiedy najlepiej sie odezwac.
+            Zostaw kontakt, jeśli chcesz dobrać konsultację, trening zdrowia albo kierunek pracy.
           </h1>
           <div className="section-lead grid gap-5">
             <p>
-              Wypelnij krotki formularz, a oddzwonimy lub odpiszemy, aby ustalic
-              dogodny termin wizyty albo rozmowy.
+              Wypełnij krótki formularz, a odpowiedź pomoże ustalić najlepszy kolejny krok:
+              wizytę, konsultację online albo materiał edukacyjny.
             </p>
             <p>
-              Wystarczy podac podstawowe dane kontaktowe i preferowana pore
-              kontaktu. Szczegoly omowimy juz bezposrednio.
+              Nie wpisuj szczegółowych informacji medycznych w formularzu. Wystarczy cel kontaktu
+              i preferowana pora rozmowy.
             </p>
           </div>
 

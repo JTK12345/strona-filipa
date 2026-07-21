@@ -2,8 +2,8 @@ export function About() {
   return (
     <section id="o-mnie" className="section">
       <div className="container-main grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="card-surface min-h-[420px] bg-[linear-gradient(180deg,#dceae4_0%,#eef5f1_100%)] p-8">
-          <div className="flex h-full flex-col justify-end">
+        <div className="about-panel">
+          <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
               Filip Proniewicz
             </p>
@@ -16,36 +16,37 @@ export function About() {
         <div>
           <span className="eyebrow">O specjaliście</span>
           <h2 className="section-title">
-            Praca nad zdrowiem nie kończy się na jednym zabiegu.
+            Profesjonalna edukacja ma wspierać wizyty, nie udawać diagnozy.
           </h2>
           <div className="space-y-5 text-[1.02rem] leading-8 text-[var(--muted)]">
             <p>
-              W swojej pracy Filip łączy medycynę, ruch, terapię manualną, psychologię motywacji
-              i uważność, bo człowiek nie jest zbiorem narządów, ale systemem, w którym wszystko
-              wpływa na wszystko.
+              Świadomy Profil Ciała łączy pracę gabinetową, ruch, terapię manualną
+              i edukację. Nowa część kursowa ma uporządkować wiedzę tak, żeby pacjent
+              lub klient mógł wracać do materiałów również poza spotkaniem.
             </p>
             <p>
-              Celem współpracy jest nie tylko zmniejszenie bólu czy napięcia, ale przywracanie
-              sprawności poprzez świadomy ruch, edukację, profilaktykę i zrozumienie przyczyn problemu.
+              Kursy nie zastępują indywidualnej konsultacji w sytuacjach wymagających
+              diagnostyki. Mają pomagać w profilaktyce, budowaniu świadomości ruchu
+              i utrzymaniu efektów pracy.
             </p>
             <p>
-              To podejście dla osób, które chcą naprawdę coś zmienić i są gotowe pracować nad sobą
-              również poza gabinetem.
+              Celem pozostaje samodzielność: lepsze rozumienie ciała, spokojniejszy
+              powrót do aktywności i mniej przypadkowe podejście do ćwiczeń.
             </p>
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <div className="card-surface p-5">
-              <p className="font-semibold">Indywidualne podejście</p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Każdy plan dopasowany do osoby, nie do szablonu.</p>
+              <p className="font-semibold">Medyczne myślenie</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Bez obietnic na skróty i bez ignorowania czerwonych flag.</p>
             </div>
             <div className="card-surface p-5">
-              <p className="font-semibold">Autoterapia</p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Narzędzia, które dają realną niezależność poza wizytą.</p>
+              <p className="font-semibold">Praktyka ruchowa</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Ćwiczenia i rutyny dobrane do realnego życia.</p>
             </div>
             <div className="card-surface p-5">
-              <p className="font-semibold">Praca nad przyczyną</p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Ruch, oddech, regeneracja i nawyki jako jeden proces.</p>
+              <p className="font-semibold">Edukacja premium</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Materiały wideo jako przedłużenie procesu pracy.</p>
             </div>
           </div>
         </div>

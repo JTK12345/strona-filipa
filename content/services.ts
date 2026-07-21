@@ -3,44 +3,44 @@ export const services = [
     title: "Konsultacja online",
     price: "200 zł / 1 h",
     description:
-      "Analiza problemu, stylu życia, badań i nawyków oraz zalecenia dotyczące ruchu, oddechu i autoterapii.",
+      "Rozmowa diagnostyczna, analiza celu, stylu życia, badań i nawyków oraz pierwsze zalecenia do samodzielnej pracy.",
     bullets: [
-      "Analiza przyczyn dolegliwości",
-      "Omówienie badań i stylu życia",
-      "Plan działania do wdrożenia samodzielnie",
+      "analiza problemu i priorytetów",
+      "omówienie badań oraz codziennych obciążeń",
+      "plan ruchu, oddechu i autoterapii",
     ],
   },
   {
     title: "Konsultacja stacjonarna",
-    price: "300 zł / 1,5–2 h",
+    price: "300 zł / 1,5-2 h",
     description:
-      "Indywidualne spotkanie obejmujące analizę zdrowia, badanie fizykalne i szczegółowy plan działania.",
+      "Spotkanie w Gdyni obejmujące wywiad, ocenę funkcjonalną, badanie fizykalne i dobranie kierunku pracy.",
     bullets: [
-      "Dokładny wywiad i ocena funkcjonalna",
-      "Kompleksowa analiza zdrowotno-treningowa",
-      "Praktyczne zalecenia po spotkaniu",
+      "dokładny wywiad i ocena ruchu",
+      "manualna oraz funkcjonalna analiza problemu",
+      "zalecenia po spotkaniu",
     ],
   },
   {
     title: "Trening zdrowia",
     price: "300 zł / 1,5 h",
     description:
-      "Ocena zdrowia i diagnostyka ruchu, terapia manualna, mobilizacje oraz nauka autoterapii do domu.",
+      "Praktyczna praca z ruchem, mobilnością, oddechem i napięciem, połączona z nauką autoterapii.",
     bullets: [
-      "Praca z ruchem i oddechem",
-      "Terapia manualna i mobilizacje",
-      "Narzędzia do samodzielnego stosowania",
+      "ćwiczenia dobrane do ograniczeń i celu",
+      "mobilizacje, praca manualna i oddech",
+      "narzędzia do stosowania między spotkaniami",
     ],
   },
   {
     title: "Pakiety współpracy",
     price: "od 600 zł",
     description:
-      "Dla osób, które chcą głębszej, regularnej pracy nad zdrowiem, ruchem, nawykami i długofalową zmianą.",
+      "Regularna praca dla osób, które chcą połączyć konsultacje, trening zdrowia, edukację i monitorowanie postępów.",
     bullets: [
-      "Pakiet 3 lub 5 spotkań",
-      "Monitorowanie postępów",
-      "Stały kontakt i materiały edukacyjne",
+      "pakiet 3 lub 5 spotkań",
+      "kontrola postępów i korekta planu",
+      "materiały edukacyjne oraz zadania domowe",
     ],
   },
 ];

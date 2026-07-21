@@ -1,23 +1,23 @@
 const steps = [
   {
-    title: "Diagnoza funkcjonalno-medyczna",
+    title: "Diagnoza i kierunek",
     description:
-      "Dokładny wywiad, ocena ruchu i spojrzenie na organizm jako całość, a nie zbiór pojedynczych objawów.",
+      "Najpierw ustalamy, czy lepsza będzie praca 1:1, kurs tematyczny, czy spokojne wejście przez bibliotekę materiałów.",
   },
   {
-    title: "Terapia i praktyczna praca z ciałem",
+    title: "Plan lub program",
     description:
-      "Terapia manualna, mobilizacje, praca z oddechem i ruchem dobrane do Twojej aktualnej sytuacji.",
+      "Dostajesz konkretną strukturę: konsultację z zaleceniami albo kurs podzielony na moduły, lekcje i zadania.",
   },
   {
-    title: "Autoterapia i edukacja",
+    title: "Praktyka w tygodniu",
     description:
-      "Dostajesz konkretne narzędzia do samodzielnej pracy w domu, tak żeby budować niezależność.",
+      "Najważniejsza część dzieje się między spotkaniami i lekcjami: krótkie rutyny, kontrola napięcia i świadomy ruch.",
   },
   {
-    title: "Plan długofalowy",
+    title: "Długofalowa zmiana",
     description:
-      "Wdrażamy nawyki dotyczące regeneracji, stresu, snu i codziennego funkcjonowania, które utrzymują efekty.",
+      "Celem jest nie tylko ulga, ale lepsze rozumienie ciała, mniej nawrotów i większa samodzielność.",
   },
 ];
 
@@ -25,17 +25,17 @@ export function Process() {
   return (
     <section className="section">
       <div className="container-main">
-        <span className="eyebrow">Jak wygląda współpraca</span>
+        <span className="eyebrow">Jak działa system</span>
         <h2 className="section-title max-w-3xl">
-          Łączę medycynę, ruch, terapię manualną i świadomą zmianę nawyków.
+          Od pojedynczej konsultacji do pełnej ścieżki edukacyjnej.
         </h2>
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
+        <div className="mt-10 grid gap-5 lg:grid-cols-4">
           {steps.map((step, index) => (
-            <div key={step.title} className="card-surface p-7">
+            <article key={step.title} className="process-card">
               <p className="text-sm font-bold text-[var(--accent)]">0{index + 1}</p>
-              <h3 className="mt-3 text-2xl font-semibold">{step.title}</h3>
+              <h3 className="mt-4 text-xl font-bold leading-snug">{step.title}</h3>
               <p className="mt-3 leading-7 text-[var(--muted)]">{step.description}</p>
-            </div>
+            </article>
           ))}
         </div>
       </div>

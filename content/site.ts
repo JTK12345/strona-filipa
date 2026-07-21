@@ -1,23 +1,26 @@
 export const siteConfig = {
   name: "Świadomy Profil Ciała",
-  metaTitle: "Świadomy Profil Ciała | Holistyczna opieka nad zdrowiem w Gdyni",
+  metaTitle: "Świadomy Profil Ciała | Ruch, zdrowie i kursy wideo",
   metaDescription:
-    "Filip Proniewicz pomaga odzyskać sprawność poprzez terapię manualną, ruch, edukację i pracę nad przyczyną problemu. Gdynia.",
+    "Świadomy Profil Ciała łączy indywidualną pracę z ciałem, konsultacje zdrowotne i kursy wideo o ruchu, bólu, regeneracji oraz profilaktyce.",
   bookingUrl: "/umow-konsultacje",
+  coursesUrl: "/kursy",
+  libraryUrl: "/biblioteka",
+  accessUrl: "/dostep",
   heroDescription:
-    "Indywidualna praca z ciałem oparta na medycynie, ruchu, terapii manualnej i edukacji. Celem jest nie tylko ulga w bólu, ale trwała poprawa zdrowia, sprawności i codziennego funkcjonowania.",
+    "Pracuj nad bólem, napięciem i sprawnością w gabinecie, online albo przez uporządkowane programy wideo. Dostajesz jasny proces: diagnozę, edukację, ćwiczenia i plan, który można realnie wdrożyć.",
   heroHighlights: [
     {
-      title: "Praca nad przyczyną",
-      description: "Analiza problemu z perspektywy ruchu, stylu życia i zdrowia, a nie tylko objawów.",
+      title: "Konsultacje i praca 1:1",
+      description: "Indywidualna analiza problemu, ruchu, stylu życia i plan działania dobrany do Twojej sytuacji.",
     },
     {
-      title: "Autoterapia",
-      description: "Konkrety do wdrożenia w domu, żeby budować niezależność i utrzymywać efekty.",
+      title: "Kursy wideo za paywallem",
+      description: "Programy o bólu, mobilności, oddechu i regeneracji dostępne po wykupieniu dostępu.",
     },
     {
-      title: "Holistyczne podejście",
-      description: "Ruch, oddech, regeneracja, stres i nawyki połączone w jeden spójny proces.",
+      title: "Biblioteka zdrowia i ruchu",
+      description: "Materiały edukacyjne ułożone w ścieżki, żeby łatwiej wybrać właściwy kierunek pracy.",
     },
   ],
 };

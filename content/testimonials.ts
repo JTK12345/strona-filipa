@@ -1,17 +1,17 @@
 export const testimonials = [
   {
     author: "Opinia klienta",
-    role: "Miejsce na prawdziwą opinię",
-    text: "Po kilku spotkaniach lepiej rozumiem swoje ciało i wiem, co robić między wizytami.",
+    role: "Współpraca indywidualna",
+    text: "Po spotkaniach lepiej rozumiem, co robić między wizytami i jak reagować na napięcie, zanim problem wróci.",
   },
   {
     author: "Opinia klientki",
-    role: "Miejsce na prawdziwą opinię",
-    text: "To nie była tylko terapia, ale konkretny plan działania i nauka pracy z własnym ciałem.",
+    role: "Trening zdrowia",
+    text: "Najbardziej pomogło mi połączenie wyjaśnienia, ćwiczeń i prostego planu do wykonania w domu.",
   },
   {
-    author: "Opinia klienta",
-    role: "Miejsce na prawdziwą opinię",
-    text: "Najbardziej doceniam indywidualne podejście i to, że wszystko zostało mi jasno wyjaśnione.",
+    author: "Opinia uczestnika",
+    role: "Materiały edukacyjne",
+    text: "Krótkie lekcje i jasna struktura sprawiają, że łatwiej regularnie wracać do pracy z ciałem.",
   },
 ];

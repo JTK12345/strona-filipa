@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
+import { TurnstileScript } from "@/components/TurnstileScript";
 import { siteConfig } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
     "fizjoterapia Gdynia",
     "terapia manualna Gdynia",
     "trening zdrowia Gdynia",
-    "masaż Gdynia",
+    "kursy zdrowotne online",
+    "kursy ruchowe online",
     "Świadomy Profil Ciała",
     "Filip Proniewicz",
   ],
@@ -29,6 +31,7 @@ export default async function RootLayout({
   return (
     <html lang="pl">
       <body>
+        <TurnstileScript />
         <ScrollProgress />
         <div className="site-shell">
           <Navbar />
