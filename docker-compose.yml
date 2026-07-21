@@ -9,6 +9,7 @@ services:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:-postgresql://strona_user:strona_password@postgres:5432/strona_db}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
       SMTP_SECURE: ${SMTP_SECURE:-}
@@ -19,6 +20,41 @@ services:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
       FORM_LOG_SALT: ${FORM_LOG_SALT:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
+      TRUSTED_PROXY_SECRET: ${TRUSTED_PROXY_SECRET:-}
+      LOG_SALT: ${LOG_SALT:-}
+      REDIS_URL: ${REDIS_URL:-}
     ports:
-      - "3000:3000"
+      - "3010:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - proxy
     restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-strona_db}
+      POSTGRES_USER: ${POSTGRES_USER:-strona_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strona_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  proxy:
+    external: true

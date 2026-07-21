@@ -4,91 +4,30 @@
 
 Najwygodniej wdrazac projekt przez GitHuba, a nie przez reczne wrzucanie ZIP-a.
 
-Na VPS przejdz do katalogu, w ktorym ma dzialac projekt, na przyklad:
-
 ```bash
 cd /home/ubuntu
-```
-
-Sklonuj repozytorium:
-
-```bash
 git clone https://github.com/JTK12345/strona-filipa.git
 cd strona-filipa
 ```
 
-Przy kolejnych aktualizacjach nie musisz wrzucac projektu od nowa. Wystarczy:
+Przy kolejnych aktualizacjach:
 
 ```bash
-git pull
-docker-compose up -d --build
-```
-
-Jesli serwer ma nowszego Dockera, mozesz zamiast tego uzyc:
-
-```bash
-git pull
+cd /home/ubuntu/strona-filipa
+git pull origin main
 docker compose up -d --build
 ```
 
-## 2. Wybierz konkretna wersje
+Jesli serwer uzywa starego Dockera, zamiast `docker compose` uzyj `docker-compose`.
 
-Jesli chcesz wdrozyc nie najnowszy kod z `main`, tylko konkretne wydanie, sprawdz dostepne tagi:
-
-```bash
-git fetch --tags
-git tag
-```
-
-Aby przejsc na konkretna wersje, na przyklad `v0.1.1`:
-
-```bash
-git checkout v0.1.1
-docker-compose up -d --build
-```
-
-Na nowszym Dockerze:
-
-```bash
-git checkout v0.1.1
-docker compose up -d --build
-```
-
-Jesli chcesz wrocic z powrotem na najnowszy kod z galezi `main`:
-
-```bash
-git checkout main
-git pull
-docker-compose up -d --build
-```
-
-Na nowszym Dockerze:
-
-```bash
-git checkout main
-git pull
-docker compose up -d --build
-```
-
-## 3. Alternatywa: rozpakuj paczke ZIP
-
-Na VPS wrzuc paczke ZIP do folderu, w ktorym ma dzialac strona, np.:
-
-```bash
-/var/www/profil-ciala
-```
-
-Rozpakuj ja tak, zeby w folderze byly pliki `Dockerfile`, `docker-compose.yml`, `package.json`, katalog `app` itd.
-
-## 4. Utworz plik .env
-
-Skopiuj przyklad:
+## 2. Utworz plik .env
 
 ```bash
 cp .env.example .env
+nano .env
 ```
 
-W pliku `.env` ustaw prawdziwe dane SMTP oraz Cloudflare Turnstile:
+Ustaw prawdziwe dane:
 
 ```env
 SMTP_HOST=smtp.example.com
@@ -100,112 +39,123 @@ MAIL_TO=kontakt@example.com
 MAIL_FROM="Formularz kontaktowy <kontakt@example.com>"
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=tu_wklej_site_key_z_cloudflare
 TURNSTILE_SECRET_KEY=tu_wklej_secret_key_z_cloudflare
-FORM_LOG_SALT=dlugi_losowy_sekret_do_haszowania_ip
-```
 
-`NEXT_PUBLIC_TURNSTILE_SITE_KEY` to Site Key z Cloudflare Turnstile.
-`TURNSTILE_SECRET_KEY` to Secret Key z Cloudflare Turnstile.
+POSTGRES_DB=strona_db
+POSTGRES_USER=strona_user
+POSTGRES_PASSWORD=tu_wklej_mocne_haslo_do_bazy
+DATABASE_URL=postgresql://strona_user:tu_wklej_mocne_haslo_do_bazy@postgres:5432/strona_db
+
+ALLOWED_ORIGINS=https://twojadomena.pl,https://www.twojadomena.pl
+TRUSTED_PROXY_IPS=127.0.0.1,::1
+TRUSTED_PROXY_SECRET=dlugi-losowy-sekret-proxy
+LOG_SALT=dlugi-losowy-sekret-logow
+FORM_LOG_SALT=dlugi-losowy-sekret-formularzy
+REDIS_URL=
+```
 
 Wazne:
 
-- Na VPS trzymaj zmienne w pliku `.env`.
-- Klucz `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
-- `MAIL_TO` to adres, na ktory maja trafiać powiadomienia z formularzy.
-- `FORM_LOG_SALT` ustaw jako dlugi, losowy sekret i nie publikuj go publicznie.
+- `POSTGRES_PASSWORD` musi byc mocne i takie samo jak haslo w `DATABASE_URL`.
+- `DATABASE_URL` laczy aplikacje z kontenerem PostgreSQL po nazwie uslugi `postgres`.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
-## 5. Uruchom strone
+## 3. Uruchom strone i baze
+
+`docker-compose.yml` uruchamia dwa kontenery:
+
+- `strona` - aplikacja Next.js,
+- `postgres` - baza danych PostgreSQL z trwalym volume `postgres_data`.
 
 ```bash
 docker compose up -d --build
 ```
 
-Jesli serwer uzywa starego Dockera:
-
-```bash
-docker-compose up -d --build
-```
-
-## 6. Sprawdz status
+Sprawdz status:
 
 ```bash
 docker compose ps
 docker compose logs -f
 ```
 
-Lokalnie na VPS aplikacja dziala na:
+Aplikacja na VPS jest wystawiona pod:
 
 ```txt
-http://127.0.0.1:3000
+http://127.0.0.1:3010
 ```
 
-Jesli formularze dalej nie wysylaja:
+Wewnatrz kontenera aplikacja nadal dziala na porcie `3000`.
+
+Sprawdz aplikacje:
 
 ```bash
-docker compose logs -f
-docker compose exec strona printenv | grep TURNSTILE
-docker compose exec strona printenv | grep SMTP
+curl -I http://127.0.0.1:3010
 ```
 
-Jesli serwer uzywa starego Dockera, zamiast `docker compose` uzyj `docker-compose`.
-
-## 7. Reverse Proxy i sieci Dockera
-
-Jesli strona dziala lokalnie w kontenerze, ale nie otwiera sie przez domene, czestym powodem jest brak wspolnej sieci Dockera z reverse proxy, np. Nginx Proxy Managerem.
-
-Objaw:
-
-- aplikacja dziala w kontenerze,
-- proxy jest uruchomione,
-- ale proxy nie moze polaczyc sie z Twoim kontenerem po nazwie.
-
-Tymczasowe obejscie:
+Sprawdz baze:
 
 ```bash
-docker network connect proxy_default strona-filipa_strona_1
+docker compose exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 ```
 
-To rozwiazanie jest tylko chwilowe. Po `docker compose down` i ponownym uruchomieniu kontenera polaczenie z ta siecia moze zniknac.
+## 4. Nginx Proxy Manager
 
-Trwale rozwiazanie:
+Kontener strony jest podlaczony do zewnetrznej sieci Docker `proxy`.
 
-W `docker-compose.yml` dodaj aplikacje do tej samej sieci co proxy. Przykladowo:
+W Nginx Proxy Manager ustaw:
 
-```yml
-services:
-  strona:
-    networks:
-      - default
-      - proxy_default
-
-networks:
-  proxy_default:
-    external: true
+```txt
+Scheme: http
+Forward Hostname / IP: strona-filipa-strona-1
+Forward Port: 3000
 ```
 
-Po takiej zmianie Docker sam podlaczy kontener do zewnetrznej sieci proxy przy starcie.
+Opcje:
 
-Jesli uzywasz Nginx Proxy Managera, zwykle ustawiasz tam:
+```txt
+Block Common Exploits: ON
+Websockets Support: ON
+Cache Assets: OFF
+```
 
-- `Forward Hostname`: nazwe kontenera, np. `strona-filipa_strona_1`
-- `Forward Port`: `3000`
+SSL:
 
-Po zmianach uruchom ponownie:
+```txt
+Request a new SSL Certificate
+Force SSL: ON
+HTTP/2 Support: ON
+```
+
+Jesli Twoj Nginx Proxy Manager uzywa innej sieci niz `proxy`, sprawdz:
 
 ```bash
+docker network ls
+docker ps --format "table {{.Names}}\t{{.Networks}}"
+```
+
+I zmien nazwe sieci w `docker-compose.yml`.
+
+## 5. Aktualizacja
+
+```bash
+cd /home/ubuntu/strona-filipa
+git pull origin main
 docker compose up -d --build
 ```
 
-Na starszym Dockerze:
+## 6. Diagnostyka
 
 ```bash
-docker-compose up -d --build
+docker compose ps
+docker compose logs -f strona
+docker compose logs -f postgres
+curl -I http://127.0.0.1:3010
 ```
 
-## 8. Sprawdz naglowki po wdrozeniu
+Po domenie:
 
 ```bash
-curl -I https://profil-ciala.jtk.ovh/
+curl -I https://twojadomena.pl
 ```
 
 W odpowiedzi powinny byc m.in.:
