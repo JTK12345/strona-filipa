@@ -9,31 +9,43 @@ export const metadata: Metadata = {
 
 export default function AppointmentPage() {
   return (
-    <section className="section bg-white">
+    <section className="appointment-page">
       <div className="container-main">
-        <div className="mb-10">
-          <Link className="button-back" href="/#kontakt">
-            <span aria-hidden="true">&larr;</span>
-            <span>Powrót</span>
-          </Link>
-        </div>
+        <Link className="text-link-back" href="/#kontakt">
+          <span aria-hidden="true">←</span>
+          <span>Wróć do kontaktu</span>
+        </Link>
 
-        <div className="soft-panel p-6 md:p-10">
-          <span className="eyebrow">Konsultacja</span>
-          <h1 className="section-title max-w-4xl">
-            Zostaw kontakt, jeśli chcesz dobrać konsultację, trening zdrowia albo kierunek pracy.
-          </h1>
-          <div className="section-lead grid gap-5">
+        <div className="appointment-shell">
+          <div className="appointment-intro">
+            <span className="eyebrow">Konsultacja</span>
+            <h1>
+              Zostaw kontakt. Dobierzemy najlepszy kolejny krok.
+            </h1>
             <p>
-              Wypełnij krótki formularz, a odpowiedź pomoże ustalić najlepszy kolejny krok:
-              wizytę, konsultację online albo materiał edukacyjny.
-            </p>
-            <p>
-              Nie wpisuj szczegółowych informacji medycznych w formularzu. Wystarczy cel kontaktu
-              i preferowana pora rozmowy.
+              To może być konsultacja online, wizyta w gabinecie, trening zdrowia
+              albo wskazanie właściwego materiału edukacyjnego.
             </p>
           </div>
 
+          <aside className="appointment-summary">
+            <p className="appointment-summary__label">Jak to działa</p>
+            <div className="appointment-summary__items">
+              <p>1. Wysyłasz krótkie zgłoszenie.</p>
+              <p>2. Ustalamy najlepszą formę kontaktu.</p>
+              <p>3. Dopiero w rozmowie omawiamy szczegóły.</p>
+            </div>
+          </aside>
+        </div>
+
+        <div className="appointment-form-card">
+          <div className="appointment-form-heading">
+            <h2>Dane do kontaktu</h2>
+            <p>
+              Nie wpisuj szczegółowych informacji medycznych. Wystarczy cel kontaktu
+              i preferowana pora rozmowy.
+            </p>
+          </div>
           <AppointmentForm />
         </div>
       </div>
