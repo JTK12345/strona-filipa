@@ -48,3 +48,21 @@ export const accessFeatures = [
   "notatki i zadania do wdrożenia",
   "materiały tylko dla osób z aktywnym dostępem",
 ];
+
+export const premiumAccessBlocks = [
+  {
+    title: "Kursy tematyczne",
+    description:
+      "Programy wideo ułożone wokół konkretnego problemu: kręgosłup, kark, barki, mobilność i powrót do aktywności.",
+  },
+  {
+    title: "Biblioteka praktyki",
+    description:
+      "Krótsze lekcje, rutyny i materiały edukacyjne, do których można wracać między wizytami albo treningami.",
+  },
+  {
+    title: "Plan wdrożenia",
+    description:
+      "Zadania, notatki i prosta struktura tygodnia, żeby wiedza nie kończyła się na obejrzeniu filmu.",
+  },
+];
