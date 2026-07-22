@@ -3,7 +3,7 @@ import { getCurrentAccessSession } from "@/app/lib/access";
 import { siteConfig } from "@/content/site";
 
 const publicLinks = [
-  { href: "/#uslugi", label: "Współpraca" },
+  { href: "/#uslugi", label: "Cennik" },
   { href: "/kursy", label: "Kursy" },
   { href: "/kup", label: "Kup dostęp" },
 ];
