@@ -45,6 +45,9 @@ POSTGRES_USER=strona_user
 POSTGRES_PASSWORD=tu_wklej_mocne_haslo_do_bazy
 DATABASE_URL=postgresql://strona_user:tu_wklej_mocne_haslo_do_bazy@postgres:5432/strona_db
 
+ADMIN_ACCESS_CODE=admin-test-access
+ACCESS_SESSION_SECRET=dlugi-losowy-sekret-sesji
+
 ALLOWED_ORIGINS=https://twojadomena.pl,https://www.twojadomena.pl
 TRUSTED_PROXY_IPS=127.0.0.1,::1
 TRUSTED_PROXY_SECRET=dlugi-losowy-sekret-proxy
@@ -57,6 +60,8 @@ Wazne:
 
 - `POSTGRES_PASSWORD` musi byc mocne i takie samo jak haslo w `DATABASE_URL`.
 - `DATABASE_URL` laczy aplikacje z kontenerem PostgreSQL po nazwie uslugi `postgres`.
+- `ADMIN_ACCESS_CODE` to testowy kod logowania admina. Na produkcji zmien go na dlugi sekret.
+- `ACCESS_SESSION_SECRET` podpisuje ciasteczko sesji. Na produkcji musi byc losowy i niepubliczny.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
@@ -98,7 +103,23 @@ Sprawdz baze:
 docker compose exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
 ```
 
-## 4. Nginx Proxy Manager
+## 4. Testowe logowanie, zakup i panel
+
+Aktualnie dziala testowy przeplyw bez prawdziwej platnosci:
+
+- `/kup` - testowy zakup nadajacy dostep do panelu,
+- `/logowanie` - logowanie admina kodem z `ADMIN_ACCESS_CODE`,
+- `/panel` - panel kursow widoczny po aktywnej sesji.
+
+Domyslny testowy kod admina, jesli nie zmienisz go w `.env`:
+
+```txt
+admin-test-access
+```
+
+To jest tylko tryb testowy. Przed produkcja zmien `ADMIN_ACCESS_CODE` i `ACCESS_SESSION_SECRET`.
+
+## 5. Nginx Proxy Manager
 
 Kontener strony jest podlaczony do zewnetrznej sieci Docker `proxy`.
 
@@ -135,7 +156,7 @@ docker ps --format "table {{.Names}}\t{{.Networks}}"
 
 I zmien nazwe sieci w `docker-compose.yml`.
 
-## 5. Aktualizacja
+## 6. Aktualizacja
 
 ```bash
 cd /home/ubuntu/strona-filipa
@@ -143,7 +164,7 @@ git pull origin main
 docker compose up -d --build
 ```
 
-## 6. Diagnostyka
+## 7. Diagnostyka
 
 ```bash
 docker compose ps

@@ -5,8 +5,8 @@ const links = [
   { href: "/#uslugi", label: "Współpraca" },
   { href: "/kursy", label: "Kursy" },
   { href: "/biblioteka", label: "Biblioteka" },
-  { href: "/#o-mnie", label: "O mnie" },
-  { href: "/#kontakt", label: "Kontakt" },
+  { href: "/kup", label: "Kup dostęp" },
+  { href: "/panel", label: "Panel" },
 ];
 
 export function Navbar() {
@@ -24,7 +24,7 @@ export function Navbar() {
           </div>
         </Link>
 
-        <nav className="order-3 flex w-full flex-wrap items-center gap-x-5 gap-y-3 lg:order-none lg:w-auto lg:flex-nowrap lg:gap-8">
+        <nav className="order-3 flex w-full flex-wrap items-center gap-x-5 gap-y-3 lg:order-none lg:w-auto lg:flex-nowrap lg:gap-7">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -37,8 +37,8 @@ export function Navbar() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-3">
-          <Link href={siteConfig.accessUrl} className="button-secondary nav-access">
-            Dostęp
+          <Link href="/logowanie" className="button-secondary nav-access">
+            Logowanie
           </Link>
           <Link href={siteConfig.bookingUrl} className="button-primary nav-booking">
             Konsultacja

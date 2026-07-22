@@ -10,6 +10,8 @@ services:
       HOSTNAME: 0.0.0.0
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL:-postgresql://strona_user:strona_password@postgres:5432/strona_db}
+      ADMIN_ACCESS_CODE: ${ADMIN_ACCESS_CODE:-admin-test-access}
+      ACCESS_SESSION_SECRET: ${ACCESS_SESSION_SECRET:-local-access-session-secret}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
       SMTP_SECURE: ${SMTP_SECURE:-}

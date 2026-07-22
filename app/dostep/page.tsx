@@ -17,15 +17,17 @@ export default function AccessPage() {
             <h1>Dostęp do kursów i biblioteki świadomej pracy z ciałem.</h1>
             <p>
               Programy wideo, krótkie lekcje i materiały do samodzielnej praktyki.
-              Dla osób, które chcą ćwiczyć świadomie między wizytami albo zacząć
-              od edukacji online.
+              Możesz kupić dostęp testowo albo wejść jako admin kodem z `.env`.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/#kontakt" className="button-primary">
-                Chcę dostać informację o starcie
+              <Link href="/kup" className="button-primary">
+                Kup dostęp
               </Link>
-              <Link href="/kursy" className="button-secondary">
-                Zobacz kursy
+              <Link href="/logowanie" className="button-secondary">
+                Logowanie admina
+              </Link>
+              <Link href="/panel" className="button-secondary">
+                Otwórz panel
               </Link>
             </div>
           </div>
@@ -36,7 +38,7 @@ export default function AccessPage() {
                 <p className="access-dashboard__label">Twój dostęp</p>
                 <h2>Panel kursów</h2>
               </div>
-              <span>Wkrótce</span>
+              <span>Test</span>
             </div>
 
             <div className="access-dashboard__progress">
@@ -68,13 +70,13 @@ export default function AccessPage() {
 
         <div className="access-roadmap">
           <div>
-            <span className="eyebrow">Jak będzie działać dostęp</span>
-            <h2>Od wyboru kursu do pracy z materiałami w panelu.</h2>
+            <span className="eyebrow">Jak działa teraz</span>
+            <h2>Gotowy testowy przepływ przed Stripe i pełnym logowaniem.</h2>
           </div>
           <div className="access-roadmap__steps">
-            <p><strong>1.</strong> Wybierasz kurs albo pakiet biblioteki.</p>
-            <p><strong>2.</strong> Po płatności konto dostaje dostęp do materiałów.</p>
-            <p><strong>3.</strong> Oglądasz lekcje, wracasz do notatek i realizujesz zadania.</p>
+            <p><strong>1.</strong> `Kup dostęp` nadaje testową sesję klienta bez pobierania płatności.</p>
+            <p><strong>2.</strong> `Logowanie admina` wpuszcza kodem z `.env` bez konieczności zakupu.</p>
+            <p><strong>3.</strong> `Panel` pokazuje materiały tylko po aktywnej sesji.</p>
           </div>
         </div>
 
