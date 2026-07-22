@@ -107,9 +107,15 @@ docker compose exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES
 
 Aktualnie dziala testowy przeplyw bez prawdziwej platnosci:
 
-- `/kup` - testowy zakup nadajacy dostep do panelu,
+- `/kursy` - publiczny katalog oferty widoczny bez logowania,
+- `/kup` - testowy zakup nadajacy dostep do panelu, biblioteki, notatek i lekcji wideo,
 - `/logowanie` - logowanie admina kodem z `ADMIN_ACCESS_CODE`,
-- `/panel` - panel kursow widoczny po aktywnej sesji.
+- `/biblioteka` - prywatna biblioteka widoczna po aktywnej sesji,
+- `/panel` - prywatny panel kursow widoczny po aktywnej sesji.
+
+Linki `Biblioteka` i `Panel` pojawiaja sie w menu dopiero po zalogowaniu. Bezposrednie
+wejscie na te adresy bez sesji przekierowuje do logowania. Po zalogowaniu uzytkownik
+wraca na wybrana strone.
 
 Domyslny testowy kod admina, jesli nie zmienisz go w `.env`:
 
@@ -117,7 +123,10 @@ Domyslny testowy kod admina, jesli nie zmienisz go w `.env`:
 admin-test-access
 ```
 
-To jest tylko tryb testowy. Przed produkcja zmien `ADMIN_ACCESS_CODE` i `ACCESS_SESSION_SECRET`.
+To jest tylko tryb testowy oparty na podpisanym ciasteczku. Nie ma jeszcze stalego konta
+uzytkownika w PostgreSQL ani prawdziwej platnosci. Przed produkcja zmien
+`ADMIN_ACCESS_CODE` i `ACCESS_SESSION_SECRET`, a nastepnie wdroz konta, zapis uprawnien
+w bazie oraz operatora platnosci.
 
 ## 5. Nginx Proxy Manager
 

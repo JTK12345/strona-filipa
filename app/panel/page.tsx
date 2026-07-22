@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import Link from "next/link";
-import { accessCookieName, parseAccessToken } from "@/app/api/_utils/access-session";
+import { redirect } from "next/navigation";
+import { getCurrentAccessSession } from "@/app/lib/access";
 import { coursePaths } from "@/content/courses";
 
 export const metadata: Metadata = {
@@ -10,33 +9,11 @@ export const metadata: Metadata = {
 };
 
 export default async function PanelPage(props: PageProps<"/panel">) {
-  const cookieStore = await cookies();
-  const session = parseAccessToken(cookieStore.get(accessCookieName)?.value);
+  const session = await getCurrentAccessSession();
   const searchParams = await props.searchParams;
 
   if (!session) {
-    return (
-      <section className="panel-page">
-        <div className="container-main">
-          <div className="panel-empty">
-            <span className="eyebrow">Panel kursów</span>
-            <h1>Najpierw zaloguj się albo kup dostęp testowo.</h1>
-            <p>
-              Ten panel jest chroniony ciasteczkiem sesji. Dostęp może nadać zakup testowy
-              albo kod administratora.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/logowanie" className="button-primary">
-                Logowanie
-              </Link>
-              <Link href="/kup" className="button-secondary">
-                Kup dostęp
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
+    redirect("/logowanie?next=/panel");
   }
 
   return (

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentAccessSession } from "@/app/lib/access";
 import { libraryTopics } from "@/content/courses";
 
 const examples = [
@@ -25,7 +27,13 @@ export const metadata: Metadata = {
   description: "Biblioteka materiałów o zdrowiu, ruchu, bólu i regeneracji.",
 };
 
-export default function LibraryPage() {
+export default async function LibraryPage() {
+  const session = await getCurrentAccessSession();
+
+  if (!session) {
+    redirect("/logowanie?next=/biblioteka");
+  }
+
   return (
     <section className="section">
       <div className="container-main">
@@ -35,8 +43,8 @@ export default function LibraryPage() {
             Miejsce na krótsze materiały, które uzupełniają kursy i konsultacje.
           </h1>
           <p className="section-lead">
-            Biblioteka ma działać jak mapa tematów: pomaga znaleźć właściwy materiał,
-            zanim użytkownik kupi kurs albo umówi konsultację.
+            Biblioteka działa jak mapa tematów: pomaga znaleźć właściwą lekcję,
+            notatkę albo materiał praktyczny w ramach aktywnego dostępu.
           </p>
         </div>
 
@@ -60,13 +68,13 @@ export default function LibraryPage() {
 
         <div className="mt-12 premium-panel">
           <div>
-            <span className="eyebrow">Następny etap</span>
+            <span className="eyebrow">Twój dostęp</span>
             <h2 className="mt-4 text-3xl font-bold leading-tight">
-              Po wdrożeniu logowania materiały z biblioteki będą mogły być blokowane paywallem.
+              Biblioteka, notatki i materiały wideo są dostępne po zalogowaniu.
             </h2>
           </div>
-          <Link href="/dostep" className="button-primary">
-            Zobacz model dostępu
+          <Link href="/panel" className="button-primary">
+            Wróć do panelu
           </Link>
         </div>
       </div>

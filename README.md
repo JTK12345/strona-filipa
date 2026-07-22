@@ -15,12 +15,16 @@ Strona bedzie dostepna pod `http://localhost:3000`.
 
 Najwazniejsze adresy:
 
-- `/kursy` - katalog kursow,
-- `/biblioteka` - biblioteka materialow,
+- `/kursy` - publiczny katalog kursow, widoczny bez logowania,
+- `/biblioteka` - prywatna biblioteka materialow, dostepna po zalogowaniu,
 - `/dostep` - opis dostepu premium,
 - `/kup` - testowy zakup bez prawdziwej platnosci,
 - `/logowanie` - logowanie administratora,
-- `/panel` - panel osoby z aktywnym dostepem.
+- `/panel` - prywatny panel osoby z aktywnym dostepem.
+
+Po wylogowaniu linki `Biblioteka` i `Panel` nie sa widoczne w nawigacji. Bezposrednie
+wejscie na te adresy przekierowuje do `/logowanie`. Po poprawnym logowaniu uzytkownik
+wraca na strone, ktora chcial otworzyc.
 
 ### Testowy zakup
 
@@ -30,6 +34,10 @@ Najwazniejsze adresy:
 4. Aplikacja utworzy sesje klienta i przeniesie do `/panel`.
 
 W tym trybie nie jest pobierana zadna oplata.
+
+Testowy dostep obejmuje panel kursow, lekcje wideo, biblioteke, notatki i materialy
+praktyczne. PostgreSQL jest uruchamiany przez Docker Compose, ale obecna sesja testowa
+nie tworzy jeszcze stalego konta uzytkownika w bazie.
 
 ### Dostep administratora
 

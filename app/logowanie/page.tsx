@@ -9,6 +9,11 @@ export const metadata: Metadata = {
 export default async function LoginPage(props: PageProps<"/logowanie">) {
   const searchParams = await props.searchParams;
   const hasError = searchParams.error === "1";
+  const requestedNext =
+    searchParams.next === "/biblioteka" || searchParams.next === "/panel"
+      ? searchParams.next
+      : "/panel";
+  const requiresLogin = searchParams.next === "/biblioteka" || searchParams.next === "/panel";
 
   return (
     <section className="auth-page">
@@ -35,6 +40,14 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
             {hasError ? (
               <p className="auth-error">Nieprawidłowy e-mail albo kod dostępu.</p>
             ) : null}
+
+            {requiresLogin && !hasError ? (
+              <p className="auth-notice">
+                Zaloguj się, aby otworzyć bibliotekę i materiały w panelu.
+              </p>
+            ) : null}
+
+            <input type="hidden" name="next" value={requestedNext} />
 
             <label>
               <span>E-mail</span>

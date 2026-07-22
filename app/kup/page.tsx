@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { coursePaths } from "@/content/courses";
 
 const plans = [
   {
@@ -36,8 +35,9 @@ export default async function BuyPage(props: PageProps<"/kup">) {
           <span className="eyebrow">Zakup dostępu</span>
           <h1>Wybierz dostęp do kursów i biblioteki.</h1>
           <p>
-            To jest testowy checkout przed integracją Stripe. Formularz nadaje dostęp
-            do panelu bez pobierania płatności.
+            Po aktywacji otrzymasz jedno miejsce do nauki: kursy wideo, krótkie lekcje,
+            notatki, materiały praktyczne i bibliotekę tematów związanych ze zdrowiem
+            oraz ruchem. Obecny formularz działa testowo i nie pobiera płatności.
           </p>
         </div>
 
@@ -71,13 +71,27 @@ export default async function BuyPage(props: PageProps<"/kup">) {
           </form>
 
           <aside className="checkout-summary">
-            <p className="checkout-plan__name">Co zobaczy użytkownik</p>
             <div>
-              {coursePaths.map((course) => (
-                <p key={course.slug} className="check-row">
-                  {course.title}
-                </p>
-              ))}
+              <p className="checkout-plan__name">W ramach dostępu</p>
+              <h2>Wszystkie materiały w jednym panelu</h2>
+            </div>
+            <div className="checkout-benefits">
+              <div className="check-row">
+                <strong>Kursy i lekcje wideo</strong>
+                <span>Programy podzielone na krótkie, uporządkowane moduły.</span>
+              </div>
+              <div className="check-row">
+                <strong>Biblioteka wiedzy</strong>
+                <span>Materiały o ruchu, bólu, regeneracji i profilaktyce.</span>
+              </div>
+              <div className="check-row">
+                <strong>Notatki i materiały praktyczne</strong>
+                <span>Podsumowania, zadania i wskazówki do samodzielnej pracy.</span>
+              </div>
+              <div className="check-row">
+                <strong>Dostęp po zalogowaniu</strong>
+                <span>Biblioteka i panel pojawiają się dopiero po aktywacji konta.</span>
+              </div>
             </div>
             <Link href="/logowanie" className="button-secondary">
               Mam już kod admina

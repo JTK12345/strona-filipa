@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { getCurrentAccessSession } from "@/app/lib/access";
 import { contactData } from "@/content/contact";
 import { siteConfig } from "@/content/site";
 
-export function Footer() {
+export async function Footer() {
+  const session = await getCurrentAccessSession();
+
   return (
     <footer className="border-t border-[var(--border)] bg-white">
       <div className="container-main grid gap-10 py-12 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
@@ -20,9 +23,16 @@ export function Footer() {
             <Link className="block hover:text-[var(--foreground)]" href="/kursy">
               Kursy
             </Link>
-            <Link className="block hover:text-[var(--foreground)]" href="/biblioteka">
-              Biblioteka
-            </Link>
+            {session ? (
+              <>
+                <Link className="block hover:text-[var(--foreground)]" href="/biblioteka">
+                  Biblioteka
+                </Link>
+                <Link className="block hover:text-[var(--foreground)]" href="/panel">
+                  Panel
+                </Link>
+              </>
+            ) : null}
             <Link className="block hover:text-[var(--foreground)]" href="/dostep">
               Dostęp
             </Link>

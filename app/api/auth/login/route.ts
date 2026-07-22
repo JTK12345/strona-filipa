@@ -12,11 +12,17 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const code = String(formData.get("code") ?? "").trim();
+  const requestedNext = String(formData.get("next") ?? "");
+  const destination =
+    requestedNext === "/biblioteka" || requestedNext === "/panel"
+      ? requestedNext
+      : "/panel";
 
   if (!email || !code || code !== getAdminAccessCode()) {
+    const errorDestination = new URLSearchParams({ error: "1", next: destination });
     return new NextResponse(null, {
       status: 303,
-      headers: { Location: "/logowanie?error=1" },
+      headers: { Location: `/logowanie?${errorDestination.toString()}` },
     });
   }
 
@@ -28,7 +34,7 @@ export async function POST(request: Request) {
   };
   const response = new NextResponse(null, {
     status: 303,
-    headers: { Location: "/panel" },
+    headers: { Location: destination },
   });
   response.cookies.set(createSessionCookie(createAccessToken(session)));
 

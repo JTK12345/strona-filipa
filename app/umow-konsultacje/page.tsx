@@ -29,12 +29,31 @@ export default function AppointmentPage() {
           </div>
 
           <aside className="appointment-summary">
-            <p className="appointment-summary__label">Jak to działa</p>
-            <div className="appointment-summary__items">
-              <p>1. Wysyłasz krótkie zgłoszenie.</p>
-              <p>2. Ustalamy najlepszą formę kontaktu.</p>
-              <p>3. Dopiero w rozmowie omawiamy szczegóły.</p>
-            </div>
+            <p className="appointment-summary__label">Pierwszy kontakt</p>
+            <h2>Krótko, konkretnie i bez zobowiązań.</h2>
+            <ol className="appointment-summary__items">
+              <li>
+                <span>01</span>
+                <div>
+                  <strong>Wysyłasz zgłoszenie</strong>
+                  <p>Podajesz tylko cel kontaktu i dogodną porę rozmowy.</p>
+                </div>
+              </li>
+              <li>
+                <span>02</span>
+                <div>
+                  <strong>Oddzwaniamy</strong>
+                  <p>Ustalamy, jaka forma współpracy będzie najlepsza.</p>
+                </div>
+              </li>
+              <li>
+                <span>03</span>
+                <div>
+                  <strong>Wybierasz kolejny krok</strong>
+                  <p>Decyzję o konsultacji podejmujesz dopiero po rozmowie.</p>
+                </div>
+              </li>
+            </ol>
           </aside>
         </div>
 
