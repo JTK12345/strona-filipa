@@ -14,7 +14,10 @@ export async function POST(request: Request) {
   const code = String(formData.get("code") ?? "").trim();
 
   if (!email || !code || code !== getAdminAccessCode()) {
-    return NextResponse.redirect(new URL("/logowanie?error=1", request.url), 303);
+    return new NextResponse(null, {
+      status: 303,
+      headers: { Location: "/logowanie?error=1" },
+    });
   }
 
   const session: AccessSession = {
@@ -23,7 +26,10 @@ export async function POST(request: Request) {
     accessAll: true,
     createdAt: Date.now(),
   };
-  const response = NextResponse.redirect(new URL("/panel", request.url), 303);
+  const response = new NextResponse(null, {
+    status: 303,
+    headers: { Location: "/panel" },
+  });
   response.cookies.set(createSessionCookie(createAccessToken(session)));
 
   return response;

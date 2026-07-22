@@ -12,7 +12,10 @@ export async function POST(request: Request) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
 
   if (!email) {
-    return NextResponse.redirect(new URL("/kup?error=1", request.url), 303);
+    return new NextResponse(null, {
+      status: 303,
+      headers: { Location: "/kup?error=1" },
+    });
   }
 
   const session: AccessSession = {
@@ -21,7 +24,10 @@ export async function POST(request: Request) {
     accessAll: true,
     createdAt: Date.now(),
   };
-  const response = NextResponse.redirect(new URL("/panel?purchase=success", request.url), 303);
+  const response = new NextResponse(null, {
+    status: 303,
+    headers: { Location: "/panel?purchase=success" },
+  });
   response.cookies.set(createSessionCookie(createAccessToken(session)));
 
   return response;
