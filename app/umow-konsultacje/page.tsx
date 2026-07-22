@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { AppointmentForm } from "@/components/AppointmentForm";
+import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
   title: "Umów konsultację",
@@ -11,10 +11,7 @@ export default function AppointmentPage() {
   return (
     <section className="appointment-page">
       <div className="container-main">
-        <Link className="text-link-back" href="/#kontakt">
-          <span aria-hidden="true">←</span>
-          <span>Wróć do kontaktu</span>
-        </Link>
+        <BackHomeLink />
 
         <div className="appointment-shell">
           <div className="appointment-intro">

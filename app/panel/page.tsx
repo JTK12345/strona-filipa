@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { BackHomeLink } from "@/components/BackHomeLink";
 import { coursePaths } from "@/content/courses";
 
 export const metadata: Metadata = {
@@ -19,6 +20,7 @@ export default async function PanelPage(props: PageProps<"/panel">) {
   return (
     <section className="panel-page">
       <div className="container-main">
+        <BackHomeLink />
         <div className="panel-topbar">
           <div>
             <span className="eyebrow">Panel kursów</span>

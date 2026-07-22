@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackHomeLink } from "@/components/BackHomeLink";
 import { accessFeatures, coursePaths, premiumAccessBlocks } from "@/content/courses";
 
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export default function AccessPage() {
   return (
     <section className="access-premium-page">
       <div className="container-main">
+        <BackHomeLink />
         <div className="access-premium-hero">
           <div className="access-premium-copy">
             <span className="eyebrow">Dostęp premium</span>

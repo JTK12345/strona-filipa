@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackHomeLink } from "@/components/BackHomeLink";
 
 const plans = [
   {
@@ -31,6 +32,7 @@ export default async function BuyPage(props: PageProps<"/kup">) {
   return (
     <section className="checkout-page">
       <div className="container-main">
+        <BackHomeLink />
         <div className="checkout-hero">
           <span className="eyebrow">Zakup dostępu</span>
           <h1>Wybierz dostęp do kursów i biblioteki.</h1>

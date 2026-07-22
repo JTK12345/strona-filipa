@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackHomeLink } from "@/components/BackHomeLink";
 import { coursePaths } from "@/content/courses";
 
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export default function CoursesPage() {
   return (
     <section className="section bg-white">
       <div className="container-main">
+        <BackHomeLink />
         <div className="page-hero">
           <span className="eyebrow">Kursy wideo</span>
           <h1 className="section-title max-w-4xl">

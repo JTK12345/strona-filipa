@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { BackHomeLink } from "@/components/BackHomeLink";
 import { libraryTopics } from "@/content/courses";
 
 const examples = [
@@ -37,6 +38,7 @@ export default async function LibraryPage() {
   return (
     <section className="section">
       <div className="container-main">
+        <BackHomeLink />
         <div className="page-hero">
           <span className="eyebrow">Biblioteka zdrowia i ruchu</span>
           <h1 className="section-title max-w-4xl">

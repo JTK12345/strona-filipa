@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
   title: "Logowanie | Świadomy Profil Ciała",
@@ -18,6 +19,7 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
   return (
     <section className="auth-page">
       <div className="container-main">
+        <BackHomeLink />
         <div className="auth-shell">
           <div className="auth-copy">
             <span className="eyebrow">Logowanie</span>
