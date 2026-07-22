@@ -97,10 +97,10 @@ Sprawdz aplikacje:
 curl -I http://127.0.0.1:3010
 ```
 
-Sprawdz baze:
+Sprawdz baze (zmienne zostana odczytane wewnatrz kontenera):
 
 ```bash
-docker compose exec postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+docker compose exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
 
 ## 4. Testowe logowanie, zakup i panel
@@ -160,6 +160,22 @@ I zmien nazwe sieci w `docker-compose.yml`.
 
 ```bash
 cd /home/ubuntu/strona-filipa
+git pull origin main
+docker compose up -d --build
+docker compose ps
+```
+
+Jesli `git pull` zglasza lokalne zmiany w `docker-compose.yml`, najpierw sprawdz je:
+
+```bash
+git status --short
+git diff -- docker-compose.yml
+```
+
+Jesli jest to tylko stara, lokalna zmiana sieci `proxy`, ktora znajduje sie juz w repozytorium, odloz plik przed aktualizacja:
+
+```bash
+git stash push -m "vps-compose-przed-aktualizacja" -- docker-compose.yml
 git pull origin main
 docker compose up -d --build
 ```

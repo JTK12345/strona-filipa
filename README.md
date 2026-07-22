@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Swiadomy Profil Ciala
 
-## Getting Started
+Strona gabinetu z katalogiem kursow wideo, biblioteka materialow i testowym panelem dostepu premium.
 
-First, run the development server:
+## Uruchomienie lokalne
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Strona bedzie dostepna pod `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Obsluga wersji testowej
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Najwazniejsze adresy:
 
-## Learn More
+- `/kursy` - katalog kursow,
+- `/biblioteka` - biblioteka materialow,
+- `/dostep` - opis dostepu premium,
+- `/kup` - testowy zakup bez prawdziwej platnosci,
+- `/logowanie` - logowanie administratora,
+- `/panel` - panel osoby z aktywnym dostepem.
 
-To learn more about Next.js, take a look at the following resources:
+### Testowy zakup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Otworz `/kup`.
+2. Wpisz adres e-mail.
+3. Kliknij przycisk testowego zakupu.
+4. Aplikacja utworzy sesje klienta i przeniesie do `/panel`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+W tym trybie nie jest pobierana zadna oplata.
 
-## Deploy on Vercel
+### Dostep administratora
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Otworz `/logowanie`.
+2. Podaj dowolny poprawny adres e-mail.
+3. Wpisz kod ustawiony w `ADMIN_ACCESS_CODE`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Domyslny kod testowy to `admin-test-access`. Przed uruchomieniem produkcyjnym trzeba go zmienic razem z `ACCESS_SESSION_SECRET`.
+
+## Docker i VPS
+
+Docker Compose uruchamia:
+
+- aplikacje Next.js jako `strona`,
+- baze PostgreSQL jako `postgres` z trwalym volume,
+- polaczenie aplikacji z zewnetrzna siecia `proxy` dla Nginx Proxy Manager.
+
+Pelna instrukcja pierwszego wdrozenia, konfiguracji `.env`, Nginx Proxy Manager oraz aktualizacji znajduje sie w [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md).
+
+Szybka aktualizacja istniejacej instalacji:
+
+```bash
+cd /home/ubuntu/strona-filipa
+git pull origin main
+docker compose up -d --build
+docker compose ps
+```
+
+Aplikacja jest wystawiona na hoscie pod `http://127.0.0.1:3010`, a Nginx Proxy Manager laczy sie z kontenerem `strona-filipa-strona-1` na porcie `3000`.
+
+## Stan platnosci
+
+Zakup jest obecnie symulowany. Przed produkcja trzeba podlaczyc operatora platnosci, zapis uprawnien w bazie oraz produkcyjny system kont uzytkownikow.
