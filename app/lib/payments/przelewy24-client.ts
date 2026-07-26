@@ -3,6 +3,7 @@ import {
   createP24VerificationSign,
 } from "./przelewy24-signatures";
 import type { P24Config } from "./przelewy24-config";
+import { LosslessNumber, stringify as losslessStringify } from "lossless-json";
 
 type FetchImplementation = typeof fetch;
 
@@ -20,7 +21,7 @@ export type P24VerificationInput = {
   sessionId: string;
   amount: number;
   currency: "PLN";
-  orderId: number;
+  orderId: string;
 };
 
 export class P24ApiError extends Error {
@@ -83,7 +84,13 @@ function validateRegistration(input: P24RegistrationInput) {
 function validateVerification(input: P24VerificationInput) {
   assertText(input.sessionId, "sessionId", 100);
   assertNonNegativeInteger(input.amount, "amount");
-  assertNonNegativeInteger(input.orderId, "orderId");
+
+  if (
+    !/^(0|[1-9]\d*)$/.test(input.orderId) ||
+    BigInt(input.orderId) > BigInt("9223372036854775807")
+  ) {
+    throw new TypeError("orderId must be an unsigned 64-bit integer.");
+  }
 }
 
 function parseJsonResponse(value: string): unknown {
@@ -237,13 +244,13 @@ export class Przelewy24Client {
 
     const result = await this.request("/transaction/verify", {
       method: "PUT",
-      body: JSON.stringify({
+      body: losslessStringify({
         merchantId: this.config.merchantId,
         posId: this.config.posId,
         sessionId: input.sessionId,
         amount: input.amount,
         currency: input.currency,
-        orderId: input.orderId,
+        orderId: new LosslessNumber(input.orderId),
         sign: createP24VerificationSign(
           {
             sessionId: input.sessionId,

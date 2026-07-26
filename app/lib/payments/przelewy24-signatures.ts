@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { LosslessNumber, stringify as losslessStringify } from "lossless-json";
 
 type RegistrationSignatureInput = {
   sessionId: string;
@@ -9,7 +10,7 @@ type RegistrationSignatureInput = {
 
 type VerificationSignatureInput = {
   sessionId: string;
-  orderId: number;
+  orderId: string;
   amount: number;
   currency: string;
 };
@@ -21,13 +22,19 @@ export type P24Notification = {
   amount: number;
   originAmount: number;
   currency: string;
-  orderId: number;
+  orderId: string;
   methodId: number;
   statement: string;
 };
 
 function sha384(value: unknown) {
-  return createHash("sha384").update(JSON.stringify(value), "utf8").digest("hex");
+  const serialized = losslessStringify(value);
+
+  if (!serialized) {
+    throw new TypeError("The P24 signature payload could not be serialized.");
+  }
+
+  return createHash("sha384").update(serialized, "utf8").digest("hex");
 }
 
 function assertSafeInteger(value: number, field: string) {
@@ -40,6 +47,17 @@ function assertText(value: string, field: string) {
   if (!value) {
     throw new TypeError(`${field} must not be empty.`);
   }
+}
+
+function asInt64(value: string, field: string) {
+  if (
+    !/^(0|[1-9]\d*)$/.test(value) ||
+    BigInt(value) > BigInt("9223372036854775807")
+  ) {
+    throw new TypeError(`${field} must be an unsigned 64-bit integer.`);
+  }
+
+  return new LosslessNumber(value);
 }
 
 function validateCommonInput(input: {
@@ -74,12 +92,11 @@ export function createP24VerificationSign(
   crc: string,
 ) {
   validateCommonInput(input);
-  assertSafeInteger(input.orderId, "orderId");
   assertText(crc, "crc");
 
   return sha384({
     sessionId: input.sessionId,
-    orderId: input.orderId,
+    orderId: asInt64(input.orderId, "orderId"),
     amount: input.amount,
     currency: input.currency,
     crc,
@@ -94,7 +111,6 @@ export function createP24NotificationSign(
   assertSafeInteger(input.merchantId, "merchantId");
   assertSafeInteger(input.posId, "posId");
   assertSafeInteger(input.originAmount, "originAmount");
-  assertSafeInteger(input.orderId, "orderId");
   assertSafeInteger(input.methodId, "methodId");
   assertText(input.statement, "statement");
   assertText(crc, "crc");
@@ -106,7 +122,7 @@ export function createP24NotificationSign(
     amount: input.amount,
     originAmount: input.originAmount,
     currency: input.currency,
-    orderId: input.orderId,
+    orderId: asInt64(input.orderId, "orderId"),
     methodId: input.methodId,
     statement: input.statement,
     crc,

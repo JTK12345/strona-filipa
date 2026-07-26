@@ -28,7 +28,7 @@ test("creates the verification sign with the P24 orderId", () => {
   const sign = createP24VerificationSign(
     {
       sessionId: "sessionId",
-      orderId: 999999,
+      orderId: "999999",
       amount: 1000,
       currency: "PLN",
     },
@@ -50,7 +50,7 @@ test("creates and compares the notification sign", () => {
       amount: 1000,
       originAmount: 1000,
       currency: "PLN",
-      orderId: 999999,
+      orderId: "999999",
       methodId: 1,
       statement: "Profil Ciala",
     },
@@ -70,7 +70,7 @@ test("rejects unsafe numeric values before signing", () => {
       createP24VerificationSign(
         {
           sessionId: "sessionId",
-          orderId: Number.MAX_SAFE_INTEGER + 1,
+          orderId: "9223372036854775808",
           amount: 1000,
           currency: "PLN",
         },

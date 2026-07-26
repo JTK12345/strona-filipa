@@ -85,7 +85,7 @@ test("verifies a transaction using the P24 order identifier", async () => {
       sessionId: "purchase-session",
       amount: 14_900,
       currency: "PLN",
-      orderId: 987654,
+      orderId: "987654",
     }),
     true,
   );

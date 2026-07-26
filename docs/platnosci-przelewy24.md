@@ -6,8 +6,8 @@ jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 ## Status realizacji
 
 - etapy 0 i 1: zakonczone,
-- etapy 2-5: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
-- etapy 6-9: jeszcze nierozpoczete.
+- etapy 2-6: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
+- etapy 7-9: jeszcze nierozpoczete.
 
 ## 1. Wykryty stack
 
@@ -181,15 +181,21 @@ bledu P24.
 
 ### Etap 6 - idempotentna notyfikacja
 
-- walidowac JSON notyfikacji i podpis,
-- porownywac sprzedawce, sesje, kwote, walute i `orderId`,
-- wykonac `transaction/verify`,
-- w jednej transakcji bazy zapisac `paid`, zdarzenie i dostep,
-- ponowne wywolanie ma zwracac sukces bez kolejnego dostepu.
+- [x] walidowac JSON notyfikacji i podpis,
+- [x] porownywac sprzedawce, sesje, kwote, walute i `orderId`,
+- [x] wykonac `transaction/verify`,
+- [x] w jednej transakcji bazy zapisac `paid`, zdarzenie i dostep,
+- [x] ponowne wywolanie ma zwracac sukces bez kolejnego dostepu.
 
 Endpoint P24 nie bedzie uzywal ochrony CSRF przeznaczonej dla formularzy
 przegladarki. Bedzie chroniony podpisem, weryfikacja API, ograniczeniem rozmiaru,
 walidacja danych i bezpiecznym logowaniem.
+
+Notyfikacje odbiera `POST /api/payments/przelewy24/status`. `orderId` jest
+parsowany bezstratnie jako liczba 64-bitowa, a w PostgreSQL pozostaje tekstem.
+Podpis, dane sprzedawcy i wszystkie dane zakupu sa sprawdzane przed wywolaniem
+`transaction/verify`. Nadanie dostepu, status `paid` i oznaczenie zdarzenia jako
+przetworzone odbywaja sie w jednej transakcji.
 
 ### Etap 7 - frontend i status
 
