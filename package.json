@@ -10,7 +10,8 @@
     "test": "tsx --test tests/*.test.ts",
     "db:migrate": "node scripts/db-migrate.mjs",
     "db:status": "node scripts/db-status.mjs",
-    "db:create-admin": "node scripts/create-admin.mjs"
+    "db:create-admin": "node scripts/create-admin.mjs",
+    "db:set-video": "node scripts/set-lesson-video.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

@@ -86,9 +86,12 @@ export default async function PanelPage(props: PageProps<"/panel">) {
                       </span>
                     </div>
                     <p>{course.description}</p>
-                    <button className="button-secondary" type="button" disabled>
-                      Lekcje w przygotowaniu
-                    </button>
+                    <Link
+                      href={`/panel/kursy/${course.slug}`}
+                      className="button-primary"
+                    >
+                      Przejdź do kursu
+                    </Link>
                   </article>
                 ))
               ) : (

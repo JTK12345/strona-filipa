@@ -46,6 +46,8 @@ POSTGRES_PASSWORD=tu_wklej_mocne_haslo_do_bazy
 DATABASE_URL=postgresql://strona_user:tu_wklej_mocne_haslo_do_bazy@postgres:5432/strona_db
 ENABLE_TEST_CHECKOUT=true
 APP_URL=https://twojadomena.pl
+VIDEO_STORAGE_PATH=/data/videos
+VIDEO_STORAGE_HOST_PATH=./data/videos
 
 # Przelewy24 pozostaje wylaczone do czasu testow Sandbox.
 P24_ENABLED=false
@@ -72,6 +74,8 @@ Wazne:
 - Puste dane P24 sa prawidlowe, dopoki `P24_ENABLED=false`. Nie wlaczaj tej
   opcji przed ukonczeniem i sprawdzeniem integracji Sandbox.
 - `APP_URL` musi zawierac publiczny adres HTTPS strony bez ukosnika na koncu.
+- `VIDEO_STORAGE_HOST_PATH` wskazuje katalog z filmami na VPS. Nie umieszczaj
+  filmow w `public` ani w repozytorium.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
@@ -131,7 +135,33 @@ Kolejne migracje rozszerzaja zamowienia pod operatora platnosci oraz dodaja dwa
 pierwsze kursy do katalogu PostgreSQL. Migracje uruchamiaja sie automatycznie
 podczas startu kontenera aplikacji.
 
-## 4. Konta, administrator i zakup testowy
+## 4. Prywatne filmy kursowe
+
+Przed uruchomieniem kontenerow utworz katalog:
+
+```bash
+cd /home/ubuntu/strona-filipa
+mkdir -p data/videos/kregoslup data/videos/kark-barki
+```
+
+Skopiuj film do odpowiedniego podkatalogu. Pliki nie sa dostepne bezposrednio
+przez WWW. Kontener montuje katalog tylko do odczytu pod `/data/videos`.
+
+Po uruchomieniu aplikacji przypisz plik do lekcji:
+
+```bash
+docker compose exec strona npm run db:set-video -- \
+  --course kregoslup-bez-przeciazen \
+  --lesson punkt-wyjscia \
+  --file kregoslup/punkt-wyjscia.mp4 \
+  --duration 720
+```
+
+`--duration` jest czasem filmu w sekundach. Narzedzie nie zapisze rekordu, jezeli
+plik nie istnieje, wychodzi poza katalog filmow albo ma nieobslugiwane
+rozszerzenie.
+
+## 5. Konta, administrator i zakup testowy
 
 Aktualnie dziala system kont i sesji w PostgreSQL:
 
@@ -161,7 +191,7 @@ Sesje sa losowymi tokenami. W bazie przechowywany jest tylko ich hash, a hasla
 uzytkownikow sa hashowane bcrypt. Przed produkcja trzeba jeszcze podlaczyc
 operatora platnosci, webhook i odzyskiwanie hasla.
 
-## 5. Nginx Proxy Manager
+## 6. Nginx Proxy Manager
 
 Kontener strony jest podlaczony do zewnetrznej sieci Docker `proxy`.
 
@@ -198,7 +228,7 @@ docker ps --format "table {{.Names}}\t{{.Networks}}"
 
 I zmien nazwe sieci w `docker-compose.yml`.
 
-## 6. Aktualizacja
+## 7. Aktualizacja
 
 Przed aktualizacja zawierajaca nowa migracje wykonaj backup PostgreSQL:
 
@@ -218,7 +248,7 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Sprawdz, czy migracje `002` i `003` zostaly wykonane:
+Sprawdz, czy migracje `002`, `003` i `004` zostaly wykonane:
 
 ```bash
 docker compose exec strona node scripts/db-status.mjs
@@ -240,7 +270,7 @@ git pull origin main
 docker compose up -d --build
 ```
 
-## 7. Diagnostyka
+## 8. Diagnostyka
 
 ```bash
 docker compose ps

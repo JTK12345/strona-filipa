@@ -6,8 +6,8 @@ jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 ## Status realizacji
 
 - etapy 0 i 1: zakonczone,
-- etap 2: kod i migracja gotowe, oczekuja na wdrozenie na VPS,
-- etapy 3-9: jeszcze nierozpoczete.
+- etapy 2 i 3: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
+- etapy 4-9: jeszcze nierozpoczete.
 
 ## 1. Wykryty stack
 
@@ -129,20 +129,27 @@ platnosci.
 
 ### Etap 3 - ochrona tresci
 
-- dodac trasy kursu, modulu i lekcji,
-- sprawdzac `access_grants` po stronie serwera dla kazdego zasobu,
-- przechowywac filmy w osobnym katalogu lub woluminie VPS poza `public`,
-- wydawac filmy dopiero po autoryzacji, docelowo przez wewnetrzne przekierowanie
-  serwera WWW zamiast przesylania calego pliku przez proces Next.js,
-- obslugiwac zadania zakresowe HTTP potrzebne do przewijania filmu,
-- zabezpieczyc pliki, notatki i zapis postepu,
-- administrator zachowuje pelny dostep.
+- [x] dodac trasy kursu, modulu i lekcji,
+- [x] sprawdzac `access_grants` po stronie serwera dla kazdego zasobu,
+- [x] przechowywac filmy w woluminie VPS poza `public`,
+- [x] wydawac filmy przez autoryzowany endpoint,
+- [x] obslugiwac zadania zakresowe HTTP potrzebne do przewijania filmu,
+- [x] zabezpieczyc notatki i zapis postepu,
+- [x] zachowac pelny dostep administratora.
+
+Endpoint `/api/media/lessons/[lessonId]` obsluguje `GET`, `HEAD` i pojedynczy
+zakres `Range`. Kazde wywolanie sprawdza sesje oraz dostep do kursu. Sciezka
+pliku jest rozwiazywana w obrebie `VIDEO_STORAGE_PATH`; wyjscie poza ten katalog
+i nieobslugiwane rozszerzenia sa odrzucane.
 
 Limit 200 GB powinien wystarczyc na dwa pierwsze kursy, ale przed publikacja
 nalezy zmierzyc rzeczywisty rozmiar wszystkich wariantow wideo i zachowac zapas
 na system, baze, logi i backupy. Backup filmow musi znajdowac sie poza tym samym
 VPS. Zewnetrzny hosting wideo stanie sie kolejnym krokiem dopiero wtedy, gdy
 transfer, liczba uzytkownikow lub obsluga kilku jakosci zaczna obciazac serwer.
+Na pierwszym etapie plik jest strumieniowany przez proces aplikacji. Przy
+wiekszym ruchu nalezy przejsc na wewnetrzne przekierowanie Nginx albo zewnetrzny
+serwis wideo.
 
 ### Etap 4 - klient P24 bez publicznego checkoutu
 
