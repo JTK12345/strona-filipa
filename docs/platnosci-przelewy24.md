@@ -6,8 +6,8 @@ jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 ## Status realizacji
 
 - etapy 0 i 1: zakonczone,
-- etapy 2 i 3: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
-- etapy 4-9: jeszcze nierozpoczete.
+- etapy 2-4: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
+- etapy 5-9: jeszcze nierozpoczete.
 
 ## 1. Wykryty stack
 
@@ -153,10 +153,16 @@ serwis wideo.
 
 ### Etap 4 - klient P24 bez publicznego checkoutu
 
-- walidowac komplet konfiguracji,
-- dodac klienta z timeoutem i bezpiecznymi bledami,
-- zaimplementowac `testAccess`, rejestracje i weryfikacje,
-- mockowac wszystkie polaczenia w testach.
+- [x] walidowac komplet konfiguracji,
+- [x] dodac klienta z timeoutem i bezpiecznymi bledami,
+- [x] zaimplementowac `testAccess`, rejestracje i weryfikacje,
+- [x] mockowac wszystkie polaczenia w testach.
+
+Klient wybiera serwer tylko na podstawie `P24_ENV`. Dane uwierzytelniajace sa
+wysylane przez Basic Auth wylacznie do oficjalnego hosta Sandbox albo produkcji.
+Blad operatora nie przekazuje odpowiedzi P24 uzytkownikowi ani do wyjatku.
+Domyslny limit czasu wynosi 8 sekund i mozna go ustawic przez
+`P24_HTTP_TIMEOUT_MS` w zakresie od 1 do 30 sekund.
 
 ### Etap 5 - tworzenie platnosci
 
