@@ -12,6 +12,13 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://strona_user:strona_password@postgres:5432/strona_db}
       DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
       ENABLE_TEST_CHECKOUT: ${ENABLE_TEST_CHECKOUT:-true}
+      APP_URL: ${APP_URL:-https://profil-ciala.jtk.ovh}
+      P24_ENABLED: ${P24_ENABLED:-false}
+      P24_ENV: ${P24_ENV:-sandbox}
+      P24_MERCHANT_ID: ${P24_MERCHANT_ID:-}
+      P24_POS_ID: ${P24_POS_ID:-}
+      P24_API_KEY: ${P24_API_KEY:-}
+      P24_CRC: ${P24_CRC:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
       SMTP_SECURE: ${SMTP_SECURE:-}

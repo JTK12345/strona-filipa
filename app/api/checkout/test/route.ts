@@ -53,19 +53,36 @@ export async function POST(request: Request) {
       throw new Error("The test checkout user is not active.");
     }
 
+    const checkoutId = randomUUID();
+    const providerReference = `test-${checkoutId}`;
+    const publicOrderNumber = `PC-TEST-${checkoutId.replaceAll("-", "").toUpperCase()}`;
     const purchaseResult = await client.query<{ id: string }>(
       `INSERT INTO purchases (
          user_id,
          provider,
          provider_order_id,
+         provider_session_id,
+         public_order_number,
+         buyer_email,
          status,
          amount_cents,
          paid_at,
          metadata
        )
-       VALUES ($1, 'test', $2, 'paid', 0, now(), '{"test": true}'::jsonb)
+       VALUES (
+         $1,
+         'test',
+         $2,
+         $2,
+         $3,
+         $4,
+         'paid',
+         0,
+         now(),
+         '{"test": true}'::jsonb
+       )
        RETURNING id`,
-      [user.id, `test-${randomUUID()}`],
+      [user.id, providerReference, publicOrderNumber, email],
     );
     const purchaseId = purchaseResult.rows[0].id;
 

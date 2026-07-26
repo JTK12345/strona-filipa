@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
     "db:migrate": "node scripts/db-migrate.mjs",
     "db:status": "node scripts/db-status.mjs",
     "db:create-admin": "node scripts/create-admin.mjs"
@@ -29,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
+    "tsx": "^4.23.1",
     "typescript": "^5"
   }
 }

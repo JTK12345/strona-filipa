@@ -45,6 +45,15 @@ POSTGRES_USER=strona_user
 POSTGRES_PASSWORD=tu_wklej_mocne_haslo_do_bazy
 DATABASE_URL=postgresql://strona_user:tu_wklej_mocne_haslo_do_bazy@postgres:5432/strona_db
 ENABLE_TEST_CHECKOUT=true
+APP_URL=https://twojadomena.pl
+
+# Przelewy24 pozostaje wylaczone do czasu testow Sandbox.
+P24_ENABLED=false
+P24_ENV=sandbox
+P24_MERCHANT_ID=
+P24_POS_ID=
+P24_API_KEY=
+P24_CRC=
 
 ALLOWED_ORIGINS=https://twojadomena.pl,https://www.twojadomena.pl
 TRUSTED_PROXY_IPS=127.0.0.1,::1
@@ -60,6 +69,9 @@ Wazne:
 - `DATABASE_URL` laczy aplikacje z kontenerem PostgreSQL po nazwie uslugi `postgres`.
 - `ENABLE_TEST_CHECKOUT=true` wlacza zakup testowy bez pobierania oplaty.
   Przed uruchomieniem prawdziwych platnosci ustaw `false`.
+- Puste dane P24 sa prawidlowe, dopoki `P24_ENABLED=false`. Nie wlaczaj tej
+  opcji przed ukonczeniem i sprawdzeniem integracji Sandbox.
+- `APP_URL` musi zawierac publiczny adres HTTPS strony bez ukosnika na koncu.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
@@ -184,6 +196,17 @@ docker ps --format "table {{.Names}}\t{{.Networks}}"
 I zmien nazwe sieci w `docker-compose.yml`.
 
 ## 6. Aktualizacja
+
+Przed aktualizacja zawierajaca nowa migracje wykonaj backup PostgreSQL:
+
+```bash
+cd /home/ubuntu/strona-filipa
+mkdir -p backups
+docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
+ls -lh backups
+```
+
+Nastepnie pobierz kod i przebuduj kontenery:
 
 ```bash
 cd /home/ubuntu/strona-filipa

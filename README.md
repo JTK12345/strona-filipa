@@ -102,3 +102,7 @@ Aplikacja jest wystawiona na hoscie pod `http://127.0.0.1:3010`, a Nginx Proxy M
 Zakup jest obecnie symulowany, ale konto, transakcja, sesja i uprawnienie sa
 zapisywane w PostgreSQL. Przed produkcja trzeba wylaczyc testowy checkout i
 podlaczyc operatora platnosci oraz jego webhook.
+
+Audyt i etapowy plan integracji z Przelewy24 znajduja sie w
+[docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md). Konfiguracja P24
+jest domyslnie wylaczona przez `P24_ENABLED=false`.
