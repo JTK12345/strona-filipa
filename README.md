@@ -55,6 +55,26 @@ Docker Compose uruchamia:
 - baze PostgreSQL jako `postgres` z trwalym volume,
 - polaczenie aplikacji z zewnetrzna siecia `proxy` dla Nginx Proxy Manager.
 
+Przy kazdym starcie kontenera aplikacji migracje z `database/migrations` sa
+wykonywane automatycznie przed uruchomieniem Next.js. Zastosowane migracje sa
+zapisywane w tabeli `schema_migrations` i nie wykonuja sie ponownie.
+
+Podstawowy model danych obejmuje:
+
+- uzytkownikow i sesje,
+- kursy, moduly oraz lekcje,
+- materialy biblioteki,
+- zakupy i zdarzenia operatora platnosci,
+- uprawnienia do kursow i biblioteki,
+- postep lekcji i notatki uzytkownikow.
+
+Stan aplikacji i polaczenia z baza:
+
+```bash
+curl http://127.0.0.1:3010/api/health
+docker compose exec strona node scripts/db-status.mjs
+```
+
 Pelna instrukcja pierwszego wdrozenia, konfiguracji `.env`, Nginx Proxy Manager oraz aktualizacji znajduje sie w [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md).
 
 Szybka aktualizacja istniejacej instalacji:

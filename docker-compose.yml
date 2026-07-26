@@ -10,6 +10,7 @@ services:
       HOSTNAME: 0.0.0.0
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL:-postgresql://strona_user:strona_password@postgres:5432/strona_db}
+      DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
       ADMIN_ACCESS_CODE: ${ADMIN_ACCESS_CODE:-admin-test-access}
       ACCESS_SESSION_SECRET: ${ACCESS_SESSION_SECRET:-local-access-session-secret}
       SMTP_HOST: ${SMTP_HOST:-}
@@ -32,6 +33,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((response) => { if (!response.ok) process.exit(1); }).catch(() => process.exit(1));",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     networks:
       - default
       - proxy

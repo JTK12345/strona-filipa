@@ -72,6 +72,10 @@ Wazne:
 - `strona` - aplikacja Next.js,
 - `postgres` - baza danych PostgreSQL z trwalym volume `postgres_data`.
 
+Przed uruchomieniem Next.js kontener `strona` automatycznie wykonuje brakujace
+migracje z katalogu `database/migrations`. Dane pozostaja w volume
+`postgres_data` podczas przebudowy i ponownego tworzenia kontenera aplikacji.
+
 ```bash
 docker compose up -d --build
 ```
@@ -101,7 +105,18 @@ Sprawdz baze (zmienne zostana odczytane wewnatrz kontenera):
 
 ```bash
 docker compose exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
 ```
+
+Poprawna odpowiedz endpointu:
+
+```json
+{"status":"ok","database":"connected"}
+```
+
+Pierwsza migracja tworzy tabele uzytkownikow, sesji, kursow, modulow, lekcji,
+biblioteki, zakupow, zdarzen platniczych, uprawnien, postepu i notatek.
 
 ## 4. Testowe logowanie, zakup i panel
 
@@ -196,6 +211,7 @@ docker compose ps
 docker compose logs -f strona
 docker compose logs -f postgres
 curl -I http://127.0.0.1:3010
+curl http://127.0.0.1:3010/api/health
 ```
 
 Po domenie:
