@@ -3,6 +3,12 @@
 Dokument opisuje stan projektu z 27 lipca 2026 r. oraz etapowy plan wdrozenia
 jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 
+## Status realizacji
+
+- etapy 0 i 1: zakonczone,
+- etap 2: kod i migracja gotowe, oczekuja na wdrozenie na VPS,
+- etapy 3-9: jeszcze nierozpoczete.
+
 ## 1. Wykryty stack
 
 - Next.js 16.2.2 z App Routerem i Route Handlers,
@@ -44,6 +50,7 @@ nie jest jeszcze zrodlem oferty widocznej na stronie.
 ### Ustalone decyzje produktowe
 
 - startujemy od dwoch kursow sprzedawanych jednorazowo,
+- cena startowa kazdego kursu wynosi 149 PLN,
 - filmy na pierwszym etapie sa przechowywane na VPS z limitem 200 GB,
 - Przelewy24 jest docelowym operatorem platnosci,
 - administrator zachowuje dostep do wszystkich materialow bez zakupu,
@@ -109,10 +116,16 @@ Identyfikator `orderId` P24 jest typu `int64`. Istniejace pole
 
 ### Etap 2 - katalog z PostgreSQL
 
-- uzgodnic dwa pierwsze kursy, ceny i zakres dostepu,
-- dodac bezpieczny seed lub panel administracyjny,
-- wyswietlac publicznie tylko kursy `published`,
-- pobierac cene i walute wylacznie z bazy.
+- [x] dodac dwa pierwsze kursy i ich ceny,
+- [x] dodac bezpieczny seed w migracji,
+- [x] wyswietlac publicznie tylko kursy `published`,
+- [x] pobierac cene i walute wylacznie z bazy,
+- [x] pozostawic sprzedaz wylaczona przez `sales_enabled=false`,
+- [x] ograniczyc panel uzytkownika do kursow wynikajacych z `access_grants`.
+
+Migracja `003_course_catalog.sql` dodaje dwa kursy po 149 PLN. Sa widoczne w
+katalogu jako przygotowywane, ale nie mozna jeszcze rozpoczac dla nich prawdziwej
+platnosci.
 
 ### Etap 3 - ochrona tresci
 

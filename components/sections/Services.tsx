@@ -1,8 +1,14 @@
 import Link from "next/link";
+import {
+  formatCoursePrice,
+  getCourseStatusLabel,
+  getPublishedCourses,
+} from "@/app/lib/courses";
 import { services } from "@/content/services";
-import { coursePaths } from "@/content/courses";
 
-export function Services() {
+export async function Services() {
+  const courses = await getPublishedCourses();
+
   return (
     <section id="uslugi" className="section bg-white">
       <div className="container-main">
@@ -43,12 +49,16 @@ export function Services() {
             </h3>
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
-            {coursePaths.map((course) => (
+            {courses.map((course) => (
               <article key={course.slug} className="course-mini-card">
-                <p className="text-sm font-bold text-[var(--accent)]">{course.status}</p>
+                <p className="text-sm font-bold text-[var(--accent)]">
+                  {getCourseStatusLabel(course)}
+                </p>
                 <h4 className="mt-3 text-xl font-bold">{course.title}</h4>
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{course.description}</p>
-                <p className="mt-5 text-sm font-bold">{course.duration} · {course.level}</p>
+                <p className="mt-5 text-sm font-bold">
+                  {course.duration} · {course.level} · {formatCoursePrice(course)}
+                </p>
               </article>
             ))}
           </div>

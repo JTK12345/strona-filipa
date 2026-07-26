@@ -106,3 +106,7 @@ podlaczyc operatora platnosci oraz jego webhook.
 Audyt i etapowy plan integracji z Przelewy24 znajduja sie w
 [docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md). Konfiguracja P24
 jest domyslnie wylaczona przez `P24_ENABLED=false`.
+
+Publiczny katalog, ceny oraz lista kursow przypisanych do konta sa odczytywane
+z PostgreSQL. Migracja `003_course_catalog.sql` dodaje dwa pierwsze kursy po
+149 PLN, pozostawiajac ich prawdziwa sprzedaz wylaczona.

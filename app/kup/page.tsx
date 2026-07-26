@@ -1,24 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  formatCoursePrice,
+  getCourseStatusLabel,
+  getPublishedCourses,
+} from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
-
-const plans = [
-  {
-    name: "Pojedynczy kurs",
-    price: "149 zł",
-    description: "Dostęp do jednego programu wideo i materiałów do wdrożenia.",
-  },
-  {
-    name: "Biblioteka miesięczna",
-    price: "49 zł / mies.",
-    description: "Dostęp do krótkich lekcji, rutyn i materiałów edukacyjnych.",
-  },
-  {
-    name: "Premium",
-    price: "349 zł",
-    description: "Kursy, biblioteka i konsultacja startowa pomagająca dobrać kierunek.",
-  },
-];
 
 export const metadata: Metadata = {
   title: "Kup dostęp | Świadomy Profil Ciała",
@@ -27,6 +14,7 @@ export const metadata: Metadata = {
 
 export default async function BuyPage(props: PageProps<"/kup">) {
   const searchParams = await props.searchParams;
+  const courses = await getPublishedCourses();
   const hasEmailError = searchParams.error === "email";
   const isCheckoutDisabled = searchParams.error === "disabled";
   const requiresAccess = searchParams.required === "1";
@@ -52,11 +40,15 @@ export default async function BuyPage(props: PageProps<"/kup">) {
         ) : null}
 
         <div className="checkout-grid">
-          {plans.map((plan) => (
-            <article key={plan.name} className="checkout-plan">
-              <p className="checkout-plan__name">{plan.name}</p>
-              <h2>{plan.price}</h2>
-              <p>{plan.description}</p>
+          {courses.map((course) => (
+            <article key={course.slug} className="checkout-plan">
+              <p className="checkout-plan__name">{getCourseStatusLabel(course)}</p>
+              <h2>{formatCoursePrice(course)}</h2>
+              <h3 className="mt-3 text-xl font-bold">{course.title}</h3>
+              <p>{course.description}</p>
+              <p className="font-bold">
+                {course.duration} · {course.level}
+              </p>
             </article>
           ))}
         </div>

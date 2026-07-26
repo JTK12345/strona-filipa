@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  formatCoursePrice,
+  getCourseStatusLabel,
+  getPublishedCourses,
+} from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
-import { accessFeatures, coursePaths, premiumAccessBlocks } from "@/content/courses";
+import { accessFeatures, premiumAccessBlocks } from "@/content/courses";
 
 export const metadata: Metadata = {
   title: "Dostęp premium | Świadomy Profil Ciała",
   description: "Dostęp premium do kursów wideo i biblioteki ruchu.",
 };
 
-export default function AccessPage() {
+export default async function AccessPage() {
+  const courses = await getPublishedCourses();
+  const featuredCourse = courses[0];
+
   return (
     <section className="access-premium-page">
       <div className="container-main">
@@ -46,8 +54,8 @@ export default function AccessPage() {
 
             <div className="access-dashboard__progress">
               <div>
-                <p>Kręgosłup bez przeciążeń</p>
-                <span>4 moduły</span>
+                <p>{featuredCourse?.title ?? "Pierwszy kurs"}</p>
+                <span>{featuredCourse?.duration ?? "Materiały w przygotowaniu"}</span>
               </div>
               <div className="access-progress-bar">
                 <span style={{ width: "62%" }} />
@@ -84,11 +92,13 @@ export default function AccessPage() {
         </div>
 
         <div className="access-course-strip">
-          {coursePaths.map((course) => (
+          {courses.map((course) => (
             <article key={course.slug}>
-              <p>{course.status}</p>
+              <p>{getCourseStatusLabel(course)}</p>
               <h3>{course.title}</h3>
-              <span>{course.duration} · {course.level}</span>
+              <span>
+                {course.duration} · {course.level} · {formatCoursePrice(course)}
+              </span>
             </article>
           ))}
         </div>

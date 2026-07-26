@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  formatCoursePrice,
+  getCourseStatusLabel,
+  getPublishedCourses,
+} from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
-import { coursePaths } from "@/content/courses";
 
 export const metadata: Metadata = {
   title: "Kursy wideo | Świadomy Profil Ciała",
   description: "Programy wideo o ruchu, bólu, mobilności i regeneracji.",
 };
 
-export default function CoursesPage() {
+export default async function CoursesPage() {
+  const courses = await getPublishedCourses();
+
   return (
     <section className="section bg-white">
       <div className="container-main">
@@ -25,21 +31,29 @@ export default function CoursesPage() {
         </div>
 
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
-          {coursePaths.map((course) => (
+          {courses.map((course) => (
             <article key={course.slug} className="course-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="price-pill">{course.status}</span>
-                <span className="text-sm font-bold text-[var(--muted)]">{course.duration}</span>
+                <span className="price-pill">{getCourseStatusLabel(course)}</span>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-[var(--muted)]">
+                    {course.duration}
+                  </p>
+                  <p className="mt-1 font-bold">{formatCoursePrice(course)}</p>
+                </div>
               </div>
               <h2 className="mt-6 text-2xl font-bold leading-tight">{course.title}</h2>
               <p className="mt-4 leading-7 text-[var(--muted)]">{course.description}</p>
               <div className="mt-6 grid gap-2 text-sm text-[var(--muted)]">
-                {course.lessons.map((lesson) => (
-                  <p key={lesson} className="check-row">{lesson}</p>
+                {course.modules.map((module) => (
+                  <p key={module} className="check-row">{module}</p>
                 ))}
               </div>
-              <Link href="/dostep" className="button-primary mt-8 w-full">
-                Sprawdź dostęp
+              <Link
+                href={`/kup?course=${course.slug}`}
+                className="button-primary mt-8 w-full"
+              >
+                Zobacz cenę i dostęp
               </Link>
             </article>
           ))}

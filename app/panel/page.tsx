@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import {
+  getAccessibleCourses,
+  getCourseStatusLabel,
+} from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
-import { coursePaths } from "@/content/courses";
 
 export const metadata: Metadata = {
   title: "Panel kursów | Świadomy Profil Ciała",
@@ -17,6 +20,11 @@ export default async function PanelPage(props: PageProps<"/panel">) {
   if (!session) {
     redirect("/logowanie?next=/panel");
   }
+
+  const courses = await getAccessibleCourses(
+    session.userId,
+    session.role === "admin",
+  );
 
   return (
     <section className="panel-page">
@@ -56,33 +64,48 @@ export default async function PanelPage(props: PageProps<"/panel">) {
             </Link>
           </div>
         ) : (
-        <div className="panel-layout">
-          <aside className="panel-sidebar">
-            <p>Moje kursy</p>
-            <p>Biblioteka</p>
-            <p>Notatki</p>
-            <p>Ustawienia</p>
-          </aside>
+          <div className="panel-layout">
+            <aside className="panel-sidebar">
+              <p>Moje kursy</p>
+              <p>Biblioteka</p>
+              <p>Notatki</p>
+              <p>Ustawienia</p>
+            </aside>
 
-          <div className="panel-courses">
-            {coursePaths.map((course, index) => (
-              <article key={course.slug} className="panel-course-card">
-                <div>
-                  <p className="checkout-plan__name">{course.status}</p>
-                  <h2>{course.title}</h2>
-                  <span>{course.duration} · {course.level}</span>
+            <div className="panel-courses">
+              {courses.length > 0 ? (
+                courses.map((course) => (
+                  <article key={course.slug} className="panel-course-card">
+                    <div>
+                      <p className="checkout-plan__name">
+                        {getCourseStatusLabel(course)}
+                      </p>
+                      <h2>{course.title}</h2>
+                      <span>
+                        {course.duration} · {course.level}
+                      </span>
+                    </div>
+                    <p>{course.description}</p>
+                    <button className="button-secondary" type="button" disabled>
+                      Lekcje w przygotowaniu
+                    </button>
+                  </article>
+                ))
+              ) : (
+                <div className="panel-empty">
+                  <span className="eyebrow">Brak przypisanych kursów</span>
+                  <h2>Masz aktywny dostęp, ale nie przypisano do niego kursu.</h2>
+                  <p>
+                    Dostęp do biblioteki nadal działa. Zakupione kursy pojawią się
+                    tutaj automatycznie.
+                  </p>
+                  <Link href="/biblioteka" className="button-primary">
+                    Otwórz bibliotekę
+                  </Link>
                 </div>
-                <p>{course.description}</p>
-                <div className="access-progress-bar">
-                  <span style={{ width: `${index === 0 ? 62 : 12}%` }} />
-                </div>
-                <button className="button-primary" type="button">
-                  Otwórz kurs
-                </button>
-              </article>
-            ))}
+              )}
+            </div>
           </div>
-        </div>
         )}
       </div>
     </section>

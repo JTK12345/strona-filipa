@@ -127,6 +127,9 @@ Poprawna odpowiedz endpointu:
 
 Pierwsza migracja tworzy tabele uzytkownikow, sesji, kursow, modulow, lekcji,
 biblioteki, zakupow, zdarzen platniczych, uprawnien, postepu i notatek.
+Kolejne migracje rozszerzaja zamowienia pod operatora platnosci oraz dodaja dwa
+pierwsze kursy do katalogu PostgreSQL. Migracje uruchamiaja sie automatycznie
+podczas startu kontenera aplikacji.
 
 ## 4. Konta, administrator i zakup testowy
 
@@ -213,6 +216,13 @@ cd /home/ubuntu/strona-filipa
 git pull origin main
 docker compose up -d --build
 docker compose ps
+```
+
+Sprawdz, czy migracje `002` i `003` zostaly wykonane:
+
+```bash
+docker compose exec strona node scripts/db-status.mjs
+docker compose logs --tail=100 strona
 ```
 
 Jesli `git pull` zglasza lokalne zmiany w `docker-compose.yml`, najpierw sprawdz je:
