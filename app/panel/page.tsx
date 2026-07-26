@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { BackHomeLink } from "@/components/BackHomeLink";
@@ -27,7 +28,7 @@ export default async function PanelPage(props: PageProps<"/panel">) {
             <h1>Twoje materiały premium</h1>
             <p>
               Zalogowano jako <strong>{session.email}</strong>. Rola:{" "}
-              <strong>{session.role === "admin" ? "admin" : "użytkownik testowy"}</strong>.
+              <strong>{session.role === "admin" ? "administrator" : "użytkownik"}</strong>.
             </p>
           </div>
 
@@ -42,6 +43,19 @@ export default async function PanelPage(props: PageProps<"/panel">) {
           <div className="panel-alert">Dostęp testowy został aktywowany.</div>
         ) : null}
 
+        {!session.hasAnyAccess ? (
+          <div className="panel-empty">
+            <span className="eyebrow">Brak aktywnego dostępu</span>
+            <h2>Konto jest aktywne, ale nie masz jeszcze wykupionych materiałów.</h2>
+            <p>
+              Wybierz kurs lub pakiet biblioteki. Po aktywacji zakupione materiały
+              pojawią się tutaj automatycznie.
+            </p>
+            <Link href="/kup" className="button-primary">
+              Zobacz opcje dostępu
+            </Link>
+          </div>
+        ) : (
         <div className="panel-layout">
           <aside className="panel-sidebar">
             <p>Moje kursy</p>
@@ -69,6 +83,7 @@ export default async function PanelPage(props: PageProps<"/panel">) {
             ))}
           </div>
         </div>
+        )}
       </div>
     </section>
   );

@@ -35,6 +35,10 @@ export default async function LibraryPage() {
     redirect("/logowanie?next=/biblioteka");
   }
 
+  if (!session.hasLibraryAccess) {
+    redirect("/kup?required=1");
+  }
+
   return (
     <section className="section">
       <div className="container-main">

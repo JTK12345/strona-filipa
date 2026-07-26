@@ -3,16 +3,18 @@ import Link from "next/link";
 import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
-  title: "Logowanie | Świadomy Profil Ciała",
-  description: "Logowanie do panelu kursów.",
+  title: "Rejestracja | Świadomy Profil Ciała",
+  description: "Utwórz konto użytkownika platformy kursowej.",
 };
 
 const errorMessages: Record<string, string> = {
-  credentials: "Nieprawidłowy e-mail lub hasło.",
-  server: "Nie udało się zalogować. Spróbuj ponownie.",
+  invalid: "Podaj poprawny adres e-mail i hasło mające co najmniej 10 znaków.",
+  mismatch: "Wpisane hasła nie są takie same.",
+  exists: "Konto z tym adresem e-mail już istnieje. Zaloguj się.",
+  server: "Nie udało się utworzyć konta. Spróbuj ponownie.",
 };
 
-export default async function LoginPage(props: PageProps<"/logowanie">) {
+export default async function RegisterPage(props: PageProps<"/rejestracja">) {
   const searchParams = await props.searchParams;
   const requestedNext =
     searchParams.next === "/biblioteka" ||
@@ -20,7 +22,6 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
     searchParams.next === "/kup"
       ? searchParams.next
       : "/panel";
-  const requiresLogin = searchParams.next === "/biblioteka" || searchParams.next === "/panel";
   const errorMessage =
     typeof searchParams.error === "string" ? errorMessages[searchParams.error] : null;
 
@@ -30,30 +31,24 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
         <BackHomeLink />
         <div className="auth-shell">
           <div className="auth-copy">
-            <span className="eyebrow">Logowanie</span>
-            <h1>Zaloguj się do swoich materiałów.</h1>
+            <span className="eyebrow">Nowe konto</span>
+            <h1>Utwórz konto do kursów i biblioteki.</h1>
             <p>
-              Użyj adresu e-mail i hasła podanego podczas rejestracji. Po zalogowaniu
-              zobaczysz panel konta oraz materiały objęte aktywnym dostępem.
+              Konto pozwala bezpiecznie logować się do panelu. Dostęp do płatnych
+              materiałów pojawi się po zakupie lub nadaniu uprawnienia.
             </p>
-            <Link href={`/rejestracja?next=${requestedNext}`} className="button-secondary mt-8">
-              Utwórz konto
+            <Link href="/logowanie" className="button-secondary mt-8">
+              Mam już konto
             </Link>
           </div>
 
-          <form action="/api/auth/login" method="post" className="auth-card">
+          <form action="/api/auth/register" method="post" className="auth-card">
             <div>
-              <p className="auth-card__label">Twoje konto</p>
-              <h2>Logowanie</h2>
+              <p className="auth-card__label">Rejestracja</p>
+              <h2>Załóż konto</h2>
             </div>
 
             {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
-
-            {requiresLogin && !errorMessage ? (
-              <p className="auth-notice">
-                Zaloguj się, aby przejść do wybranej części platformy.
-              </p>
-            ) : null}
 
             <input type="hidden" name="next" value={requestedNext} />
 
@@ -68,13 +63,26 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
                 name="password"
                 type="password"
                 required
+                minLength={10}
                 maxLength={128}
-                autoComplete="current-password"
+                autoComplete="new-password"
+              />
+            </label>
+
+            <label>
+              <span>Powtórz hasło</span>
+              <input
+                name="passwordConfirmation"
+                type="password"
+                required
+                minLength={10}
+                maxLength={128}
+                autoComplete="new-password"
               />
             </label>
 
             <button type="submit" className="button-primary">
-              Zaloguj do panelu
+              Utwórz konto
             </button>
           </form>
         </div>

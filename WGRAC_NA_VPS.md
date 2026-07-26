@@ -44,9 +44,7 @@ POSTGRES_DB=strona_db
 POSTGRES_USER=strona_user
 POSTGRES_PASSWORD=tu_wklej_mocne_haslo_do_bazy
 DATABASE_URL=postgresql://strona_user:tu_wklej_mocne_haslo_do_bazy@postgres:5432/strona_db
-
-ADMIN_ACCESS_CODE=admin-test-access
-ACCESS_SESSION_SECRET=dlugi-losowy-sekret-sesji
+ENABLE_TEST_CHECKOUT=true
 
 ALLOWED_ORIGINS=https://twojadomena.pl,https://www.twojadomena.pl
 TRUSTED_PROXY_IPS=127.0.0.1,::1
@@ -60,8 +58,8 @@ Wazne:
 
 - `POSTGRES_PASSWORD` musi byc mocne i takie samo jak haslo w `DATABASE_URL`.
 - `DATABASE_URL` laczy aplikacje z kontenerem PostgreSQL po nazwie uslugi `postgres`.
-- `ADMIN_ACCESS_CODE` to testowy kod logowania admina. Na produkcji zmien go na dlugi sekret.
-- `ACCESS_SESSION_SECRET` podpisuje ciasteczko sesji. Na produkcji musi byc losowy i niepubliczny.
+- `ENABLE_TEST_CHECKOUT=true` wlacza zakup testowy bez pobierania oplaty.
+  Przed uruchomieniem prawdziwych platnosci ustaw `false`.
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
 - Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
 
@@ -118,30 +116,35 @@ Poprawna odpowiedz endpointu:
 Pierwsza migracja tworzy tabele uzytkownikow, sesji, kursow, modulow, lekcji,
 biblioteki, zakupow, zdarzen platniczych, uprawnien, postepu i notatek.
 
-## 4. Testowe logowanie, zakup i panel
+## 4. Konta, administrator i zakup testowy
 
-Aktualnie dziala testowy przeplyw bez prawdziwej platnosci:
+Aktualnie dziala system kont i sesji w PostgreSQL:
 
 - `/kursy` - publiczny katalog oferty widoczny bez logowania,
 - `/kup` - testowy zakup nadajacy dostep do panelu, biblioteki, notatek i lekcji wideo,
-- `/logowanie` - logowanie admina kodem z `ADMIN_ACCESS_CODE`,
-- `/biblioteka` - prywatna biblioteka widoczna po aktywnej sesji,
-- `/panel` - prywatny panel kursow widoczny po aktywnej sesji.
+- `/rejestracja` - utworzenie konta z haslem,
+- `/logowanie` - logowanie e-mailem i haslem,
+- `/biblioteka` - prywatna biblioteka widoczna po aktywnym uprawnieniu,
+- `/panel` - panel widoczny po zalogowaniu; bez zakupu pokazuje informacje o braku dostepu.
 
-Linki `Biblioteka` i `Panel` pojawiaja sie w menu dopiero po zalogowaniu. Bezposrednie
-wejscie na te adresy bez sesji przekierowuje do logowania. Po zalogowaniu uzytkownik
-wraca na wybrana strone.
+Link `Panel` pojawia sie po zalogowaniu, a `Biblioteka` dopiero po aktywacji
+dostepu. Zakup testowy zapisuje w bazie transakcje i uprawnienie `all_access`.
+Nie pobiera prawdziwej oplaty.
 
-Domyslny testowy kod admina, jesli nie zmienisz go w `.env`:
+Utworz lub zaktualizuj konto administratora po uruchomieniu kontenerow:
 
-```txt
-admin-test-access
+```bash
+read -s ADMIN_PASSWORD
+printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email admin@example.com --password-stdin
+unset ADMIN_PASSWORD
 ```
 
-To jest tylko tryb testowy oparty na podpisanym ciasteczku. Nie ma jeszcze stalego konta
-uzytkownika w PostgreSQL ani prawdziwej platnosci. Przed produkcja zmien
-`ADMIN_ACCESS_CODE` i `ACCESS_SESSION_SECRET`, a nastepnie wdroz konta, zapis uprawnien
-w bazie oraz operatora platnosci.
+Zmien `admin@example.com` na swoj adres. Polecenie nie zapisuje jawnego hasla
+w historii powloki. Administrator loguje sie na `/logowanie` i omija paywall.
+
+Sesje sa losowymi tokenami. W bazie przechowywany jest tylko ich hash, a hasla
+uzytkownikow sa hashowane bcrypt. Przed produkcja trzeba jeszcze podlaczyc
+operatora platnosci, webhook i odzyskiwanie hasla.
 
 ## 5. Nginx Proxy Manager
 

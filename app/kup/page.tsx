@@ -27,7 +27,9 @@ export const metadata: Metadata = {
 
 export default async function BuyPage(props: PageProps<"/kup">) {
   const searchParams = await props.searchParams;
-  const hasError = searchParams.error === "1";
+  const hasEmailError = searchParams.error === "email";
+  const isCheckoutDisabled = searchParams.error === "disabled";
+  const requiresAccess = searchParams.required === "1";
 
   return (
     <section className="checkout-page">
@@ -42,6 +44,12 @@ export default async function BuyPage(props: PageProps<"/kup">) {
             oraz ruchem. Obecny formularz działa testowo i nie pobiera płatności.
           </p>
         </div>
+
+        {requiresAccess ? (
+          <div className="panel-alert">
+            Biblioteka jest dostępna po aktywacji wybranego pakietu.
+          </div>
+        ) : null}
 
         <div className="checkout-grid">
           {plans.map((plan) => (
@@ -60,7 +68,14 @@ export default async function BuyPage(props: PageProps<"/kup">) {
               <h2>Nadaj dostęp testowy</h2>
             </div>
 
-            {hasError ? <p className="auth-error">Podaj poprawny adres e-mail.</p> : null}
+            {hasEmailError ? (
+              <p className="auth-error">Podaj poprawny adres e-mail.</p>
+            ) : null}
+            {isCheckoutDisabled ? (
+              <p className="auth-error">
+                Zakup testowy jest wyłączony. Skontaktuj się w sprawie aktywacji dostępu.
+              </p>
+            ) : null}
 
             <label>
               <span>E-mail użytkownika</span>
@@ -92,11 +107,14 @@ export default async function BuyPage(props: PageProps<"/kup">) {
               </div>
               <div className="check-row">
                 <strong>Dostęp po zalogowaniu</strong>
-                <span>Biblioteka i panel pojawiają się dopiero po aktywacji konta.</span>
+                <span>
+                  Zakup aktywuje bibliotekę, notatki, filmy kursowe i materiały
+                  przypisane do konta.
+                </span>
               </div>
             </div>
             <Link href="/logowanie" className="button-secondary">
-              Mam już kod admina
+              Mam już konto
             </Link>
           </aside>
         </div>

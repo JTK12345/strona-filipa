@@ -8,14 +8,15 @@ const publicLinks = [
   { href: "/kup", label: "Kup dostęp" },
 ];
 
-const privateLinks = [
-  { href: "/biblioteka", label: "Biblioteka" },
-  { href: "/panel", label: "Panel" },
-];
-
 export async function Navbar() {
   const session = await getCurrentAccessSession();
-  const links = session ? [...publicLinks, ...privateLinks] : publicLinks;
+  const links = [
+    ...publicLinks,
+    ...(session ? [{ href: "/panel", label: "Panel" }] : []),
+    ...(session?.hasLibraryAccess
+      ? [{ href: "/biblioteka", label: "Biblioteka" }]
+      : []),
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(250,248,242,0.92)] backdrop-blur">

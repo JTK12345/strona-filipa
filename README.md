@@ -1,6 +1,7 @@
 # Swiadomy Profil Ciala
 
-Strona gabinetu z katalogiem kursow wideo, biblioteka materialow i testowym panelem dostepu premium.
+Strona gabinetu z katalogiem kursow wideo, kontami uzytkownikow, biblioteka
+materialow i panelem dostepu premium.
 
 ## Uruchomienie lokalne
 
@@ -19,33 +20,41 @@ Najwazniejsze adresy:
 - `/biblioteka` - prywatna biblioteka materialow, dostepna po zalogowaniu,
 - `/dostep` - opis dostepu premium,
 - `/kup` - testowy zakup bez prawdziwej platnosci,
-- `/logowanie` - logowanie administratora,
-- `/panel` - prywatny panel osoby z aktywnym dostepem.
+- `/rejestracja` - tworzenie konta uzytkownika,
+- `/logowanie` - logowanie e-mailem i haslem,
+- `/panel` - panel zalogowanego uzytkownika.
 
-Po wylogowaniu linki `Biblioteka` i `Panel` nie sa widoczne w nawigacji. Bezposrednie
-wejscie na te adresy przekierowuje do `/logowanie`. Po poprawnym logowaniu uzytkownik
-wraca na strone, ktora chcial otworzyc.
+Po wylogowaniu linki `Biblioteka` i `Panel` nie sa widoczne w nawigacji. Panel
+pojawia sie po zalogowaniu, a biblioteka dopiero po nadaniu aktywnego dostepu.
+Bezposrednie wejscie do chronionej czesci wykonuje odpowiednie przekierowanie.
 
 ### Testowy zakup
 
 1. Otworz `/kup`.
 2. Wpisz adres e-mail.
 3. Kliknij przycisk testowego zakupu.
-4. Aplikacja utworzy sesje klienta i przeniesie do `/panel`.
+4. Aplikacja zapisze testowy zakup i uprawnienie w PostgreSQL, utworzy sesje
+   klienta i przeniesie do `/panel`.
 
-W tym trybie nie jest pobierana zadna oplata.
+W tym trybie nie jest pobierana zadna oplata. Mozna go wylaczyc przez
+`ENABLE_TEST_CHECKOUT=false`.
 
 Testowy dostep obejmuje panel kursow, lekcje wideo, biblioteke, notatki i materialy
-praktyczne. PostgreSQL jest uruchamiany przez Docker Compose, ale obecna sesja testowa
-nie tworzy jeszcze stalego konta uzytkownika w bazie.
+praktyczne. Uzytkownik moze pozniej ustawic haslo przez rejestracje na ten sam e-mail.
 
 ### Dostep administratora
 
-1. Otworz `/logowanie`.
-2. Podaj dowolny poprawny adres e-mail.
-3. Wpisz kod ustawiony w `ADMIN_ACCESS_CODE`.
+Konto administratora utworz w kontenerze aplikacji:
 
-Domyslny kod testowy to `admin-test-access`. Przed uruchomieniem produkcyjnym trzeba go zmienic razem z `ACCESS_SESSION_SECRET`.
+```bash
+read -s ADMIN_PASSWORD
+printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email admin@example.com --password-stdin
+unset ADMIN_PASSWORD
+```
+
+Administrator loguje sie zwyklym formularzem `/logowanie` i ma dostep do panelu
+oraz biblioteki bez zakupu. Haslo jest zapisywane jako hash bcrypt, a losowa sesja
+jest przechowywana w bazie.
 
 ## Docker i VPS
 
@@ -90,4 +99,6 @@ Aplikacja jest wystawiona na hoscie pod `http://127.0.0.1:3010`, a Nginx Proxy M
 
 ## Stan platnosci
 
-Zakup jest obecnie symulowany. Przed produkcja trzeba podlaczyc operatora platnosci, zapis uprawnien w bazie oraz produkcyjny system kont uzytkownikow.
+Zakup jest obecnie symulowany, ale konto, transakcja, sesja i uprawnienie sa
+zapisywane w PostgreSQL. Przed produkcja trzeba wylaczyc testowy checkout i
+podlaczyc operatora platnosci oraz jego webhook.

@@ -19,14 +19,15 @@ export default function AccessPage() {
             <h1>Dostęp do kursów i biblioteki świadomej pracy z ciałem.</h1>
             <p>
               Programy wideo, krótkie lekcje i materiały do samodzielnej praktyki.
-              Możesz kupić dostęp testowo albo wejść jako admin kodem z `.env`.
+              Załóż konto, wybierz dostęp i korzystaj z przypisanych materiałów
+              po bezpiecznym zalogowaniu.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link href="/kup" className="button-primary">
                 Kup dostęp
               </Link>
               <Link href="/logowanie" className="button-secondary">
-                Logowanie admina
+                Zaloguj się
               </Link>
               <Link href="/panel" className="button-secondary">
                 Otwórz panel
@@ -73,12 +74,12 @@ export default function AccessPage() {
         <div className="access-roadmap">
           <div>
             <span className="eyebrow">Jak działa teraz</span>
-            <h2>Gotowy testowy przepływ przed Stripe i pełnym logowaniem.</h2>
+            <h2>Konta i dostęp są już zapisywane w bazie platformy.</h2>
           </div>
           <div className="access-roadmap__steps">
-            <p><strong>1.</strong> `Kup dostęp` nadaje testową sesję klienta bez pobierania płatności.</p>
-            <p><strong>2.</strong> `Logowanie admina` wpuszcza kodem z `.env` bez konieczności zakupu.</p>
-            <p><strong>3.</strong> `Panel` pokazuje materiały tylko po aktywnej sesji.</p>
+            <p><strong>1.</strong> Rejestracja tworzy konto chronione hasłem.</p>
+            <p><strong>2.</strong> Zakup testowy zapisuje transakcję i aktywuje materiały bez pobrania pieniędzy.</p>
+            <p><strong>3.</strong> Biblioteka jest dostępna tylko dla kont z odpowiednim uprawnieniem.</p>
           </div>
         </div>
 

@@ -25,12 +25,14 @@ export async function Footer() {
             </Link>
             {session ? (
               <>
-                <Link className="block hover:text-[var(--foreground)]" href="/biblioteka">
-                  Biblioteka
-                </Link>
                 <Link className="block hover:text-[var(--foreground)]" href="/panel">
                   Panel
                 </Link>
+                {session.hasLibraryAccess ? (
+                  <Link className="block hover:text-[var(--foreground)]" href="/biblioteka">
+                    Biblioteka
+                  </Link>
+                ) : null}
               </>
             ) : null}
             <Link className="block hover:text-[var(--foreground)]" href="/dostep">
