@@ -13,6 +13,9 @@ export async function Navbar() {
   const links = [
     ...publicLinks,
     ...(session ? [{ href: "/panel", label: "Panel" }] : []),
+    ...(session?.role === "admin"
+      ? [{ href: "/panel/admin", label: "Administracja" }]
+      : []),
     ...(session?.hasLibraryAccess
       ? [{ href: "/biblioteka", label: "Biblioteka" }]
       : []),

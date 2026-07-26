@@ -1155,6 +1155,41 @@ header nav a:hover::after {
   font-weight: 900;
 }
 
+.panel-sidebar a {
+  border-left: 3px solid transparent;
+  padding: 0.55rem 0.65rem;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.panel-sidebar a:hover {
+  border-left-color: var(--accent);
+  background: var(--soft);
+  color: var(--accent);
+}
+
+.panel-content {
+  display: grid;
+  min-width: 0;
+  gap: 3rem;
+}
+
+.panel-section-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-section-heading h2 {
+  margin-top: 0.4rem;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
 .panel-course-card {
   display: grid;
   gap: 1.1rem;
@@ -1171,6 +1206,275 @@ header nav a:hover::after {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 800;
+}
+
+.panel-empty--compact {
+  margin-top: 1rem;
+  padding: 2rem;
+}
+
+.panel-empty--compact h2 {
+  max-width: 680px;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.account-orders {
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+
+.account-order-list {
+  margin-top: 1rem;
+  border-block: 1px solid var(--border);
+}
+
+.account-order {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.account-order + .account-order {
+  border-top: 1px solid var(--border);
+}
+
+.account-order > div {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.account-order span,
+.account-orders__empty {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.account-order__amount {
+  justify-items: end;
+}
+
+.account-orders__empty {
+  margin-top: 1rem;
+  border-block: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+
+.status-badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.status-badge--paid {
+  background: rgba(47, 93, 80, 0.12);
+  color: #205044;
+}
+
+.status-badge--pending {
+  background: rgba(215, 154, 56, 0.16);
+  color: #77500f;
+}
+
+.status-badge--failed,
+.status-badge--cancelled,
+.status-badge--expired {
+  background: rgba(194, 118, 79, 0.14);
+  color: #7c3f24;
+}
+
+.status-badge--refunded {
+  background: #e7e9e6;
+  color: #4d574c;
+}
+
+.admin-page {
+  min-height: calc(100vh - 92px);
+  padding: 4rem 0 6rem;
+  background: #ffffff;
+}
+
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1rem 0 2.5rem;
+}
+
+.admin-header h1 {
+  max-width: 850px;
+  margin-top: 0.8rem;
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.02;
+}
+
+.admin-header p:not(.eyebrow) {
+  max-width: 740px;
+  margin-top: 1rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.admin-tabs {
+  position: sticky;
+  top: 92px;
+  z-index: 10;
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  border-block: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.96);
+  padding: 1rem 0;
+}
+
+.admin-tabs a {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.admin-tabs a:hover {
+  color: var(--accent);
+}
+
+.admin-section {
+  scroll-margin-top: 165px;
+  padding: 3rem 0;
+}
+
+.admin-section + .admin-section {
+  border-top: 1px solid var(--border);
+}
+
+.admin-section__heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-section__heading h2,
+.admin-grant-section h2 {
+  margin-top: 0.4rem;
+  font-size: 1.9rem;
+  font-weight: 900;
+}
+
+.admin-section__heading > span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border-block: 1px solid var(--border);
+}
+
+.admin-table {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.admin-table th {
+  background: #f4f6f2;
+  color: #536052;
+  padding: 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-table td {
+  border-top: 1px solid var(--border);
+  padding: 0.9rem 0.8rem;
+  font-size: 0.86rem;
+  vertical-align: top;
+}
+
+.admin-table td:first-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-table small {
+  color: var(--muted);
+}
+
+.admin-empty-row {
+  color: var(--muted);
+  padding: 1.25rem 0.8rem;
+}
+
+.admin-grant-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(360px, 1.2fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.admin-grant-section > div > p:last-child {
+  max-width: 500px;
+  margin-top: 1rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.admin-grant-form {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f9faf8;
+  padding: 1.5rem;
+}
+
+.admin-grant-form label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 800;
+}
+
+.admin-grant-form select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.9rem 1rem;
+}
+
+@media (max-width: 800px) {
+  .panel-topbar,
+  .panel-section-heading,
+  .admin-header,
+  .admin-section__heading,
+  .account-order {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-order__amount {
+    justify-items: start;
+  }
+
+  .admin-grant-section {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-tabs {
+    top: 0;
+  }
 }
 
 .purchase-header {

@@ -6,8 +6,8 @@ jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 ## Status realizacji
 
 - etapy 0 i 1: zakonczone,
-- etapy 2-7: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
-- etapy 8-9: jeszcze nierozpoczete.
+- etapy 2-8: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
+- etap 9: jeszcze nierozpoczety.
 
 ## 1. Wykryty stack
 
@@ -219,10 +219,16 @@ pelnych dokumentow i tresci zgody przez osobe odpowiedzialna za zgodnosc prawna.
 
 ### Etap 8 - panel i operacje
 
-- panel uzytkownika pokazuje tylko posiadane kursy,
-- panel administratora pokazuje zamowienia i zdarzenia,
-- reczne nadanie dostepu jest osobna, audytowana operacja,
-- nie dodawac przycisku recznego oznaczania platnosci jako `paid`.
+- [x] panel uzytkownika pokazuje tylko posiadane kursy,
+- [x] panel uzytkownika pokazuje jego historie zamowien,
+- [x] panel administratora pokazuje zamowienia i zdarzenia,
+- [x] reczne nadanie dostepu jest osobna, audytowana operacja,
+- [x] nie dodawac przycisku recznego oznaczania platnosci jako `paid`.
+
+Panel administratora jest dostepny pod `/panel/admin` tylko dla roli `admin`.
+Reczne nadanie kursu tworzy `access_grants.source='admin'` i wpis w tabeli
+`admin_audit_events` dodanej przez migracje `005_admin_audit_log.sql`. Operacja
+nie modyfikuje zakupu ani zdarzenia platniczego.
 
 ### Etap 9 - Sandbox i uruchomienie
 
