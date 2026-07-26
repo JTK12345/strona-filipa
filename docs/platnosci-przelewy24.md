@@ -6,8 +6,8 @@ jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 ## Status realizacji
 
 - etapy 0 i 1: zakonczone,
-- etapy 2-6: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
-- etapy 7-9: jeszcze nierozpoczete.
+- etapy 2-7: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
+- etapy 8-9: jeszcze nierozpoczete.
 
 ## 1. Wykryty stack
 
@@ -167,14 +167,15 @@ Domyslny limit czasu wynosi 8 sekund i mozna go ustawic przez
 ### Etap 5 - tworzenie platnosci
 
 - [x] wymagac zalogowania,
-- [x] przyjmowac tylko `courseId`,
+- [x] z danych oferty przyjmowac tylko `courseId`,
 - [x] blokowac zakup posiadanego lub nieaktywnego kursu,
 - [x] tworzyc `pending` przed wywolaniem P24,
 - [x] generowac kryptograficzny `sessionId`,
 - [x] zapisywac token i zwracac adres bramki.
 
-`POST /api/checkout/przelewy24` przyjmuje JSON zawierajacy wylacznie `courseId`.
-Cena, waluta, tytul i dostepnosc sprzedazy sa ponownie pobierane z PostgreSQL.
+`POST /api/checkout/przelewy24` przyjmuje `courseId` oraz dwa wymagane
+potwierdzenia zgody. Cena, waluta, tytul i dostepnosc sprzedazy sa ponownie
+pobierane z PostgreSQL.
 Frontend nie moze podac kwoty. Zamowienie `pending` powstaje przed wywolaniem
 operatora, a nieudana rejestracja zmienia je na `failed` bez ujawniania tresci
 bledu P24.
@@ -199,11 +200,22 @@ przetworzone odbywaja sie w jednej transakcji.
 
 ### Etap 7 - frontend i status
 
-- dodac przycisk `Kupuje i place`,
-- wymagac niezaznaczonych domyslnie zgod,
-- dodac `/platnosc/sukces` i `/platnosc/niepowodzenie`,
-- strona sukcesu tylko odczytuje stan lokalnego zakupu,
-- ograniczyc odpytywanie do maksymalnie 60 sekund.
+- [x] dodac przycisk `Kupuje i place`,
+- [x] wymagac niezaznaczonych domyslnie zgod,
+- [x] dodac `/platnosc/sukces` i `/platnosc/niepowodzenie`,
+- [x] strona sukcesu tylko odczytuje stan lokalnego zakupu,
+- [x] ograniczyc odpytywanie do maksymalnie 60 sekund.
+
+Ekran zakupu nie przyjmuje ceny ani adresu e-mail. Uzywa zalogowanego konta,
+identyfikatora kursu i dwoch wymaganych oswiadczen. Backend wymaga obu zgod i
+zapisuje ich czas oraz wersje dokumentow w metadanych zamowienia. Status jest
+dostepny przez chroniony endpoint
+`GET /api/purchases/{publicOrderNumber}/status`, ktory zwraca tylko zamowienie
+nalezace do biezacego uzytkownika. Powrot z P24 nie zmienia stanu platnosci.
+
+Strony regulaminu i polityki prywatnosci sa wyraznie oznaczonymi projektami.
+Nie wolno wlaczac sprzedazy przed wpisaniem danych sprzedawcy oraz zatwierdzeniem
+pelnych dokumentow i tresci zgody przez osobe odpowiedzialna za zgodnosc prawna.
 
 ### Etap 8 - panel i operacje
 

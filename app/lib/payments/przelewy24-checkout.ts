@@ -125,7 +125,16 @@ async function createPendingPurchase(
          $5,
          $6,
          now() + interval '15 minutes',
-         jsonb_build_object('courseId', $7::text)
+         jsonb_build_object(
+           'courseId',
+           $7::text,
+           'legalVersion',
+           'draft-2026-07-27',
+           'termsAcceptedAt',
+           now(),
+           'digitalContentConsentAt',
+           now()
+         )
        )
        RETURNING id`,
       [

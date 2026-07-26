@@ -1,115 +1,116 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getCurrentAccessSession } from "@/app/lib/access";
 import {
   formatCoursePrice,
-  getCourseStatusLabel,
+  getAccessibleCourses,
   getPublishedCourses,
 } from "@/app/lib/courses";
+import { isP24Enabled } from "@/app/lib/payments/przelewy24-config";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { CourseCheckout } from "@/components/course/CourseCheckout";
 
 export const metadata: Metadata = {
   title: "Kup dostęp | Świadomy Profil Ciała",
-  description: "Testowy zakup dostępu do kursów i biblioteki.",
+  description:
+    "Jednorazowy zakup kursów wideo o zdrowiu i świadomym ruchu.",
 };
 
 export default async function BuyPage(props: PageProps<"/kup">) {
   const searchParams = await props.searchParams;
+  const session = await getCurrentAccessSession();
   const courses = await getPublishedCourses();
-  const hasEmailError = searchParams.error === "email";
-  const isCheckoutDisabled = searchParams.error === "disabled";
-  const requiresAccess = searchParams.required === "1";
+  const accessibleCourses = session
+    ? await getAccessibleCourses(session.userId, session.role === "admin")
+    : [];
+  const ownedCourseIds = new Set(accessibleCourses.map((course) => course.id));
+  const selectedSlug =
+    typeof searchParams.course === "string" ? searchParams.course : undefined;
 
   return (
     <section className="checkout-page">
       <div className="container-main">
         <BackHomeLink />
-        <div className="checkout-hero">
-          <span className="eyebrow">Zakup dostępu</span>
-          <h1>Wybierz dostęp do kursów i biblioteki.</h1>
+
+        <header className="purchase-header">
+          <span className="eyebrow">Jednorazowy dostęp</span>
+          <h1>Wybierz kurs i ucz się we własnym tempie.</h1>
           <p>
-            Po aktywacji otrzymasz jedno miejsce do nauki: kursy wideo, krótkie lekcje,
-            notatki, materiały praktyczne i bibliotekę tematów związanych ze zdrowiem
-            oraz ruchem. Obecny formularz działa testowo i nie pobiera płatności.
+            Każdy zakup przypisujemy do konta. Otrzymujesz lekcje wideo,
+            uporządkowane moduły, własne notatki i zapis postępu bez abonamentu.
           </p>
-        </div>
+        </header>
 
-        {requiresAccess ? (
-          <div className="panel-alert">
-            Biblioteka jest dostępna po aktywacji wybranego pakietu.
+        {!session ? (
+          <div className="purchase-account-bar">
+            <div>
+              <strong>Do zakupu potrzebne jest konto</strong>
+              <span>
+                Zaloguj się lub utwórz konto, aby zachować dostęp do materiałów.
+              </span>
+            </div>
+            <div className="purchase-account-bar__actions">
+              <Link href="/logowanie?next=/kup" className="button-primary">
+                Zaloguj się
+              </Link>
+              <Link href="/rejestracja?next=/kup" className="button-secondary">
+                Utwórz konto
+              </Link>
+            </div>
           </div>
-        ) : null}
-
-        <div className="checkout-grid">
-          {courses.map((course) => (
-            <article key={course.slug} className="checkout-plan">
-              <p className="checkout-plan__name">{getCourseStatusLabel(course)}</p>
-              <h2>{formatCoursePrice(course)}</h2>
-              <h3 className="mt-3 text-xl font-bold">{course.title}</h3>
-              <p>{course.description}</p>
-              <p className="font-bold">
-                {course.duration} · {course.level}
-              </p>
-            </article>
-          ))}
-        </div>
-
-        <div className="checkout-shell">
-          <form action="/api/checkout/test" method="post" className="checkout-form">
+        ) : (
+          <div className="purchase-account-bar purchase-account-bar--active">
             <div>
-              <p className="auth-card__label">Tryb testowy</p>
-              <h2>Nadaj dostęp testowy</h2>
+              <strong>Kupujesz jako {session.email}</strong>
+              <span>Dostęp pojawi się na tym koncie po potwierdzeniu wpłaty.</span>
             </div>
-
-            {hasEmailError ? (
-              <p className="auth-error">Podaj poprawny adres e-mail.</p>
-            ) : null}
-            {isCheckoutDisabled ? (
-              <p className="auth-error">
-                Zakup testowy jest wyłączony. Skontaktuj się w sprawie aktywacji dostępu.
-              </p>
-            ) : null}
-
-            <label>
-              <span>E-mail użytkownika</span>
-              <input name="email" type="email" required autoComplete="email" />
-            </label>
-
-            <button type="submit" className="button-primary">
-              Kup testowo i przejdź do panelu
-            </button>
-          </form>
-
-          <aside className="checkout-summary">
-            <div>
-              <p className="checkout-plan__name">W ramach dostępu</p>
-              <h2>Wszystkie materiały w jednym panelu</h2>
-            </div>
-            <div className="checkout-benefits">
-              <div className="check-row">
-                <strong>Kursy i lekcje wideo</strong>
-                <span>Programy podzielone na krótkie, uporządkowane moduły.</span>
-              </div>
-              <div className="check-row">
-                <strong>Biblioteka wiedzy</strong>
-                <span>Materiały o ruchu, bólu, regeneracji i profilaktyce.</span>
-              </div>
-              <div className="check-row">
-                <strong>Notatki i materiały praktyczne</strong>
-                <span>Podsumowania, zadania i wskazówki do samodzielnej pracy.</span>
-              </div>
-              <div className="check-row">
-                <strong>Dostęp po zalogowaniu</strong>
-                <span>
-                  Zakup aktywuje bibliotekę, notatki, filmy kursowe i materiały
-                  przypisane do konta.
-                </span>
-              </div>
-            </div>
-            <Link href="/logowanie" className="button-secondary">
-              Mam już konto
+            <Link href="/panel" className="button-secondary">
+              Przejdź do panelu
             </Link>
-          </aside>
-        </div>
+          </div>
+        )}
+
+        <CourseCheckout
+          courses={courses.map((course) => ({
+            id: course.id,
+            slug: course.slug,
+            title: course.title,
+            description: course.description,
+            duration: course.duration,
+            level: course.level,
+            modules: course.modules,
+            price: formatCoursePrice(course),
+            priceCents: course.priceCents,
+            salesEnabled: course.salesEnabled,
+            owned: ownedCourseIds.has(course.id),
+          }))}
+          selectedSlug={selectedSlug}
+          isAuthenticated={Boolean(session)}
+          paymentsEnabled={isP24Enabled()}
+        />
+
+        <section className="purchase-includes" aria-labelledby="purchase-includes-title">
+          <div>
+            <p className="checkout-plan__name">W cenie kursu</p>
+            <h2 id="purchase-includes-title">
+              Materiały przypisane do Twojego konta
+            </h2>
+          </div>
+          <div className="purchase-includes__grid">
+            <div>
+              <strong>Lekcje wideo</strong>
+              <span>Filmy podzielone na krótkie, uporządkowane moduły.</span>
+            </div>
+            <div>
+              <strong>Notatki i postęp</strong>
+              <span>Własne zapiski oraz zapis ukończonych lekcji.</span>
+            </div>
+            <div>
+              <strong>Materiały kursowe</strong>
+              <span>Podsumowania i zadania przypisane do zakupionego kursu.</span>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
   );

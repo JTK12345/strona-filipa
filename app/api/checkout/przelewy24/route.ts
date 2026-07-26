@@ -59,9 +59,13 @@ export async function POST(request: Request) {
     typeof body !== "object" ||
     body === null ||
     Array.isArray(body) ||
-    Object.keys(body).length !== 1 ||
+    Object.keys(body).length !== 3 ||
     !("courseId" in body) ||
-    typeof body.courseId !== "string"
+    typeof body.courseId !== "string" ||
+    !("termsAccepted" in body) ||
+    body.termsAccepted !== true ||
+    !("digitalContentAccepted" in body) ||
+    body.digitalContentAccepted !== true
   ) {
     return errorResponse("invalid_request", "Nieprawidlowe zadanie.", 400);
   }

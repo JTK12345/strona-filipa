@@ -38,6 +38,15 @@ export async function Footer() {
             <Link className="block hover:text-[var(--foreground)]" href="/dostep">
               Dostęp
             </Link>
+            <Link className="block hover:text-[var(--foreground)]" href="/regulamin">
+              Regulamin
+            </Link>
+            <Link
+              className="block hover:text-[var(--foreground)]"
+              href="/polityka-prywatnosci"
+            >
+              Polityka prywatności
+            </Link>
           </div>
         </div>
 
