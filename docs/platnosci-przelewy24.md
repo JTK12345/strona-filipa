@@ -6,8 +6,8 @@ jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
 ## Status realizacji
 
 - etapy 0 i 1: zakonczone,
-- etapy 2-4: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
-- etapy 5-9: jeszcze nierozpoczete.
+- etapy 2-5: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
+- etapy 6-9: jeszcze nierozpoczete.
 
 ## 1. Wykryty stack
 
@@ -166,12 +166,18 @@ Domyslny limit czasu wynosi 8 sekund i mozna go ustawic przez
 
 ### Etap 5 - tworzenie platnosci
 
-- wymagac zalogowania,
-- przyjmowac tylko `courseId`,
-- blokowac zakup posiadanego lub nieaktywnego kursu,
-- tworzyc `pending` przed wywolaniem P24,
-- generowac kryptograficzny `sessionId`,
-- zapisywac token i przekierowywac na bramke.
+- [x] wymagac zalogowania,
+- [x] przyjmowac tylko `courseId`,
+- [x] blokowac zakup posiadanego lub nieaktywnego kursu,
+- [x] tworzyc `pending` przed wywolaniem P24,
+- [x] generowac kryptograficzny `sessionId`,
+- [x] zapisywac token i zwracac adres bramki.
+
+`POST /api/checkout/przelewy24` przyjmuje JSON zawierajacy wylacznie `courseId`.
+Cena, waluta, tytul i dostepnosc sprzedazy sa ponownie pobierane z PostgreSQL.
+Frontend nie moze podac kwoty. Zamowienie `pending` powstaje przed wywolaniem
+operatora, a nieudana rejestracja zmienia je na `failed` bez ujawniania tresci
+bledu P24.
 
 ### Etap 6 - idempotentna notyfikacja
 
