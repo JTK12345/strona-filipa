@@ -11,7 +11,9 @@ export function Testimonials() {
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
             <article key={`${testimonial.author}-${index}`} className="card-surface p-7">
-              <p className="text-lg leading-8 text-[var(--foreground)]">"{testimonial.text}"</p>
+              <q className="block text-lg leading-8 text-[var(--foreground)]">
+                {testimonial.text}
+              </q>
               <p className="mt-6 font-semibold">{testimonial.author}</p>
               <p className="text-sm text-[var(--muted)]">{testimonial.role}</p>
             </article>

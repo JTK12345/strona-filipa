@@ -5,8 +5,14 @@ import {
   isValidEmail,
   isValidPassword,
   normalizeEmail,
+  readUrlEncodedForm,
   sanitizeAuthDestination,
 } from "@/app/lib/auth";
+import { getClientIp } from "@/app/api/_utils/ip";
+import {
+  checkRateLimit,
+  getRateLimitFingerprint,
+} from "@/app/api/_utils/rateLimiter";
 import { queryDatabase } from "@/app/lib/db";
 import { createSessionCookie, createUserSession } from "@/app/lib/session";
 
@@ -29,7 +35,30 @@ export async function POST(request: Request) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  const formData = await request.formData();
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkRateLimit(
+    "auth-register",
+    getRateLimitFingerprint(
+      clientIp.ip,
+      request.headers.get("user-agent") ?? "unknown",
+    ),
+    { endpointLimit: 5, globalLimit: 20 },
+  );
+  const formData = await readUrlEncodedForm(request, [
+    "email",
+    "password",
+    "passwordConfirmation",
+    "next",
+  ]);
+
+  if (!rateLimit.allowed) {
+    return registrationRedirect("rate", "/panel");
+  }
+
+  if (!formData) {
+    return registrationRedirect("invalid", "/panel");
+  }
+
   const email = normalizeEmail(formData.get("email"));
   const password = String(formData.get("password") ?? "");
   const passwordConfirmation = String(formData.get("passwordConfirmation") ?? "");
@@ -50,11 +79,7 @@ export async function POST(request: Request) {
       `INSERT INTO users (email, password_hash)
        VALUES ($1, $2)
        ON CONFLICT (lower(email))
-       DO UPDATE SET
-         password_hash = EXCLUDED.password_hash,
-         updated_at = now()
-       WHERE users.password_hash IS NULL
-         AND users.status = 'active'
+       DO NOTHING
        RETURNING id`,
       [email, passwordHash],
     );

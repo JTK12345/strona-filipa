@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { createMailerTransport } from "@/app/api/_utils/mailer";
+import { logServerError } from "@/app/api/_utils/server-log";
 import {
+  containsHtml,
   escapeHtml,
-  hasHeaderInjection,
   isEmail,
   isPhone,
   logFormSuccess,
   normalizeEmail,
   normalizePhone,
   normalizeText,
-  readProtectedJson,
+  readProtectedForm,
+  sanitizeHeaderValue,
 } from "@/app/api/_utils/form-security";
 import { formConfig } from "@/content/form-config";
 
@@ -31,29 +33,32 @@ type AppointmentBody = Record<(typeof allowedFields)[number], unknown>;
 
 export async function POST(req: Request) {
   try {
-    const protectedJson = await readProtectedJson<AppointmentBody>(req, {
+    const protectedJson = await readProtectedForm<AppointmentBody>(req, {
       allowedFields: [...allowedFields],
       csrfField: "csrfToken",
       honeypotField: "website",
       turnstileField: "turnstileToken",
       eventType,
+      endpointKey: "appointment",
     });
 
     if (protectedJson.error) {
       return protectedJson.error;
     }
 
-    const name = normalizeText(protectedJson.body.name, { maxLength: 80 });
+    const rawName = normalizeText(protectedJson.body.name, { maxLength: 100 });
     const phone = normalizePhone(protectedJson.body.phone, 32);
     const email = normalizeEmail(protectedJson.body.email, 160);
     const preferredContactTime = normalizeText(protectedJson.body.preferredContactTime, {
-      maxLength: 200,
+      maxLength: 120,
       multiline: true,
     });
-    const message = normalizeText(protectedJson.body.message, {
-      maxLength: 1000,
+    const rawMessage = normalizeText(protectedJson.body.message, {
+      maxLength: 500,
       multiline: true,
     });
+    const name = sanitizeHeaderValue(rawName);
+    const message = rawMessage;
 
     if (formConfig.appointmentNameRequired && !name) {
       return NextResponse.json({ error: "Podaj imie." }, { status: 400 });
@@ -81,7 +86,11 @@ export async function POST(req: Request) {
       );
     }
 
-    if (hasHeaderInjection(name) || hasHeaderInjection(email)) {
+    if (
+      containsHtml(String(protectedJson.body.name ?? "")) ||
+      containsHtml(String(protectedJson.body.message ?? "")) ||
+      containsHtml(String(protectedJson.body.preferredContactTime ?? ""))
+    ) {
       return NextResponse.json(
         { error: "Nieprawidlowe dane formularza." },
         { status: 400 }
@@ -93,7 +102,6 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: smtp.from,
       to: smtp.to,
-      ...(email ? { replyTo: email } : {}),
       subject: "Nowa prosba o umowienie wizyty",
       text: [
         "Nowa prosba o umowienie wizyty",
@@ -123,9 +131,13 @@ export async function POST(req: Request) {
 
     logFormSuccess(eventType, protectedJson.ipHash);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: protectedJson.rateLimitHeaders });
   } catch (error) {
-    console.error("Blad wysylki formularza umawiania wizyty:", error);
+    logServerError({
+      eventType,
+      stage: "mail_send_failed",
+      error,
+    });
 
     return NextResponse.json(
       { error: "Nie udalo sie wyslac zgloszenia." },

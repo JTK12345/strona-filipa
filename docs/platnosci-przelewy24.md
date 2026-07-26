@@ -1,265 +1,178 @@
-# Plan wdrozenia platnosci Przelewy24
+# Platnosci Przelewy24 - architektura i stan
 
-Dokument opisuje stan projektu z 27 lipca 2026 r. oraz etapowy plan wdrozenia
-jednorazowych zakupow kursow. Integracja produkcyjna nie jest jeszcze aktywna.
+Stan dokumentu: 27 lipca 2026 r.
 
-## Status realizacji
+## Status
 
-- etapy 0 i 1: zakonczone,
-- etapy 2-8: kod i migracje gotowe, oczekuja na wdrozenie na VPS,
-- etap 9: jeszcze nierozpoczety.
+Etapy implementacyjne 0-8 sa zakonczone w kodzie. Etap 9 jest gotowy od strony
+narzedzi i instrukcji, ale wymaga zewnetrznych danych Sandbox oraz decyzji
+prawnych wlasciciela:
 
-## 1. Wykryty stack
+- [x] konfiguracja `sandbox|production` bez dowolnego `P24_BASE_URL`,
+- [x] klient `testAccess`, register i verify z timeoutem,
+- [x] tworzenie `pending` przed kontaktem z operatorem,
+- [x] cena i waluta tylko z PostgreSQL,
+- [x] kryptograficzny `sessionId`,
+- [x] podpisy SHA-384,
+- [x] bezstratny `orderId` int64,
+- [x] idempotentny callback i atomowy grant,
+- [x] chroniony status zamowienia,
+- [x] frontend zakupu, zgody i limit pollingu 60 sekund,
+- [x] panel uzytkownika i administratora,
+- [x] audytowane reczne nadanie dostepu,
+- [x] usuniety publiczny checkout testowy,
+- [ ] prawdziwe dane konta P24 Sandbox,
+- [ ] poprawny `testAccess` wykonany z VPS,
+- [ ] pelne scenariusze platnosci w Sandbox,
+- [ ] finalne dokumenty prawne i potwierdzenie umowy e-mailem,
+- [ ] osobna akceptacja uruchomienia produkcji.
 
-- Next.js 16.2.2 z App Routerem i Route Handlers,
-- React 19 i TypeScript,
-- PostgreSQL 16 oraz sterownik `pg`,
-- wlasny, jednokierunkowy system migracji SQL,
-- Docker Compose, obraz Next.js `standalone`,
-- Nginx Proxy Manager jako reverse proxy,
-- sesje bazodanowe w ciasteczku `spc_session`,
-- hasla hashowane bcrypt z kosztem 12.
+P24 i sprzedaz kursow pozostaja domyslnie wylaczone.
 
-## 2. Stan obecny
+## Oficjalny kontrakt
 
-Logowanie uzywa losowego tokenu sesji. W bazie zapisywany jest tylko jego hash.
-Ciasteczko jest `HttpOnly`, `SameSite=Lax` i `Secure` na produkcji.
+Zrodla:
 
-Model platformy zawiera juz:
+- https://developers.przelewy24.pl/
+- https://developers.przelewy24.pl/yaml/pl_documentation_1.0.yaml
 
-- `users` i `user_sessions`,
-- `courses`, `course_modules` i `lessons`,
-- `purchases` i `purchase_items`,
-- `payment_events`,
-- `access_grants`,
-- postep lekcji i notatki.
-
-Nie nalezy tworzyc osobnych tabel `orders`, `course_access` ani `enrollments`.
-Zakup jest reprezentowany przez `purchases`, a dostep przez `access_grants`.
-
-Obecny checkout `/api/checkout/test`:
-
-- nie pobiera pieniedzy,
-- tworzy zakup o dostawcy `test`,
-- nadaje `all_access`,
-- jest sterowany przez `ENABLE_TEST_CHECKOUT`.
-
-Katalog i panel pobieraja obecnie kursy z `content/courses.ts`. Tabela `courses`
-nie jest jeszcze zrodlem oferty widocznej na stronie.
-
-### Ustalone decyzje produktowe
-
-- startujemy od dwoch kursow sprzedawanych jednorazowo,
-- cena startowa kazdego kursu wynosi 149 PLN,
-- filmy na pierwszym etapie sa przechowywane na VPS z limitem 200 GB,
-- Przelewy24 jest docelowym operatorem platnosci,
-- administrator zachowuje dostep do wszystkich materialow bez zakupu,
-- katalog kursow pozostaje publiczny, a lekcje, biblioteka i notatki wymagaja
-  aktywnego dostepu.
-
-## 3. Najwazniejsze ryzyka przed produkcja
-
-1. Cena i status kursu musza pochodzic z PostgreSQL, nie z frontendu ani stalej
-   TypeScript.
-2. Checkout testowy nie moze byc aktywny po uruchomieniu prawdziwej sprzedazy.
-3. Logowanie nie ma jeszcze kompletnego limitowania prob, resetu hasla ani
-   weryfikacji adresu e-mail.
-4. Nie istnieja jeszcze chronione trasy lekcji, plikow i filmow.
-5. Dokumenty prawne i zgody dla tresci cyfrowych nie sa gotowe.
-6. Migracje sa tylko w przod. Cofniecie wymaga migracji naprawczej lub
-   przywrocenia backupu PostgreSQL.
-7. Domyslne hasla bazy z przykladowej konfiguracji nie nadaja sie do produkcji.
-8. Filmy nie moga trafic do katalogu `public` ani do obrazu aplikacji. Taki plik
-   bylby dostepny bez kontroli uprawnien lub zniknalby przy przebudowie kontenera.
-
-## 4. Oficjalny kontrakt Przelewy24
-
-Zrodlo: https://developers.przelewy24.pl/
-
-Sprawdzona wersja dokumentacji REST: `1.0.17`.
+Sprawdzona dokumentacja REST: wersja `1.0.17`.
 
 - Sandbox API: `https://sandbox.przelewy24.pl/api/v1`
 - Production API: `https://secure.przelewy24.pl/api/v1`
-- rejestracja: `POST /transaction/register`
-- weryfikacja: `PUT /transaction/verify`
-- test danych API: `GET /testAccess`
-- autoryzacja: Basic Auth, `user=posId`, `password=secretId/API key`
-- podpisy: SHA-384 z dokladnie okreslonych obiektow JSON i klucza CRC
+- `GET /testAccess`
+- `POST /transaction/register`
+- `PUT /transaction/verify`
+- Basic Auth: uzytkownik `posId`, haslo `API key/secretId`
+- podpisy: SHA-384 z obiektu JSON i CRC
 
-Adres bazowy musi wynikac wylacznie z `P24_ENV=sandbox|production`. Nie bedzie
-konfigurowalnej zmiennej `P24_BASE_URL`.
+`urlReturn` nie potwierdza zaplaty. Dostep moze powstac tylko po notyfikacji
+`urlStatus` i sukcesie `transaction/verify`.
 
-Przelewy24 wysyla `urlStatus` tylko dla poprawnej wplaty. Powrot klienta przez
-`urlReturn` nie potwierdza zaplaty. Po notyfikacji backend musi wywolac
-`transaction/verify`; dopiero sukces tej operacji pozwala oznaczyc zakup jako
-`paid`.
+## Model danych
 
-Identyfikator `orderId` P24 jest typu `int64`. Istniejace pole
-`provider_order_id text` przechowa go bez ryzyka przepelnienia 32-bitowego typu.
+Nie ma osobnej tabeli `orders`. Uzywane sa:
 
-## 5. Etapy wdrozenia
+- `purchases` - zamowienie i stan platnosci,
+- `purchase_items` - zakupiony kurs i cena w chwili zakupu,
+- `payment_events` - odebrane notyfikacje i bledy,
+- `access_grants` - aktywny dostep,
+- `admin_audit_events` - reczne operacje administratora.
 
-### Etap 0 - audyt i zabezpieczenie prac
+Najwazniejsze identyfikatory:
 
-- zapisac ten plan,
-- nie modyfikowac danych produkcyjnych recznie,
-- wykonac backup przed kazda migracja,
-- utrzymac P24 w stanie `P24_ENABLED=false`.
+- `public_order_number` - bezpieczny numer pokazywany uzytkownikowi,
+- `provider_session_id` - unikalna sesja wysylana do P24,
+- `provider_token` - token rejestracji,
+- `provider_order_id` - `orderId` P24 zapisany jako tekst.
 
-### Etap 1 - fundament danych i testow
+## Tworzenie zakupu
 
-- rozszerzyc `purchases` o publiczny numer zamowienia, `provider_session_id`,
-  token rejestracji, e-mail kupujacego oraz daty rejestracji i wygasniecia,
-- dodac unikalnosc sesji dostawcy,
-- zagwarantowac jeden dostep danego typu z jednego zakupu,
-- dodac testy podpisow P24.
+`POST /api/checkout/przelewy24`:
 
-### Etap 2 - katalog z PostgreSQL
+1. wymaga sesji i poprawnego Origin,
+2. ogranicza czestotliwosc wywolan,
+3. przyjmuje `courseId` i dwa wymagane potwierdzenia zgody,
+4. pobiera kurs, cene, walute i `sales_enabled` z bazy,
+5. blokuje administratora i konto z istniejacym dostepem,
+6. tworzy `purchases.status='pending'` oraz `purchase_items`,
+7. rejestruje transakcje w P24,
+8. zapisuje token i zwraca oficjalny adres bramki.
 
-- [x] dodac dwa pierwsze kursy i ich ceny,
-- [x] dodac bezpieczny seed w migracji,
-- [x] wyswietlac publicznie tylko kursy `published`,
-- [x] pobierac cene i walute wylacznie z bazy,
-- [x] pozostawic sprzedaz wylaczona przez `sales_enabled=false`,
-- [x] ograniczyc panel uzytkownika do kursow wynikajacych z `access_grants`.
+Nieudana rejestracja zmienia probe na `failed`. Tresc bledu operatora nie jest
+zwracana klientowi.
 
-Migracja `003_course_catalog.sql` dodaje dwa kursy po 149 PLN. Sa widoczne w
-katalogu jako przygotowywane, ale nie mozna jeszcze rozpoczac dla nich prawdziwej
+## Callback
+
+`POST /api/payments/przelewy24/status` nie uzywa CSRF. Wykonuje:
+
+1. limit 32 KiB i bezstratne parsowanie JSON z odrzuceniem duplikatow kluczy,
+2. walidacje typow i int64,
+3. porownanie Merchant ID, POS ID i PLN,
+4. timing-safe porownanie podpisu,
+5. zapis/aktualizacje `payment_events`,
+6. porownanie sesji, kwoty, ceny pozycji, waluty i `orderId`,
+7. `PUT /transaction/verify`,
+8. transakcje PostgreSQL: `paid`, `provider_order_id`, grant i processed event.
+
+Powtorzona notyfikacja zwraca sukces bez kolejnego verify i bez drugiego grantu.
+Rownolegla notyfikacja jest ponownie sprawdzana po blokadzie rekordu.
+
+## Status uzytkownika
+
+`GET /api/purchases/{publicOrderNumber}/status` wymaga sesji i filtruje zakup po
+`user_id`. Nie mozna odczytac cudzego zamowienia. Strona powrotu odpytuje status
+co 2 sekundy, najwyzej przez 60 sekund. Sama niczego nie oznacza jako zaplacone.
+
+## Administrator
+
+`/panel/admin` pokazuje:
+
+- ostatnie zamowienia,
+- zdarzenia platnicze bez surowego payloadu,
+- audyt recznych grantow,
+- formularz nadania kursu,
+- przycisk `testAccess`.
+
+Nie ma i nie powinno byc przycisku `Oznacz jako paid`.
+
+## Konfiguracja
+
+```env
+APP_URL=https://profil-ciala.jtk.ovh
+P24_ENABLED=false
+P24_ENV=sandbox
+P24_MERCHANT_ID=
+P24_POS_ID=
+P24_API_KEY=
+P24_CRC=
+P24_HTTP_TIMEOUT_MS=8000
+```
+
+Gdy `P24_ENABLED=false`, puste dane sa prawidlowe. Gdy jest `true`, aplikacja
+wymaga kompletu, dodatnich identyfikatorow i publicznego HTTPS `APP_URL`.
+
+## Uruchomienie Sandbox
+
+Pelna procedura jest w `WGRAC_NA_VPS.md`. Kolejnosc:
+
+1. backup,
+2. dane Sandbox i IP VPS w panelu P24,
+3. `P24_ENABLED=true`, `P24_ENV=sandbox`,
+4. rebuild,
+5. `testAccess` z `/panel/admin`,
+6. wlaczenie `sales_enabled` skryptem,
+7. scenariusze sukcesu i anulowania,
+8. kontrola panelu, eventow i duplikatu,
+9. ponowne wylaczenie sprzedazy po testach.
+
+## Dokumenty prawne
+
+`/regulamin` i `/polityka-prywatnosci` sa projektami, nie finalnymi dokumentami.
+Przed sprzedaza potrzebne sa dane sprzedawcy, zasady reklamacji, dostarczania
+tresci cyfrowych, odstapienia, wymagania techniczne, okres dostepu i zasady
+przetwarzania danych.
+
+Oficjalne informacje UOKiK o tresciach cyfrowych:
+https://prawakonsumenta.uokik.gov.pl/prawo-odstapienia-od-umowy/wylaczenia-prawa-do-odstapienia/
+
+Sama zgoda w checkboxie nie wystarcza. Nalezy przekazac konsumentowi
+potwierdzenie zawarcia umowy i otrzymanej zgody na trwalym nosniku.
+
+## Testy
+
+`npm test` obejmuje:
+
+- podpisy register, verify i callback,
+- stala konfiguracje hostow,
+- Basic Auth klienta i kontrolowane bledy,
+- kolejnosc `pending -> register -> token`,
+- blad rejestracji,
+- zla kwote i zly podpis callbacku,
+- powtorzona notyfikacje,
+- maksymalny `orderId` int64,
+- sciezki i zakresy filmow,
+- rate limiting i scisle rozpoznawanie loopback.
+
+Wszystkie wywolania P24 w testach sa mockowane. Testy nie wykonuja prawdziwej
 platnosci.
-
-### Etap 3 - ochrona tresci
-
-- [x] dodac trasy kursu, modulu i lekcji,
-- [x] sprawdzac `access_grants` po stronie serwera dla kazdego zasobu,
-- [x] przechowywac filmy w woluminie VPS poza `public`,
-- [x] wydawac filmy przez autoryzowany endpoint,
-- [x] obslugiwac zadania zakresowe HTTP potrzebne do przewijania filmu,
-- [x] zabezpieczyc notatki i zapis postepu,
-- [x] zachowac pelny dostep administratora.
-
-Endpoint `/api/media/lessons/[lessonId]` obsluguje `GET`, `HEAD` i pojedynczy
-zakres `Range`. Kazde wywolanie sprawdza sesje oraz dostep do kursu. Sciezka
-pliku jest rozwiazywana w obrebie `VIDEO_STORAGE_PATH`; wyjscie poza ten katalog
-i nieobslugiwane rozszerzenia sa odrzucane.
-
-Limit 200 GB powinien wystarczyc na dwa pierwsze kursy, ale przed publikacja
-nalezy zmierzyc rzeczywisty rozmiar wszystkich wariantow wideo i zachowac zapas
-na system, baze, logi i backupy. Backup filmow musi znajdowac sie poza tym samym
-VPS. Zewnetrzny hosting wideo stanie sie kolejnym krokiem dopiero wtedy, gdy
-transfer, liczba uzytkownikow lub obsluga kilku jakosci zaczna obciazac serwer.
-Na pierwszym etapie plik jest strumieniowany przez proces aplikacji. Przy
-wiekszym ruchu nalezy przejsc na wewnetrzne przekierowanie Nginx albo zewnetrzny
-serwis wideo.
-
-### Etap 4 - klient P24 bez publicznego checkoutu
-
-- [x] walidowac komplet konfiguracji,
-- [x] dodac klienta z timeoutem i bezpiecznymi bledami,
-- [x] zaimplementowac `testAccess`, rejestracje i weryfikacje,
-- [x] mockowac wszystkie polaczenia w testach.
-
-Klient wybiera serwer tylko na podstawie `P24_ENV`. Dane uwierzytelniajace sa
-wysylane przez Basic Auth wylacznie do oficjalnego hosta Sandbox albo produkcji.
-Blad operatora nie przekazuje odpowiedzi P24 uzytkownikowi ani do wyjatku.
-Domyslny limit czasu wynosi 8 sekund i mozna go ustawic przez
-`P24_HTTP_TIMEOUT_MS` w zakresie od 1 do 30 sekund.
-
-### Etap 5 - tworzenie platnosci
-
-- [x] wymagac zalogowania,
-- [x] z danych oferty przyjmowac tylko `courseId`,
-- [x] blokowac zakup posiadanego lub nieaktywnego kursu,
-- [x] tworzyc `pending` przed wywolaniem P24,
-- [x] generowac kryptograficzny `sessionId`,
-- [x] zapisywac token i zwracac adres bramki.
-
-`POST /api/checkout/przelewy24` przyjmuje `courseId` oraz dwa wymagane
-potwierdzenia zgody. Cena, waluta, tytul i dostepnosc sprzedazy sa ponownie
-pobierane z PostgreSQL.
-Frontend nie moze podac kwoty. Zamowienie `pending` powstaje przed wywolaniem
-operatora, a nieudana rejestracja zmienia je na `failed` bez ujawniania tresci
-bledu P24.
-
-### Etap 6 - idempotentna notyfikacja
-
-- [x] walidowac JSON notyfikacji i podpis,
-- [x] porownywac sprzedawce, sesje, kwote, walute i `orderId`,
-- [x] wykonac `transaction/verify`,
-- [x] w jednej transakcji bazy zapisac `paid`, zdarzenie i dostep,
-- [x] ponowne wywolanie ma zwracac sukces bez kolejnego dostepu.
-
-Endpoint P24 nie bedzie uzywal ochrony CSRF przeznaczonej dla formularzy
-przegladarki. Bedzie chroniony podpisem, weryfikacja API, ograniczeniem rozmiaru,
-walidacja danych i bezpiecznym logowaniem.
-
-Notyfikacje odbiera `POST /api/payments/przelewy24/status`. `orderId` jest
-parsowany bezstratnie jako liczba 64-bitowa, a w PostgreSQL pozostaje tekstem.
-Podpis, dane sprzedawcy i wszystkie dane zakupu sa sprawdzane przed wywolaniem
-`transaction/verify`. Nadanie dostepu, status `paid` i oznaczenie zdarzenia jako
-przetworzone odbywaja sie w jednej transakcji.
-
-### Etap 7 - frontend i status
-
-- [x] dodac przycisk `Kupuje i place`,
-- [x] wymagac niezaznaczonych domyslnie zgod,
-- [x] dodac `/platnosc/sukces` i `/platnosc/niepowodzenie`,
-- [x] strona sukcesu tylko odczytuje stan lokalnego zakupu,
-- [x] ograniczyc odpytywanie do maksymalnie 60 sekund.
-
-Ekran zakupu nie przyjmuje ceny ani adresu e-mail. Uzywa zalogowanego konta,
-identyfikatora kursu i dwoch wymaganych oswiadczen. Backend wymaga obu zgod i
-zapisuje ich czas oraz wersje dokumentow w metadanych zamowienia. Status jest
-dostepny przez chroniony endpoint
-`GET /api/purchases/{publicOrderNumber}/status`, ktory zwraca tylko zamowienie
-nalezace do biezacego uzytkownika. Powrot z P24 nie zmienia stanu platnosci.
-
-Strony regulaminu i polityki prywatnosci sa wyraznie oznaczonymi projektami.
-Nie wolno wlaczac sprzedazy przed wpisaniem danych sprzedawcy oraz zatwierdzeniem
-pelnych dokumentow i tresci zgody przez osobe odpowiedzialna za zgodnosc prawna.
-
-### Etap 8 - panel i operacje
-
-- [x] panel uzytkownika pokazuje tylko posiadane kursy,
-- [x] panel uzytkownika pokazuje jego historie zamowien,
-- [x] panel administratora pokazuje zamowienia i zdarzenia,
-- [x] reczne nadanie dostepu jest osobna, audytowana operacja,
-- [x] nie dodawac przycisku recznego oznaczania platnosci jako `paid`.
-
-Panel administratora jest dostepny pod `/panel/admin` tylko dla roli `admin`.
-Reczne nadanie kursu tworzy `access_grants.source='admin'` i wpis w tabeli
-`admin_audit_events` dodanej przez migracje `005_admin_audit_log.sql`. Operacja
-nie modyfikuje zakupu ani zdarzenia platniczego.
-
-### Etap 9 - Sandbox i uruchomienie
-
-- skonfigurowac konto Sandbox oraz dozwolony adres IP VPS,
-- wykonac `testAccess`,
-- przetestowac sukces, odrzucenie, zla kwote i powtorzona notyfikacje,
-- po akceptacji dokumentow prawnych ustawic `ENABLE_TEST_CHECKOUT=false`,
-- produkcje P24 wlaczyc osobnym wdrozeniem i przegladem.
-
-## 6. Bramki decyzyjne
-
-Po etapach 2, 3, 6 i 9 nalezy zatrzymac prace, przedstawic wynik testow i uzyskac
-akceptacje przed przejsciem dalej. Nie nalezy automatycznie wlaczac P24, zmieniac
-sekretow na VPS ani wykonywac prawdziwych platnosci.
-
-## 7. Backup przed migracja
-
-Na VPS:
-
-```bash
-cd ~/strona-filipa
-mkdir -p backups
-docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
-```
-
-Sprawdzenie pliku:
-
-```bash
-ls -lh backups
-```
-
-Migracje uruchamiaja sie automatycznie przy starcie kontenera `strona`. Nie ma
-automatycznego `down`; procedura przywracania backupu zostanie dopisana i
-przetestowana przed pierwsza migracja zwiazana z aktywnym Sandboxem.

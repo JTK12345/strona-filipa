@@ -5,7 +5,7 @@ ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 ENV NPM_CONFIG_FUND=false
 
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app

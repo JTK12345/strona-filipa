@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { createMailerTransport } from "@/app/api/_utils/mailer";
+import { logServerError } from "@/app/api/_utils/server-log";
 import {
+  containsHtml,
   escapeHtml,
-  hasHeaderInjection,
   isEmail,
   isPhone,
   logFormSuccess,
   normalizeEmail,
   normalizePhone,
   normalizeText,
-  readProtectedJson,
+  readProtectedForm,
+  sanitizeHeaderValue,
 } from "@/app/api/_utils/form-security";
 
 export const runtime = "nodejs";
@@ -29,25 +31,28 @@ type ContactBody = Record<(typeof allowedFields)[number], unknown>;
 
 export async function POST(req: Request) {
   try {
-    const protectedJson = await readProtectedJson<ContactBody>(req, {
+    const protectedJson = await readProtectedForm<ContactBody>(req, {
       allowedFields: [...allowedFields],
       csrfField: "csrfToken",
       honeypotField: "website",
       turnstileField: "turnstileToken",
       eventType,
+      endpointKey: "contact",
     });
 
     if (protectedJson.error) {
       return protectedJson.error;
     }
 
-    const name = normalizeText(protectedJson.body.name, { maxLength: 80 });
+    const rawName = normalizeText(protectedJson.body.name, { maxLength: 100 });
     const phone = normalizePhone(protectedJson.body.phone, 32);
     const email = normalizeEmail(protectedJson.body.email, 160);
-    const message = normalizeText(protectedJson.body.message, {
-      maxLength: 1000,
+    const rawMessage = normalizeText(protectedJson.body.message, {
+      maxLength: 500,
       multiline: true,
     });
+    const name = sanitizeHeaderValue(rawName);
+    const message = rawMessage;
 
     if (!phone && !email) {
       return NextResponse.json(
@@ -68,7 +73,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Wpisz krotka wiadomosc." }, { status: 400 });
     }
 
-    if (hasHeaderInjection(name) || hasHeaderInjection(email)) {
+    if (containsHtml(String(protectedJson.body.name ?? "")) || containsHtml(String(protectedJson.body.message ?? ""))) {
       return NextResponse.json(
         { error: "Nieprawidlowe dane formularza." },
         { status: 400 }
@@ -80,7 +85,6 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: smtp.from,
       to: smtp.to,
-      ...(email ? { replyTo: email } : {}),
       subject: "Nowa wiadomosc z formularza kontaktowego",
       text: [
         "Nowa wiadomosc z formularza kontaktowego",
@@ -106,9 +110,13 @@ export async function POST(req: Request) {
 
     logFormSuccess(eventType, protectedJson.ipHash);
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: protectedJson.rateLimitHeaders });
   } catch (error) {
-    console.error("Blad wysylki formularza kontaktowego:", error);
+    logServerError({
+      eventType,
+      stage: "mail_send_failed",
+      error,
+    });
 
     return NextResponse.json(
       { error: "Nie udalo sie wyslac wiadomosci." },

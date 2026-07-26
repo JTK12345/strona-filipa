@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 type TurnstileFieldProps = {
   siteKey: string;
+  requireTurnstile?: boolean;
   onVerify: (token: string) => void;
   onExpire?: () => void;
 };
@@ -25,11 +26,12 @@ declare global {
   }
 }
 
-export function TurnstileField({ siteKey, onVerify, onExpire }: TurnstileFieldProps) {
-  const isLocalDevelopmentHost =
-    typeof window !== "undefined" &&
-    process.env.NODE_ENV !== "production" &&
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+export function TurnstileField({
+  siteKey,
+  requireTurnstile = true,
+  onVerify,
+  onExpire,
+}: TurnstileFieldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const onVerifyRef = useRef(onVerify);
@@ -37,7 +39,6 @@ export function TurnstileField({ siteKey, onVerify, onExpire }: TurnstileFieldPr
   const [scriptReady, setScriptReady] = useState(
     typeof window !== "undefined" && Boolean(window.turnstile)
   );
-  const [shouldRender] = useState(!isLocalDevelopmentHost);
   const [widgetError, setWidgetError] = useState(false);
 
   useEffect(() => {
@@ -50,27 +51,20 @@ export function TurnstileField({ siteKey, onVerify, onExpire }: TurnstileFieldPr
       return;
     }
 
-    const existingScript = document.querySelector<HTMLScriptElement>(
-      'script[src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"]'
-    );
+    const intervalId = window.setInterval(() => {
+      if (window.turnstile) {
+        setScriptReady(true);
+        window.clearInterval(intervalId);
+      }
+    }, 250);
 
-    if (existingScript) {
-      existingScript.addEventListener("load", () => setScriptReady(true), {
-        once: true,
-      });
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    script.async = true;
-    script.defer = true;
-    script.addEventListener("load", () => setScriptReady(true), { once: true });
-    document.head.appendChild(script);
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, [siteKey]);
 
   useEffect(() => {
-    if (!shouldRender || !siteKey || scriptReady) {
+    if (!requireTurnstile || !siteKey || scriptReady) {
       return;
     }
 
@@ -81,11 +75,11 @@ export function TurnstileField({ siteKey, onVerify, onExpire }: TurnstileFieldPr
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [scriptReady, shouldRender, siteKey]);
+  }, [requireTurnstile, scriptReady, siteKey]);
 
   useEffect(() => {
     if (
-      !shouldRender ||
+      !requireTurnstile ||
       !siteKey ||
       !scriptReady ||
       !window.turnstile ||
@@ -122,9 +116,9 @@ export function TurnstileField({ siteKey, onVerify, onExpire }: TurnstileFieldPr
         widgetIdRef.current = null;
       }
     };
-  }, [scriptReady, shouldRender, siteKey]);
+  }, [requireTurnstile, scriptReady, siteKey]);
 
-  if (!shouldRender) {
+  if (!requireTurnstile) {
     return null;
   }
 

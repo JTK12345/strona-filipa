@@ -1,153 +1,190 @@
 # Wdrozenie na VPS
 
-## 1. Pobierz projekt z GitHuba
+Instrukcja dotyczy repozytorium:
+`https://github.com/JTK12345/strona-filipa.git`.
 
-Najwygodniej wdrazac projekt przez GitHuba, a nie przez reczne wrzucanie ZIP-a.
+## 1. Wymagania
+
+- Ubuntu z Docker Engine i `docker compose`,
+- Nginx Proxy Manager w zewnetrznej sieci Docker `proxy`,
+- publiczna domena HTTPS,
+- minimum kilkanascie GB wolnego miejsca poza miejscem na filmy,
+- osobny backup bazy i filmow poza tym VPS.
+
+Sprawdz:
+
+```bash
+docker --version
+docker compose version
+docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
+```
+
+## 2. Pierwsza instalacja
 
 ```bash
 cd /home/ubuntu
 git clone https://github.com/JTK12345/strona-filipa.git
 cd strona-filipa
-```
-
-Przy kolejnych aktualizacjach:
-
-```bash
-cd /home/ubuntu/strona-filipa
-git pull origin main
-docker compose up -d --build
-```
-
-Jesli serwer uzywa starego Dockera, zamiast `docker compose` uzyj `docker-compose`.
-
-## 2. Utworz plik .env
-
-```bash
 cp .env.example .env
+```
+
+Wygeneruj trzy rozne sekrety:
+
+```bash
+openssl rand -hex 32
+openssl rand -hex 32
+openssl rand -hex 32
+```
+
+Pierwszy ustaw jako `POSTGRES_PASSWORD`, drugi jako
+`TRUSTED_PROXY_SECRET`, a trzeci jako `LOG_SALT`. Haslo bazy wpisz takze w
+`DATABASE_URL`.
+
+Edytuj konfiguracje:
+
+```bash
 nano .env
 ```
 
-Ustaw prawdziwe dane:
+Minimalny przyklad dla domeny `profil-ciala.jtk.ovh`:
 
 ```env
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=kontakt@example.com
-SMTP_PASS=twoje-haslo-smtp
+SMTP_PASS=tu_wpisz_haslo_smtp
 MAIL_TO=kontakt@example.com
 MAIL_FROM="Formularz kontaktowy <kontakt@example.com>"
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=tu_wklej_site_key_z_cloudflare
-TURNSTILE_SECRET_KEY=tu_wklej_secret_key_z_cloudflare
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=tu_wpisz_site_key
+TURNSTILE_SECRET_KEY=tu_wpisz_secret_key
 
 POSTGRES_DB=strona_db
 POSTGRES_USER=strona_user
-POSTGRES_PASSWORD=tu_wklej_mocne_haslo_do_bazy
-DATABASE_URL=postgresql://strona_user:tu_wklej_mocne_haslo_do_bazy@postgres:5432/strona_db
-ENABLE_TEST_CHECKOUT=true
-APP_URL=https://twojadomena.pl
+POSTGRES_PASSWORD=tu_wpisz_pierwszy_losowy_sekret
+DATABASE_URL=postgresql://strona_user:tu_wpisz_pierwszy_losowy_sekret@postgres:5432/strona_db
+DATABASE_POOL_MAX=10
+
+APP_URL=https://profil-ciala.jtk.ovh
 VIDEO_STORAGE_PATH=/data/videos
 VIDEO_STORAGE_HOST_PATH=./data/videos
 
-# Przelewy24 pozostaje wylaczone do czasu testow Sandbox.
 P24_ENABLED=false
 P24_ENV=sandbox
 P24_MERCHANT_ID=
 P24_POS_ID=
 P24_API_KEY=
 P24_CRC=
+P24_HTTP_TIMEOUT_MS=8000
 
-ALLOWED_ORIGINS=https://twojadomena.pl,https://www.twojadomena.pl
-TRUSTED_PROXY_IPS=127.0.0.1,::1
-TRUSTED_PROXY_SECRET=dlugi-losowy-sekret-proxy
-LOG_SALT=dlugi-losowy-sekret-logow
-FORM_LOG_SALT=dlugi-losowy-sekret-formularzy
-REDIS_URL=
+ALLOWED_ORIGINS=https://profil-ciala.jtk.ovh
+TRUSTED_PROXY_SECRET=tu_wpisz_drugi_losowy_sekret
+LOG_SALT=tu_wpisz_trzeci_losowy_sekret
 ```
 
-Wazne:
+Nie zapisuj `.env` w Git. Nie wysylaj jego tresci w rozmowie ani na zrzucie
+ekranu.
 
-- `POSTGRES_PASSWORD` musi byc mocne i takie samo jak haslo w `DATABASE_URL`.
-- `DATABASE_URL` laczy aplikacje z kontenerem PostgreSQL po nazwie uslugi `postgres`.
-- `ENABLE_TEST_CHECKOUT=true` wlacza zakup testowy bez pobierania oplaty.
-  Przed uruchomieniem prawdziwych platnosci ustaw `false`.
-- Puste dane P24 sa prawidlowe, dopoki `P24_ENABLED=false`. Nie wlaczaj tej
-  opcji przed ukonczeniem i sprawdzeniem integracji Sandbox.
-- `APP_URL` musi zawierac publiczny adres HTTPS strony bez ukosnika na koncu.
-- `VIDEO_STORAGE_HOST_PATH` wskazuje katalog z filmami na VPS. Nie umieszczaj
-  filmow w `public` ani w repozytorium.
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` musi byc dostepny przy budowaniu i uruchamianiu kontenera.
-- Po zmianie zmiennych uruchom pelny rebuild obrazu, a nie sam restart kontenera.
+## 3. Start i migracje
 
-## 3. Uruchom strone i baze
-
-`docker-compose.yml` uruchamia dwa kontenery:
-
-- `strona` - aplikacja Next.js,
-- `postgres` - baza danych PostgreSQL z trwalym volume `postgres_data`.
-
-Przed uruchomieniem Next.js kontener `strona` automatycznie wykonuje brakujace
-migracje z katalogu `database/migrations`. Dane pozostaja w volume
-`postgres_data` podczas przebudowy i ponownego tworzenia kontenera aplikacji.
+Utworz katalog filmow i uruchom caly stack:
 
 ```bash
+cd /home/ubuntu/strona-filipa
+mkdir -p data/videos/kregoslup data/videos/kark-barki backups
 docker compose up -d --build
-```
-
-Sprawdz status:
-
-```bash
 docker compose ps
-docker compose logs -f
 ```
 
-Aplikacja na VPS jest wystawiona pod:
-
-```txt
-http://127.0.0.1:3010
-```
-
-Wewnatrz kontenera aplikacja nadal dziala na porcie `3000`.
-
-Sprawdz aplikacje:
+Kontener aplikacji automatycznie wykonuje migracje `001`-`005` przed startem
+Next.js. Sprawdz:
 
 ```bash
-curl -I http://127.0.0.1:3010
-```
-
-Sprawdz baze (zmienne zostana odczytane wewnatrz kontenera):
-
-```bash
-docker compose exec postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 docker compose exec strona node scripts/db-status.mjs
+docker compose logs --tail=150 strona
 curl http://127.0.0.1:3010/api/health
 ```
 
-Poprawna odpowiedz endpointu:
+Poprawna odpowiedz:
 
 ```json
 {"status":"ok","database":"connected"}
 ```
 
-Pierwsza migracja tworzy tabele uzytkownikow, sesji, kursow, modulow, lekcji,
-biblioteki, zakupow, zdarzen platniczych, uprawnien, postepu i notatek.
-Kolejne migracje rozszerzaja zamowienia pod operatora platnosci oraz dodaja dwa
-pierwsze kursy do katalogu PostgreSQL. Migracje uruchamiaja sie automatycznie
-podczas startu kontenera aplikacji.
+Port `3010` jest zwiazany tylko z `127.0.0.1`, wiec nie wystawia aplikacji
+bezposrednio do internetu.
 
-## 4. Prywatne filmy kursowe
+## 4. Administrator
 
-Przed uruchomieniem kontenerow utworz katalog:
+Utworz administratora dla ustalonego adresu:
 
 ```bash
-cd /home/ubuntu/strona-filipa
-mkdir -p data/videos/kregoslup data/videos/kark-barki
+read -s -p "Haslo administratora: " ADMIN_PASSWORD; echo
+printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email lokiju12345@wp.pl --password-stdin
+unset ADMIN_PASSWORD
 ```
 
-Skopiuj film do odpowiedniego podkatalogu. Pliki nie sa dostepne bezposrednio
-przez WWW. Kontener montuje katalog tylko do odczytu pod `/data/videos`.
+Brak znakow podczas wpisywania hasla jest prawidlowy. `unset` usuwa haslo z
+biezacej zmiennej powloki po przekazaniu go do kontenera. W bazie jest tylko
+hash bcrypt.
 
-Po uruchomieniu aplikacji przypisz plik do lekcji:
+Administrator loguje sie przez `/logowanie` i ma dostep do `/panel/admin`.
+
+## 5. Nginx Proxy Manager
+
+W Proxy Host ustaw:
+
+```txt
+Domain Names: profil-ciala.jtk.ovh
+Scheme: http
+Forward Hostname / IP: profil-ciala
+Forward Port: 3000
+Cache Assets: OFF
+Block Common Exploits: ON
+Websockets Support: ON
+```
+
+`profil-ciala` jest stalym aliasem sieciowym z `docker-compose.yml`. Nie uzywaj
+nazwy typu `strona-filipa-strona-1`, bo moze zmienic sie po odtworzeniu
+kontenera.
+
+W zakladce Advanced dodaj naglowek z ta sama wartoscia co
+`TRUSTED_PROXY_SECRET` w `.env`:
+
+```nginx
+proxy_set_header X-Trusted-Proxy-Secret "TU_WPISZ_TEN_SAM_SEKRET";
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $remote_addr;
+```
+
+W SSL:
+
+```txt
+Request a new SSL Certificate
+Force SSL: ON
+HTTP/2 Support: ON
+```
+
+Po zapisie:
+
+```bash
+curl -I https://profil-ciala.jtk.ovh
+```
+
+Odpowiedz powinna zawierac CSP, HSTS, `X-Frame-Options: DENY`,
+`X-Content-Type-Options: nosniff`, `Referrer-Policy` i `Permissions-Policy`.
+
+## 6. Filmy na VPS
+
+Filmy trzymaj pod `data/videos`, nigdy w `public` ani w repozytorium.
+Przyklad:
+
+```bash
+cp /sciezka/do/punkt-wyjscia.mp4 \
+  /home/ubuntu/strona-filipa/data/videos/kregoslup/punkt-wyjscia.mp4
+```
+
+Przypisz plik do lekcji:
 
 ```bash
 docker compose exec strona npm run db:set-video -- \
@@ -157,148 +194,150 @@ docker compose exec strona npm run db:set-video -- \
   --duration 720
 ```
 
-`--duration` jest czasem filmu w sekundach. Narzedzie nie zapisze rekordu, jezeli
-plik nie istnieje, wychodzi poza katalog filmow albo ma nieobslugiwane
-rozszerzenie.
+Kontener widzi filmy tylko do odczytu. Endpoint filmu sprawdza sesje, dostep do
+kursu, sciezke pliku oraz zakres HTTP potrzebny do przewijania.
 
-## 5. Konta, administrator i zakup testowy
+## 7. Backup przed aktualizacja
 
-Aktualnie dziala system kont i sesji w PostgreSQL:
-
-- `/kursy` - publiczny katalog oferty widoczny bez logowania,
-- `/kup` - testowy zakup nadajacy dostep do panelu, biblioteki, notatek i lekcji wideo,
-- `/rejestracja` - utworzenie konta z haslem,
-- `/logowanie` - logowanie e-mailem i haslem,
-- `/biblioteka` - prywatna biblioteka widoczna po aktywnym uprawnieniu,
-- `/panel` - panel widoczny po zalogowaniu; bez zakupu pokazuje informacje o braku dostepu.
-
-Link `Panel` pojawia sie po zalogowaniu, a `Biblioteka` dopiero po aktywacji
-dostepu. Zakup testowy zapisuje w bazie transakcje i uprawnienie `all_access`.
-Nie pobiera prawdziwej oplaty.
-
-Utworz lub zaktualizuj konto administratora po uruchomieniu kontenerow:
-
-```bash
-read -s ADMIN_PASSWORD
-printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email admin@example.com --password-stdin
-unset ADMIN_PASSWORD
-```
-
-Zmien `admin@example.com` na swoj adres. Polecenie nie zapisuje jawnego hasla
-w historii powloki. Administrator loguje sie na `/logowanie` i omija paywall.
-
-Sesje sa losowymi tokenami. W bazie przechowywany jest tylko ich hash, a hasla
-uzytkownikow sa hashowane bcrypt. Przed produkcja trzeba jeszcze podlaczyc
-operatora platnosci, webhook i odzyskiwanie hasla.
-
-## 6. Nginx Proxy Manager
-
-Kontener strony jest podlaczony do zewnetrznej sieci Docker `proxy`.
-
-W Nginx Proxy Manager ustaw:
-
-```txt
-Scheme: http
-Forward Hostname / IP: strona-filipa-strona-1
-Forward Port: 3000
-```
-
-Opcje:
-
-```txt
-Block Common Exploits: ON
-Websockets Support: ON
-Cache Assets: OFF
-```
-
-SSL:
-
-```txt
-Request a new SSL Certificate
-Force SSL: ON
-HTTP/2 Support: ON
-```
-
-Jesli Twoj Nginx Proxy Manager uzywa innej sieci niz `proxy`, sprawdz:
-
-```bash
-docker network ls
-docker ps --format "table {{.Names}}\t{{.Networks}}"
-```
-
-I zmien nazwe sieci w `docker-compose.yml`.
-
-## 7. Aktualizacja
-
-Przed aktualizacja zawierajaca nowa migracje wykonaj backup PostgreSQL:
+Wykonaj backup przed kazda wersja z nowa migracja:
 
 ```bash
 cd /home/ubuntu/strona-filipa
 mkdir -p backups
-docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
+docker compose exec -T postgres sh -c \
+  'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' \
+  > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
 ls -lh backups
 ```
 
-Nastepnie pobierz kod i przebuduj kontenery:
+Skopiuj plik `.dump` i katalog `data/videos` poza VPS. Backup na tym samym
+dysku nie chroni przed awaria serwera.
+
+Przywracanie wymaga okna serwisowego:
+
+```bash
+docker compose stop strona
+docker compose exec -T postgres sh -c \
+  'dropdb -U "$POSTGRES_USER" --if-exists "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
+docker compose exec -T postgres sh -c \
+  'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists' \
+  < backups/NAZWA_PLIKU.dump
+docker compose start strona
+```
+
+Najpierw przetestuj odtwarzanie na kopii, nie na jedynej bazie.
+
+## 8. Aktualizacja z GitHuba
 
 ```bash
 cd /home/ubuntu/strona-filipa
-git pull origin main
-docker compose up -d --build
-docker compose ps
-```
-
-Sprawdz, czy migracje `002`, `003` i `004` zostaly wykonane:
-
-```bash
-docker compose exec strona node scripts/db-status.mjs
-docker compose logs --tail=100 strona
-```
-
-Jesli `git pull` zglasza lokalne zmiany w `docker-compose.yml`, najpierw sprawdz je:
-
-```bash
 git status --short
-git diff -- docker-compose.yml
-```
-
-Jesli jest to tylko stara, lokalna zmiana sieci `proxy`, ktora znajduje sie juz w repozytorium, odloz plik przed aktualizacja:
-
-```bash
-git stash push -m "vps-compose-przed-aktualizacja" -- docker-compose.yml
 git pull origin main
 docker compose up -d --build
-```
-
-## 8. Diagnostyka
-
-```bash
 docker compose ps
-docker compose logs -f strona
-docker compose logs -f postgres
-curl -I http://127.0.0.1:3010
+docker compose exec strona node scripts/db-status.mjs
 curl http://127.0.0.1:3010/api/health
 ```
 
-Po domenie:
+Jesli `git pull` zatrzyma sie przez lokalny `docker-compose.yml`:
 
 ```bash
-curl -I https://twojadomena.pl
+git diff -- docker-compose.yml
+git stash push -m "vps-przed-aktualizacja" -- docker-compose.yml
+git pull origin main
+docker compose up -d --build
 ```
 
-W odpowiedzi powinny byc m.in.:
+Nie uzywaj `git reset --hard`, jezeli nie sprawdziles lokalnych zmian.
 
-```txt
-content-security-policy
-strict-transport-security
-x-frame-options
-x-content-type-options
-referrer-policy
-permissions-policy
+## 9. Przelewy24 Sandbox
+
+Sandbox nie pobiera prawdziwych pieniedzy. Zgodnie z oficjalna dokumentacja P24
+potrzebne sa `posId`, klucz API, CRC oraz w razie wymagania publiczny adres IP
+VPS wpisany w panelu P24:
+https://developers.przelewy24.pl/
+
+1. W panelu P24 utworz/skonfiguruj konto Sandbox.
+2. W sekcji danych API Sandbox odczytaj Merchant ID, POS ID, API key i CRC.
+3. Wpisz publiczny IPv4 VPS w konfiguracji API P24, jezeli panel tego wymaga.
+4. W `.env` ustaw:
+
+```env
+P24_ENABLED=true
+P24_ENV=sandbox
+P24_MERCHANT_ID=...
+P24_POS_ID=...
+P24_API_KEY=...
+P24_CRC=...
 ```
 
-Nie powinno byc:
+5. Przebuduj aplikacje:
 
-```txt
-x-powered-by: Next.js
+```bash
+docker compose up -d --build
 ```
+
+6. Zaloguj sie jako administrator, otworz `/panel/admin`, sekcje Przelewy24 i
+   kliknij `Sprawdz dostep API`.
+7. Dopiero po komunikacie sukcesu wlacz sprzedaz wybranych kursow:
+
+```bash
+docker compose exec strona npm run db:set-sales -- \
+  --course kregoslup-bez-przeciazen --enable
+docker compose exec strona npm run db:set-sales -- \
+  --course kark-barki-praca-siedzaca --enable
+```
+
+Wylaczenie sprzedazy:
+
+```bash
+docker compose exec strona npm run db:set-sales -- \
+  --course kregoslup-bez-przeciazen --disable
+docker compose exec strona npm run db:set-sales -- \
+  --course kark-barki-praca-siedzaca --disable
+```
+
+Przetestuj w Sandboxie:
+
+- poprawna platnosc i automatyczny dostep,
+- anulowanie albo brak zaplaty bez dostepu,
+- ponowiona notyfikacja bez podwojnego grantu,
+- zgodnosc kwoty i kursu w panelu administratora,
+- widocznosc kursu po ponownym zalogowaniu.
+
+Testy automatyczne pokrywaja bledny podpis, zla kwote, duplikat i `orderId`
+typu int64, ale nie zastepuja prawdziwego testu Sandbox.
+
+## 10. Przelaczenie na produkcje
+
+Nie zmieniaj `P24_ENV=production`, dopoki:
+
+- konto P24 nie jest zweryfikowane,
+- finalny regulamin i polityka prywatnosci nie sa opublikowane,
+- tresc zgody na natychmiastowe dostarczenie zostala zatwierdzona,
+- e-mail z potwierdzeniem umowy jest gotowy,
+- backup i monitoring zostaly sprawdzone,
+- pelny scenariusz Sandbox zakonczyl sie poprawnie.
+
+Produkcja wymaga osobnych kluczy API i CRC. Po zmianie wykonaj ponownie test API,
+ale przed wlaczeniem `sales_enabled`.
+
+## 11. Diagnostyka
+
+```bash
+docker compose ps
+docker compose logs --tail=200 strona
+docker compose logs --tail=100 postgres
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+curl -I https://profil-ciala.jtk.ovh
+docker ps --format "table {{.Names}}\t{{.Networks}}\t{{.Ports}}"
+```
+
+Najczestsze przyczyny problemow:
+
+- `403 Host nie jest dozwolony` - popraw `ALLOWED_ORIGINS`,
+- formularze odrzucane za proxy - sprawdz `X-Trusted-Proxy-Secret`,
+- `testAccess` nie dziala - sprawdz dane Sandbox i IP VPS w panelu P24,
+- kurs ma przycisk nieaktywny - sprawdz `P24_ENABLED` i `sales_enabled`,
+- brak filmu - sprawdz mount `VIDEO_STORAGE_HOST_PATH` i przypisanie lekcji.

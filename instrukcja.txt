@@ -1,20 +1,25 @@
-Na VPS-ie wejdź do folderu projektu i wpisz:
+SZYBKA AKTUALIZACJA VPS
 
-cd /sciezka/do/twojego/projektu
+cd /home/ubuntu/strona-filipa
+
+1. Backup bazy:
+mkdir -p backups
+docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
+
+2. Aktualizacja:
+git status --short
+git pull origin main
 docker compose up -d --build
-Jeśli projekt jest np. w /var/www/strona, to:
 
-cd /var/www/strona
-docker compose up -d --build
-Potem sprawdź, czy działa:
-
+3. Sprawdzenie:
 docker compose ps
-Logi aplikacji:
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+curl -I https://profil-ciala.jtk.ovh
 
-docker compose logs -f
-Strona będzie dostępna na:
+Nginx Proxy Manager:
+Forward Hostname / IP: profil-ciala
+Forward Port: 3000
 
-http://ADRES_VPS:3000
-Jeśli masz starszą wersję Dockera i komenda docker compose nie działa, spróbuj:
-
-docker-compose up -d --build
+Pelna instrukcja, konfiguracja .env, backup, filmy i Sandbox P24:
+WGRAC_NA_VPS.md

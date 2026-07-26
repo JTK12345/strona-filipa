@@ -28,6 +28,7 @@ export function AppointmentForm() {
   const [form, setForm] = useState(initialForm);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileSiteKey, setTurnstileSiteKey] = useState("");
+  const [requireTurnstile, setRequireTurnstile] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [status, setStatus] = useState("");
   const [isConfigLoading, setIsConfigLoading] = useState(true);
@@ -46,6 +47,7 @@ export function AppointmentForm() {
         const data = (await response.json()) as {
           csrfToken?: unknown;
           turnstileSiteKey?: unknown;
+          requireTurnstile?: unknown;
         };
 
         if (!cancelled) {
@@ -56,6 +58,7 @@ export function AppointmentForm() {
           setTurnstileSiteKey(
             typeof data.turnstileSiteKey === "string" ? data.turnstileSiteKey : ""
           );
+          setRequireTurnstile(data.requireTurnstile !== false);
         }
       } catch {
         if (!cancelled) {
@@ -93,7 +96,7 @@ export function AppointmentForm() {
       return;
     }
 
-    if (process.env.NODE_ENV === "production" && !turnstileToken) {
+    if (requireTurnstile && !turnstileToken) {
       setStatus("Najpierw potwierdz zabezpieczenie antyspamowe formularza.");
       return;
     }
@@ -219,6 +222,7 @@ export function AppointmentForm() {
 
       <TurnstileField
         siteKey={turnstileSiteKey}
+        requireTurnstile={requireTurnstile}
         onVerify={setTurnstileToken}
         onExpire={() => setTurnstileToken("")}
       />

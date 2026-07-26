@@ -51,9 +51,12 @@ export default async function CoursePage(
             <span>
               Ukończono {completedCount} z {lessonCount} lekcji
             </span>
-            <div className="access-progress-bar">
-              <span style={{ width: `${progress}%` }} />
-            </div>
+            <progress
+              className="access-progress-bar"
+              value={progress}
+              max={100}
+              aria-label={`Postęp kursu: ${progress} procent`}
+            />
           </div>
         </div>
 

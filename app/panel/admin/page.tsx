@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getAdminDashboard } from "@/app/lib/admin";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { isP24Enabled } from "@/app/lib/payments/przelewy24-config";
 
 export const metadata: Metadata = {
   title: "Administracja | Świadomy Profil Ciała",
@@ -17,6 +18,15 @@ const grantMessages: Record<string, string> = {
   course_not_found: "Wybrany kurs nie istnieje lub jest zarchiwizowany.",
   already_granted: "Ten użytkownik ma już dostęp do wybranego kursu.",
   server: "Nie udało się nadać dostępu. Spróbuj ponownie.",
+  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
+};
+
+const p24Messages: Record<string, string> = {
+  success: "Przelewy24 potwierdziło poprawny dostęp do API.",
+  disabled: "Integracja P24 jest wyłączona przez P24_ENABLED=false.",
+  config: "Konfiguracja P24 jest niepełna lub nieprawidłowa.",
+  failed: "P24 nie potwierdziło dostępu. Sprawdź dane i dozwolony adres IP.",
+  rate: "Wykonano zbyt wiele testów. Odczekaj kilka minut.",
 };
 
 function formatDate(value: Date | null) {
@@ -51,6 +61,12 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
   const grantResult =
     typeof searchParams.grant === "string" ? searchParams.grant : "";
   const grantMessage = grantMessages[grantResult];
+  const p24Result =
+    typeof searchParams.p24 === "string" ? searchParams.p24 : "";
+  const p24Message = p24Messages[p24Result];
+  const paymentsEnabled = isP24Enabled();
+  const paymentEnvironment =
+    process.env.P24_ENV === "production" ? "production" : "sandbox";
 
   return (
     <section className="admin-page">
@@ -74,6 +90,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
           <a href="#zamowienia">Zamówienia</a>
           <a href="#zdarzenia">Zdarzenia płatnicze</a>
           <a href="#dostepy">Nadaj dostęp</a>
+          <a href="#p24">Przelewy24</a>
           <a href="#audyt">Audyt</a>
         </nav>
 
@@ -210,6 +227,38 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
             </label>
             <button type="submit" className="button-primary">
               Nadaj dostęp
+            </button>
+          </form>
+        </section>
+
+        <section id="p24" className="admin-section admin-p24-section">
+          <div>
+            <p className="checkout-plan__name">Połączenie operatora</p>
+            <h2>Test dostępu Przelewy24</h2>
+            <p>
+              Tryb: <strong>{paymentEnvironment}</strong>. Integracja:{" "}
+              <strong>{paymentsEnabled ? "włączona" : "wyłączona"}</strong>.
+              Test nie tworzy płatności i nie zmienia zamówień.
+            </p>
+          </div>
+          <form
+            action="/api/admin/payments/przelewy24/test-access"
+            method="post"
+            className="admin-p24-action"
+          >
+            {p24Message ? (
+              <p
+                className={p24Result === "success" ? "auth-notice" : "auth-error"}
+              >
+                {p24Message}
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              className="button-primary"
+              disabled={!paymentsEnabled}
+            >
+              Sprawdź dostęp API
             </button>
           </form>
         </section>

@@ -28,6 +28,8 @@ const errorMessages: Record<string, string> = {
   already_owned: "Ten kurs jest już dostępny na Twoim koncie.",
   course_unavailable: "Ten kurs nie jest obecnie dostępny w sprzedaży.",
   payments_disabled: "Płatności są obecnie wyłączone.",
+  rate_limited:
+    "Wykonano zbyt wiele prób płatności. Odczekaj kilka minut i spróbuj ponownie.",
   provider_unavailable:
     "Nie udało się połączyć z operatorem płatności. Spróbuj ponownie później.",
 };

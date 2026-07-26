@@ -4,6 +4,7 @@ import { CheckoutError } from "@/app/lib/payments/checkout-service";
 import { startPrzelewy24Checkout } from "@/app/lib/payments/przelewy24-checkout";
 import { P24ConfigurationError } from "@/app/lib/payments/przelewy24-config";
 import { getCurrentUserSession } from "@/app/lib/session";
+import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,24 @@ export async function POST(request: Request) {
       "authentication_required",
       "Zaloguj sie, aby kupic kurs.",
       401,
+    );
+  }
+
+  const rateLimit = await checkRateLimit(
+    "checkout-przelewy24",
+    session.userId,
+    { endpointLimit: 8, globalLimit: 20 },
+  );
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: {
+          code: "rate_limited",
+          message: "Zbyt wiele prob rozpoczecia platnosci.",
+        },
+      },
+      { status: 429, headers: rateLimit.headers },
     );
   }
 
@@ -80,7 +99,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json(checkout, {
       status: 201,
-      headers: { "Cache-Control": "no-store" },
+      headers: {
+        "Cache-Control": "no-store",
+        ...Object.fromEntries(rateLimit.headers),
+      },
     });
   } catch (error) {
     if (error instanceof P24ConfigurationError) {

@@ -25,11 +25,16 @@ export function ScrollProgress() {
   }, []);
 
   return (
-    <div className="scroll-progress" aria-hidden="true">
-      <span
+    <svg className="scroll-progress" aria-hidden="true" viewBox="0 0 100 4" preserveAspectRatio="none">
+      <rect className="scroll-progress__track" x="0" y="0" width="100" height="4" />
+      <rect
         className="scroll-progress__bar"
-        style={{ transform: `scaleX(${progress})` }}
+        x="0"
+        y="0"
+        width={100 * progress}
+        height="4"
+        rx="0"
       />
-    </div>
+    </svg>
   );
 }

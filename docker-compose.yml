@@ -9,10 +9,9 @@ services:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 3000
-      DATABASE_URL: ${DATABASE_URL:-postgresql://strona_user:strona_password@postgres:5432/strona_db}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env}
       DATABASE_POOL_MAX: ${DATABASE_POOL_MAX:-10}
-      ENABLE_TEST_CHECKOUT: ${ENABLE_TEST_CHECKOUT:-true}
-      APP_URL: ${APP_URL:-https://profil-ciala.jtk.ovh}
+      APP_URL: ${APP_URL:?Set APP_URL in .env}
       VIDEO_STORAGE_PATH: ${VIDEO_STORAGE_PATH:-/data/videos}
       P24_ENABLED: ${P24_ENABLED:-false}
       P24_ENV: ${P24_ENV:-sandbox}
@@ -30,14 +29,11 @@ services:
       MAIL_FROM: ${MAIL_FROM:-}
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
-      FORM_LOG_SALT: ${FORM_LOG_SALT:-}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
-      TRUSTED_PROXY_IPS: ${TRUSTED_PROXY_IPS:-}
-      TRUSTED_PROXY_SECRET: ${TRUSTED_PROXY_SECRET:-}
-      LOG_SALT: ${LOG_SALT:-}
-      REDIS_URL: ${REDIS_URL:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS in .env}
+      TRUSTED_PROXY_SECRET: ${TRUSTED_PROXY_SECRET:?Set TRUSTED_PROXY_SECRET in .env}
+      LOG_SALT: ${LOG_SALT:?Set LOG_SALT in .env}
     ports:
-      - "3010:3000"
+      - "127.0.0.1:3010:3000"
     volumes:
       - ${VIDEO_STORAGE_HOST_PATH:-./data/videos}:/data/videos:ro
     depends_on:
@@ -56,8 +52,10 @@ services:
       start_period: 20s
       retries: 3
     networks:
-      - default
-      - proxy
+      default:
+      proxy:
+        aliases:
+          - profil-ciala
     restart: unless-stopped
 
   postgres:
@@ -65,7 +63,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-strona_db}
       POSTGRES_USER: ${POSTGRES_USER:-strona_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-strona_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

@@ -1,112 +1,107 @@
 # Swiadomy Profil Ciala
 
-Strona gabinetu z katalogiem kursow wideo, kontami uzytkownikow, biblioteka
-materialow i panelem dostepu premium.
+Platforma gabinetu i jednorazowo platnych kursow wideo. Aplikacja laczy
+publiczny katalog, konta uzytkownikow, chronione filmy z VPS, notatki, postep,
+zamowienia Przelewy24 oraz panel administratora.
 
-## Uruchomienie lokalne
+## Stan projektu
+
+Gotowe w kodzie:
+
+- rejestracja, logowanie i sesje bazodanowe,
+- publiczny katalog kursow z cenami z PostgreSQL,
+- zakup jednego kursu przez Przelewy24,
+- podpisy SHA-384, `testAccess`, rejestracja i weryfikacja transakcji,
+- idempotentny callback P24 i atomowe nadanie dostepu,
+- prywatne filmy z obsluga HTTP Range,
+- notatki i postep lekcji,
+- historia zamowien uzytkownika,
+- panel administratora, zdarzenia platnicze i audytowane nadanie dostepu,
+- Docker Compose z PostgreSQL i siecia Nginx Proxy Manager.
+
+Integracja P24 jest domyslnie wylaczona. Przed sprzedaza trzeba uzupelnic
+finalny regulamin i polityke prywatnosci, skonfigurowac konto Sandbox, wykonac
+testy z prawdziwymi danymi Sandbox i dopiero potem osobno zatwierdzic produkcje.
+
+## Najwazniejsze adresy
+
+- `/kursy` - publiczny katalog,
+- `/kup` - wybor kursu i rozpoczecie platnosci,
+- `/rejestracja` i `/logowanie` - konto uzytkownika,
+- `/panel` - kursy i historia zamowien zalogowanego uzytkownika,
+- `/panel/admin` - panel dostepny tylko dla administratora,
+- `/biblioteka` - prywatna biblioteka,
+- `/platnosc/sukces` - kontrolowany odczyt statusu lokalnego zamowienia,
+- `/regulamin` i `/polityka-prywatnosci` - obecnie oznaczone projekty.
+
+Panel i biblioteka nie sa pokazywane niezalogowanym osobom. Samo ukrycie linku
+nie jest zabezpieczeniem: kazda trasa kursu, lekcji, notatek i filmu ponownie
+sprawdza sesje oraz `access_grants` po stronie serwera.
+
+## Architektura
+
+- Next.js 16.2.2, App Router, React 19, TypeScript,
+- PostgreSQL 16 i migracje SQL tylko do przodu,
+- Docker Compose,
+- Nginx Proxy Manager przez zewnetrzna siec Docker `proxy`,
+- pliki wideo poza `public`, montowane tylko do odczytu,
+- Przelewy24 REST API, Sandbox albo produkcja wybierane tylko przez `P24_ENV`.
+
+Kontener aplikacji uruchamia migracje przed startem serwera. Baza i filmy nie sa
+czescia obrazu aplikacji.
+
+## Uruchomienie
+
+Do pelnego uruchomienia potrzebny jest PostgreSQL. Najprosciej:
+
+```bash
+cp .env.example .env
+docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
+docker compose up -d --build
+docker compose ps
+curl http://127.0.0.1:3010/api/health
+```
+
+Przed startem zmien wszystkie wartosci `replace-with-*` w `.env`.
+
+Same testy i build:
 
 ```bash
 npm install
-npm run dev
+npm test
+npm run lint
+npm run build
 ```
 
-Strona bedzie dostepna pod `http://localhost:3000`.
-
-## Obsluga wersji testowej
-
-Najwazniejsze adresy:
-
-- `/kursy` - publiczny katalog kursow, widoczny bez logowania,
-- `/biblioteka` - prywatna biblioteka materialow, dostepna po zalogowaniu,
-- `/dostep` - opis dostepu premium,
-- `/kup` - testowy zakup bez prawdziwej platnosci,
-- `/rejestracja` - tworzenie konta uzytkownika,
-- `/logowanie` - logowanie e-mailem i haslem,
-- `/panel` - panel zalogowanego uzytkownika.
-
-Po wylogowaniu linki `Biblioteka` i `Panel` nie sa widoczne w nawigacji. Panel
-pojawia sie po zalogowaniu, a biblioteka dopiero po nadaniu aktywnego dostepu.
-Bezposrednie wejscie do chronionej czesci wykonuje odpowiednie przekierowanie.
-
-### Testowy zakup
-
-1. Otworz `/kup`.
-2. Wpisz adres e-mail.
-3. Kliknij przycisk testowego zakupu.
-4. Aplikacja zapisze testowy zakup i uprawnienie w PostgreSQL, utworzy sesje
-   klienta i przeniesie do `/panel`.
-
-W tym trybie nie jest pobierana zadna oplata. Mozna go wylaczyc przez
-`ENABLE_TEST_CHECKOUT=false`.
-
-Testowy dostep obejmuje panel kursow, lekcje wideo, biblioteke, notatki i materialy
-praktyczne. Uzytkownik moze pozniej ustawic haslo przez rejestracje na ten sam e-mail.
-
-### Dostep administratora
-
-Konto administratora utworz w kontenerze aplikacji:
+Przydatne polecenia:
 
 ```bash
-read -s ADMIN_PASSWORD
-printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email admin@example.com --password-stdin
-unset ADMIN_PASSWORD
+npm run db:status
+npm run db:create-admin
+npm run db:set-video
+npm run db:set-sales
 ```
 
-Administrator loguje sie zwyklym formularzem `/logowanie` i ma dostep do panelu
-oraz biblioteki bez zakupu. Haslo jest zapisywane jako hash bcrypt, a losowa sesja
-jest przechowywana w bazie.
+## Platnosci
 
-## Docker i VPS
+Frontend wysyla tylko identyfikator kursu i wymagane potwierdzenia zgody.
+Backend ponownie pobiera cene, walute, tytul i stan sprzedazy z PostgreSQL.
+Powrot uzytkownika z bramki nie oznacza zaplaty. Dostep powstaje dopiero po:
 
-Docker Compose uruchamia:
+1. poprawnym podpisie notyfikacji,
+2. zgodnosci sprzedawcy, sesji, kwoty, waluty i `orderId`,
+3. sukcesie `PUT /transaction/verify`,
+4. transakcyjnym zapisie `paid`, zdarzenia i `access_grants`.
 
-- aplikacje Next.js jako `strona`,
-- baze PostgreSQL jako `postgres` z trwalym volume,
-- polaczenie aplikacji z zewnetrzna siecia `proxy` dla Nginx Proxy Manager.
+Nie istnieje funkcja recznego oznaczania zakupu jako `paid`. Administrator moze
+nadac kurs poza platnoscia, ale jest to osobny grant ze zrodlem `admin` i wpisem
+w `admin_audit_events`.
 
-Przy kazdym starcie kontenera aplikacji migracje z `database/migrations` sa
-wykonywane automatycznie przed uruchomieniem Next.js. Zastosowane migracje sa
-zapisywane w tabeli `schema_migrations` i nie wykonuja sie ponownie.
+## Dokumentacja
 
-Podstawowy model danych obejmuje:
-
-- uzytkownikow i sesje,
-- kursy, moduly oraz lekcje,
-- materialy biblioteki,
-- zakupy i zdarzenia operatora platnosci,
-- uprawnienia do kursow i biblioteki,
-- postep lekcji i notatki uzytkownikow.
-
-Stan aplikacji i polaczenia z baza:
-
-```bash
-curl http://127.0.0.1:3010/api/health
-docker compose exec strona node scripts/db-status.mjs
-```
-
-Pelna instrukcja pierwszego wdrozenia, konfiguracji `.env`, Nginx Proxy Manager oraz aktualizacji znajduje sie w [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md).
-
-Szybka aktualizacja istniejacej instalacji:
-
-```bash
-cd /home/ubuntu/strona-filipa
-git pull origin main
-docker compose up -d --build
-docker compose ps
-```
-
-Aplikacja jest wystawiona na hoscie pod `http://127.0.0.1:3010`, a Nginx Proxy Manager laczy sie z kontenerem `strona-filipa-strona-1` na porcie `3000`.
-
-## Stan platnosci
-
-Zakup jest obecnie symulowany, ale konto, transakcja, sesja i uprawnienie sa
-zapisywane w PostgreSQL. Przed produkcja trzeba wylaczyc testowy checkout i
-podlaczyc operatora platnosci oraz jego webhook.
-
-Audyt i etapowy plan integracji z Przelewy24 znajduja sie w
-[docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md). Konfiguracja P24
-jest domyslnie wylaczona przez `P24_ENABLED=false`.
-
-Publiczny katalog, ceny oraz lista kursow przypisanych do konta sa odczytywane
-z PostgreSQL. Migracja `003_course_catalog.sql` dodaje dwa pierwsze kursy po
-149 PLN, pozostawiajac ich prawdziwa sprzedaz wylaczona.
+- [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md) - pierwsze wdrozenie, aktualizacja,
+  backup, filmy, Nginx i Sandbox P24,
+- [docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md) - kontrakt i
+  architektura platnosci,
+- [SECURITY_HARDENING.md](./SECURITY_HARDENING.md) - zabezpieczenia i bramki
+  przed produkcja.

@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import {
   isSameOriginFormRequest,
   normalizeEmail,
+  readUrlEncodedForm,
   sanitizeAuthDestination,
   verifyPassword,
 } from "@/app/lib/auth";
+import { getClientIp } from "@/app/api/_utils/ip";
+import {
+  checkRateLimit,
+  getRateLimitFingerprint,
+} from "@/app/api/_utils/rateLimiter";
 import { queryDatabase } from "@/app/lib/db";
 import { createSessionCookie, createUserSession } from "@/app/lib/session";
 
@@ -24,7 +30,31 @@ export async function POST(request: Request) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  const formData = await request.formData();
+  const clientIp = getClientIp(request);
+  const rateLimit = await checkRateLimit(
+    "auth-login",
+    getRateLimitFingerprint(
+      clientIp.ip,
+      request.headers.get("user-agent") ?? "unknown",
+    ),
+    { endpointLimit: 10, globalLimit: 20 },
+  );
+  const formData = await readUrlEncodedForm(request, [
+    "email",
+    "password",
+    "next",
+  ]);
+
+  if (!rateLimit.allowed || !formData) {
+    const errorDestination = new URLSearchParams({
+      error: rateLimit.allowed ? "credentials" : "rate",
+      next: "/panel",
+    });
+    const headers = new Headers(rateLimit.headers);
+    headers.set("Location", `/logowanie?${errorDestination.toString()}`);
+    return new NextResponse(null, { status: 303, headers });
+  }
+
   const email = normalizeEmail(formData.get("email"));
   const password = String(formData.get("password") ?? "");
   const destination = sanitizeAuthDestination(formData.get("next"));
@@ -46,16 +76,20 @@ export async function POST(request: Request) {
       error: "credentials",
       next: destination,
     });
+    const headers = new Headers(rateLimit.headers);
+    headers.set("Location", `/logowanie?${errorDestination.toString()}`);
     return new NextResponse(null, {
       status: 303,
-      headers: { Location: `/logowanie?${errorDestination.toString()}` },
+      headers,
     });
   }
 
   const token = await createUserSession(user.id);
+  const successHeaders = new Headers(rateLimit.headers);
+  successHeaders.set("Location", destination);
   const response = new NextResponse(null, {
     status: 303,
-    headers: { Location: destination },
+    headers: successHeaders,
   });
   response.cookies.set(createSessionCookie(token));
 

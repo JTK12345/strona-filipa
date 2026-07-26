@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 const errorMessages: Record<string, string> = {
   credentials: "Nieprawidłowy e-mail lub hasło.",
+  rate: "Zbyt wiele prób logowania. Odczekaj kilka minut i spróbuj ponownie.",
   server: "Nie udało się zalogować. Spróbuj ponownie.",
 };
 

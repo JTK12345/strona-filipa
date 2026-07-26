@@ -1,9 +1,17 @@
 node_modules
 .next
+.cache
 .env
 .env.local
 .env.production
 dist
 coverage
+*.tsbuildinfo
+.tmp-next-dev*.log
+backup/
+backups/
+paczka-vps-*/
+strona-do-wgrania-*/
+profil-ciala-vps.zip
 data/videos/*
 !data/videos/.gitkeep

@@ -49,7 +49,7 @@ export default async function AccessPage() {
                 <p className="access-dashboard__label">Twój dostęp</p>
                 <h2>Panel kursów</h2>
               </div>
-              <span>Test</span>
+              <span>Konto</span>
             </div>
 
             <div className="access-dashboard__progress">
@@ -57,9 +57,12 @@ export default async function AccessPage() {
                 <p>{featuredCourse?.title ?? "Pierwszy kurs"}</p>
                 <span>{featuredCourse?.duration ?? "Materiały w przygotowaniu"}</span>
               </div>
-              <div className="access-progress-bar">
-                <span style={{ width: "62%" }} />
-              </div>
+              <progress
+                className="access-progress-bar"
+                value={62}
+                max={100}
+                aria-label="Przykładowy postęp kursu: 62 procent"
+              />
             </div>
 
             <div className="access-dashboard__list">
@@ -82,11 +85,11 @@ export default async function AccessPage() {
         <div className="access-roadmap">
           <div>
             <span className="eyebrow">Jak działa teraz</span>
-            <h2>Konta i dostęp są już zapisywane w bazie platformy.</h2>
+            <h2>Konto łączy zakup, postęp i materiały w jednym miejscu.</h2>
           </div>
           <div className="access-roadmap__steps">
             <p><strong>1.</strong> Rejestracja tworzy konto chronione hasłem.</p>
-            <p><strong>2.</strong> Zakup testowy zapisuje transakcję i aktywuje materiały bez pobrania pieniędzy.</p>
+            <p><strong>2.</strong> Po płatności Przelewy24 potwierdza transakcję i aktywuje zakupiony kurs.</p>
             <p><strong>3.</strong> Biblioteka jest dostępna tylko dla kont z odpowiednim uprawnieniem.</p>
           </div>
         </div>

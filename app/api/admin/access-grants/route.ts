@@ -9,6 +9,7 @@ import {
   normalizeEmail,
 } from "@/app/lib/auth";
 import { getCurrentUserSession } from "@/app/lib/session";
+import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,16 @@ export async function POST(request: Request) {
 
   if (!session || session.role !== "admin") {
     return new NextResponse(null, { status: 403 });
+  }
+
+  const rateLimit = await checkRateLimit(
+    "admin-access-grant",
+    session.userId,
+    { endpointLimit: 10, globalLimit: 20 },
+  );
+
+  if (!rateLimit.allowed) {
+    return redirectToAdmin("rate");
   }
 
   let formData: FormData;

@@ -8,6 +8,17 @@ type RevealProps = {
   delayMs?: number;
 };
 
+const delayClassMap: Record<number, string> = {
+  0: "reveal--delay-0",
+  80: "reveal--delay-80",
+  120: "reveal--delay-120",
+  160: "reveal--delay-160",
+  200: "reveal--delay-200",
+  240: "reveal--delay-240",
+  280: "reveal--delay-280",
+  320: "reveal--delay-320",
+};
+
 export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -42,10 +53,14 @@ export function Reveal({ children, className, delayMs = 0 }: RevealProps) {
   return (
     <div
       ref={ref}
-      className={["reveal", isVisible ? "reveal--visible" : "", className]
+      className={[
+        "reveal",
+        delayClassMap[delayMs] ?? "reveal--delay-0",
+        isVisible ? "reveal--visible" : "",
+        className,
+      ]
         .filter(Boolean)
         .join(" ")}
-      style={{ transitionDelay: `${delayMs}ms` }}
     >
       {children}
     </div>

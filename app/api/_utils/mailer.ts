@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { securityConfig } from "@/app/api/_utils/security-config";
 
 export function getSmtpConfig() {
   const port = Number(process.env.SMTP_PORT ?? 587);
@@ -27,6 +28,13 @@ export function createMailerTransport() {
       host: smtp.host,
       port: smtp.port,
       secure: smtp.secure,
+      requireTLS: true,
+      connectionTimeout: securityConfig.smtpTimeoutMs,
+      greetingTimeout: securityConfig.smtpTimeoutMs,
+      socketTimeout: securityConfig.smtpTimeoutMs,
+      tls: {
+        minVersion: "TLSv1.2",
+      },
       auth: {
         user: smtp.user,
         pass: smtp.pass,

@@ -826,15 +826,27 @@ header nav a:hover::after {
 }
 
 .access-progress-bar {
+  display: block;
+  width: 100%;
   height: 0.5rem;
+  appearance: none;
   overflow: hidden;
+  border: 0;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
 }
 
-.access-progress-bar span {
-  display: block;
-  height: 100%;
+.access-progress-bar::-webkit-progress-bar {
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.access-progress-bar::-webkit-progress-value {
+  border-radius: inherit;
+  background: var(--warm);
+}
+
+.access-progress-bar::-moz-progress-bar {
   border-radius: inherit;
   background: var(--warm);
 }
@@ -1454,6 +1466,31 @@ header nav a:hover::after {
   padding: 0.9rem 1rem;
 }
 
+.admin-p24-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: center;
+}
+
+.admin-p24-section h2 {
+  margin-top: 0.4rem;
+  font-size: 1.9rem;
+  font-weight: 900;
+}
+
+.admin-p24-section > div > p:last-child {
+  margin-top: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.admin-p24-action {
+  display: grid;
+  min-width: 260px;
+  gap: 0.8rem;
+}
+
 @media (max-width: 800px) {
   .panel-topbar,
   .panel-section-heading,
@@ -1470,6 +1507,14 @@ header nav a:hover::after {
 
   .admin-grant-section {
     grid-template-columns: 1fr;
+  }
+
+  .admin-p24-section {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-p24-action {
+    min-width: 0;
   }
 
   .admin-tabs {
@@ -2019,6 +2064,11 @@ header nav a:hover::after {
   color: var(--muted);
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.course-workspace__progress .access-progress-bar,
+.course-workspace__progress .access-progress-bar::-webkit-progress-bar {
+  background: #e3e7e0;
 }
 
 .course-modules {
