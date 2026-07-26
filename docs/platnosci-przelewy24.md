@@ -41,6 +41,15 @@ Obecny checkout `/api/checkout/test`:
 Katalog i panel pobieraja obecnie kursy z `content/courses.ts`. Tabela `courses`
 nie jest jeszcze zrodlem oferty widocznej na stronie.
 
+### Ustalone decyzje produktowe
+
+- startujemy od dwoch kursow sprzedawanych jednorazowo,
+- filmy na pierwszym etapie sa przechowywane na VPS z limitem 200 GB,
+- Przelewy24 jest docelowym operatorem platnosci,
+- administrator zachowuje dostep do wszystkich materialow bez zakupu,
+- katalog kursow pozostaje publiczny, a lekcje, biblioteka i notatki wymagaja
+  aktywnego dostepu.
+
 ## 3. Najwazniejsze ryzyka przed produkcja
 
 1. Cena i status kursu musza pochodzic z PostgreSQL, nie z frontendu ani stalej
@@ -53,6 +62,8 @@ nie jest jeszcze zrodlem oferty widocznej na stronie.
 6. Migracje sa tylko w przod. Cofniecie wymaga migracji naprawczej lub
    przywrocenia backupu PostgreSQL.
 7. Domyslne hasla bazy z przykladowej konfiguracji nie nadaja sie do produkcji.
+8. Filmy nie moga trafic do katalogu `public` ani do obrazu aplikacji. Taki plik
+   bylby dostepny bez kontroli uprawnien lub zniknalby przy przebudowie kontenera.
 
 ## 4. Oficjalny kontrakt Przelewy24
 
@@ -107,8 +118,18 @@ Identyfikator `orderId` P24 jest typu `int64`. Istniejace pole
 
 - dodac trasy kursu, modulu i lekcji,
 - sprawdzac `access_grants` po stronie serwera dla kazdego zasobu,
-- zabezpieczyc filmy, pliki, notatki i zapis postepu,
+- przechowywac filmy w osobnym katalogu lub woluminie VPS poza `public`,
+- wydawac filmy dopiero po autoryzacji, docelowo przez wewnetrzne przekierowanie
+  serwera WWW zamiast przesylania calego pliku przez proces Next.js,
+- obslugiwac zadania zakresowe HTTP potrzebne do przewijania filmu,
+- zabezpieczyc pliki, notatki i zapis postepu,
 - administrator zachowuje pelny dostep.
+
+Limit 200 GB powinien wystarczyc na dwa pierwsze kursy, ale przed publikacja
+nalezy zmierzyc rzeczywisty rozmiar wszystkich wariantow wideo i zachowac zapas
+na system, baze, logi i backupy. Backup filmow musi znajdowac sie poza tym samym
+VPS. Zewnetrzny hosting wideo stanie sie kolejnym krokiem dopiero wtedy, gdy
+transfer, liczba uzytkownikow lub obsluga kilku jakosci zaczna obciazac serwer.
 
 ### Etap 4 - klient P24 bez publicznego checkoutu
 
