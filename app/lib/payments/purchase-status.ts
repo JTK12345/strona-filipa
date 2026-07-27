@@ -28,7 +28,7 @@ export async function getUserPurchaseStatus(
        ON purchase_items.purchase_id = purchases.id
       AND purchase_items.item_type = 'course'
      WHERE purchases.user_id = $1
-       AND purchases.provider = 'przelewy24'
+       AND purchases.provider IN ('przelewy24', 'test')
        AND purchases.public_order_number = $2
      LIMIT 1`,
     [userId, publicOrderNumber],

@@ -28,6 +28,8 @@ const errorMessages: Record<string, string> = {
   already_owned: "Ten kurs jest już dostępny na Twoim koncie.",
   course_unavailable: "Ten kurs nie jest obecnie dostępny w sprzedaży.",
   payments_disabled: "Płatności są obecnie wyłączone.",
+  test_payments_disabled:
+    "Tryb płatności testowych nie jest dostępny dla tego konta.",
   rate_limited:
     "Wykonano zbyt wiele prób płatności. Odczekaj kilka minut i spróbuj ponownie.",
   provider_unavailable:
@@ -38,12 +40,12 @@ export function CourseCheckout({
   courses,
   selectedSlug,
   isAuthenticated,
-  paymentsEnabled,
+  paymentMode,
 }: {
   courses: CheckoutCourse[];
   selectedSlug?: string;
   isAuthenticated: boolean;
-  paymentsEnabled: boolean;
+  paymentMode: "przelewy24" | "test" | null;
 }) {
   const initialCourse =
     courses.find((course) => course.slug === selectedSlug) ?? courses[0];
@@ -61,7 +63,7 @@ export function CourseCheckout({
   const canPurchase =
     Boolean(selectedCourse) &&
     isAuthenticated &&
-    paymentsEnabled &&
+    Boolean(paymentMode) &&
     selectedCourse?.salesEnabled &&
     !selectedCourse?.owned &&
     termsAccepted &&
@@ -79,7 +81,11 @@ export function CourseCheckout({
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/checkout/przelewy24", {
+      const checkoutEndpoint =
+        paymentMode === "test"
+          ? "/api/checkout/test"
+          : "/api/checkout/przelewy24";
+      const response = await fetch(checkoutEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -242,17 +248,29 @@ export function CourseCheckout({
             disabled={!canPurchase}
           >
             {state === "submitting"
-              ? "Łączenie z Przelewy24..."
+              ? paymentMode === "test"
+                ? "Tworzenie testu..."
+                : "Łączenie z Przelewy24..."
               : selectedCourse?.owned
                 ? "Kurs jest już dostępny"
-                : !selectedCourse?.salesEnabled || !paymentsEnabled
+                : !selectedCourse?.salesEnabled || !paymentMode
                   ? "Sprzedaż jeszcze nieaktywna"
-                  : "Kupuję i płacę"}
+                  : paymentMode === "test"
+                    ? "Przejdź do symulatora"
+                    : "Kupuję i płacę"}
           </button>
         )}
 
-        <p className="order-summary__provider">
-          Bezpieczna płatność obsługiwana przez Przelewy24.
+        <p
+          className={`order-summary__provider${
+            paymentMode === "test"
+              ? " order-summary__provider--test"
+              : ""
+          }`}
+        >
+          {paymentMode === "test"
+            ? "Tryb testowy. Żadne pieniądze nie zostaną pobrane."
+            : "Bezpieczna płatność obsługiwana przez Przelewy24."}
         </p>
       </aside>
     </form>

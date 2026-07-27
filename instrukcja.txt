@@ -23,3 +23,6 @@ Forward Port: 3000
 
 Pelna instrukcja, konfiguracja .env, backup, filmy i Sandbox P24:
 WGRAC_NA_VPS.md
+
+Test zakupow bez konta P24:
+sekcja "Testy bez Przelewy24" w WGRAC_NA_VPS.md

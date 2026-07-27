@@ -7,17 +7,25 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function PaymentFailurePage() {
+export default async function PaymentFailurePage(
+  props: PageProps<"/platnosc/niepowodzenie">,
+) {
+  const searchParams = await props.searchParams;
+  const isTestPayment = searchParams.test === "1";
+
   return (
     <section className="payment-result-page">
       <div className="container-main">
         <BackHomeLink />
         <div className="payment-result payment-result--error">
-          <p className="checkout-plan__name">Płatność nieukończona</p>
+          <p className="checkout-plan__name">
+            {isTestPayment ? "Test odrzucony" : "Płatność nieukończona"}
+          </p>
           <h1>Dostęp nie został jeszcze aktywowany.</h1>
           <p>
-            Możesz rozpocząć płatność ponownie. Kurs zostanie przypisany dopiero
-            po potwierdzeniu transakcji przez Przelewy24.
+            {isTestPayment
+              ? "Symulator oznaczył zamówienie jako odrzucone. Możesz rozpocząć kolejny test albo wrócić do panelu."
+              : "Możesz rozpocząć płatność ponownie. Kurs zostanie przypisany dopiero po potwierdzeniu transakcji przez Przelewy24."}
           </p>
           <div className="payment-result__actions">
             <Link href="/kup" className="button-primary">

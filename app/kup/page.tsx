@@ -7,6 +7,7 @@ import {
   getPublishedCourses,
 } from "@/app/lib/courses";
 import { isP24Enabled } from "@/app/lib/payments/przelewy24-config";
+import { isTestPaymentAllowed } from "@/app/lib/payments/test-payment-config";
 import { BackHomeLink } from "@/components/BackHomeLink";
 import { CourseCheckout } from "@/components/course/CourseCheckout";
 
@@ -26,6 +27,11 @@ export default async function BuyPage(props: PageProps<"/kup">) {
   const ownedCourseIds = new Set(accessibleCourses.map((course) => course.id));
   const selectedSlug =
     typeof searchParams.course === "string" ? searchParams.course : undefined;
+  const paymentMode = isP24Enabled()
+    ? ("przelewy24" as const)
+    : session && isTestPaymentAllowed(session.email)
+      ? ("test" as const)
+      : null;
 
   return (
     <section className="checkout-page">
@@ -86,7 +92,7 @@ export default async function BuyPage(props: PageProps<"/kup">) {
           }))}
           selectedSlug={selectedSlug}
           isAuthenticated={Boolean(session)}
-          paymentsEnabled={isP24Enabled()}
+          paymentMode={paymentMode}
         />
 
         <section className="purchase-includes" aria-labelledby="purchase-includes-title">

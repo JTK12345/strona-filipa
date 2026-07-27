@@ -21,6 +21,7 @@ prawnych wlasciciela:
 - [x] panel uzytkownika i administratora,
 - [x] audytowane reczne nadanie dostepu,
 - [x] usuniety publiczny checkout testowy,
+- [x] kontrolowany symulator tylko dla jawnej listy kont testowych,
 - [ ] prawdziwe dane konta P24 Sandbox,
 - [ ] poprawny `testAccess` wykonany z VPS,
 - [ ] pelne scenariusze platnosci w Sandbox,
@@ -28,6 +29,11 @@ prawnych wlasciciela:
 - [ ] osobna akceptacja uruchomienia produkcji.
 
 P24 i sprzedaz kursow pozostaja domyslnie wylaczone.
+
+Symulator bez P24 jest osobnym providerem `test`. Wymaga zalogowanego konta z
+allowlisty, nie przyjmuje ceny z frontendu i nie jest dostepny po wlaczeniu P24
+ani w `P24_ENV=production`. Sluzy do testowania platformy, ale nie zastepuje
+prawdziwego scenariusza Sandbox operatora.
 
 ## Oficjalny kontrakt
 
@@ -127,6 +133,8 @@ P24_POS_ID=
 P24_API_KEY=
 P24_CRC=
 P24_HTTP_TIMEOUT_MS=8000
+TEST_PAYMENTS_ENABLED=false
+TEST_PAYMENT_EMAILS=
 ```
 
 Gdy `P24_ENABLED=false`, puste dane sa prawidlowe. Gdy jest `true`, aplikacja

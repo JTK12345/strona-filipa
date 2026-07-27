@@ -1,25 +1,23 @@
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
 import { readCheckoutRequest } from "@/app/api/checkout/checkout-request";
 import { isSameOriginFormRequest } from "@/app/lib/auth";
 import { CheckoutError } from "@/app/lib/payments/checkout-service";
-import { startPrzelewy24Checkout } from "@/app/lib/payments/przelewy24-checkout";
-import { P24ConfigurationError } from "@/app/lib/payments/przelewy24-config";
+import {
+  startTestPaymentCheckout,
+  TestPaymentError,
+} from "@/app/lib/payments/test-payment-service";
 import { getCurrentUserSession } from "@/app/lib/session";
-import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
 
 export const runtime = "nodejs";
 
-function errorResponse(
-  code: string,
-  message: string,
-  status: number,
-) {
+function errorResponse(code: string, message: string, status: number) {
   return NextResponse.json({ error: { code, message } }, { status });
 }
 
 export async function POST(request: Request) {
   if (!isSameOriginFormRequest(request)) {
-    return errorResponse("forbidden", "Niedozwolone zrodlo zadania.", 403);
+    return errorResponse("forbidden", "Niedozwolone źródło żądania.", 403);
   }
 
   const session = await getCurrentUserSession();
@@ -27,13 +25,13 @@ export async function POST(request: Request) {
   if (!session) {
     return errorResponse(
       "authentication_required",
-      "Zaloguj sie, aby kupic kurs.",
+      "Zaloguj się, aby przetestować zakup.",
       401,
     );
   }
 
   const rateLimit = await checkRateLimit(
-    "checkout-przelewy24",
+    "checkout-test",
     session.userId,
     { endpointLimit: 8, globalLimit: 20 },
   );
@@ -43,7 +41,7 @@ export async function POST(request: Request) {
       {
         error: {
           code: "rate_limited",
-          message: "Zbyt wiele prob rozpoczecia platnosci.",
+          message: "Zbyt wiele prób rozpoczęcia płatności testowej.",
         },
       },
       { status: 429, headers: rateLimit.headers },
@@ -53,11 +51,11 @@ export async function POST(request: Request) {
   const body = await readCheckoutRequest(request);
 
   if (!body) {
-    return errorResponse("invalid_request", "Nieprawidlowe zadanie.", 400);
+    return errorResponse("invalid_request", "Nieprawidłowe żądanie.", 400);
   }
 
   try {
-    const checkout = await startPrzelewy24Checkout({
+    const checkout = await startTestPaymentCheckout({
       userId: session.userId,
       email: session.email,
       role: session.role,
@@ -72,37 +70,30 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    if (error instanceof P24ConfigurationError) {
+    if (error instanceof TestPaymentError) {
       return errorResponse(
-        error.code === "disabled" ? "payments_disabled" : "payments_config",
-        "Platnosci sa obecnie niedostepne.",
-        503,
+        "test_payments_disabled",
+        "Płatności testowe nie są dostępne dla tego konta.",
+        403,
       );
     }
 
     if (error instanceof CheckoutError) {
-      const status =
-        error.code === "already_owned"
-          ? 409
-          : error.code === "provider_unavailable"
-            ? 502
-            : 400;
+      const status = error.code === "already_owned" ? 409 : 400;
       const message =
         error.code === "already_owned"
-          ? "Masz juz dostep do tego kursu."
+          ? "Masz już dostęp do tego kursu."
           : error.code === "course_unavailable"
-            ? "Ten kurs nie jest obecnie dostepny w sprzedazy."
-            : error.code === "invalid_course"
-              ? "Nieprawidlowy kurs."
-              : "Nie udalo sie rozpoczac platnosci.";
+            ? "Ten kurs nie jest obecnie dostępny w sprzedaży."
+            : "Nieprawidłowy kurs.";
 
       return errorResponse(error.code, message, status);
     }
 
-    console.error("Checkout failed with an unexpected error.");
+    console.error("Test checkout failed with an unexpected error.");
     return errorResponse(
       "checkout_failed",
-      "Nie udalo sie rozpoczac platnosci.",
+      "Nie udało się rozpocząć płatności testowej.",
       500,
     );
   }

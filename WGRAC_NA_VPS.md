@@ -76,6 +76,8 @@ P24_POS_ID=
 P24_API_KEY=
 P24_CRC=
 P24_HTTP_TIMEOUT_MS=8000
+TEST_PAYMENTS_ENABLED=false
+TEST_PAYMENT_EMAILS=
 
 ALLOWED_ORIGINS=https://profil-ciala.jtk.ovh
 TRUSTED_PROXY_SECRET=tu_wpisz_drugi_losowy_sekret
@@ -250,7 +252,61 @@ docker compose up -d --build
 
 Nie uzywaj `git reset --hard`, jezeli nie sprawdziles lokalnych zmian.
 
-## 9. Przelewy24 Sandbox
+## 9. Testy bez Przelewy24
+
+Symulator tworzy prawdziwe zamowienie w bazie, zapisuje wynik oraz nadaje
+dostep przez te sama tabele `access_grants`, ale nie laczy sie z bankiem i nie
+pobiera pieniedzy. Jest dostepny tylko dla adresow wpisanych w `.env`.
+
+1. W `.env` ustaw:
+
+```env
+P24_ENABLED=false
+P24_ENV=sandbox
+TEST_PAYMENTS_ENABLED=true
+TEST_PAYMENT_EMAILS=lokiju12345-test@wp.pl
+```
+
+Kilka kont oddziel przecinkami. Nie wpisuj tutaj kont klientow.
+
+2. Przebuduj aplikacje:
+
+```bash
+docker compose up -d --build
+```
+
+3. Wlacz sprzedaz testowanych kursow:
+
+```bash
+docker compose exec strona npm run db:set-sales -- \
+  --course kregoslup-bez-przeciazen --enable
+docker compose exec strona npm run db:set-sales -- \
+  --course kark-barki-praca-siedzaca --enable
+```
+
+4. Przez `/rejestracja` utworz zwykle konto
+   `lokiju12345-test@wp.pl`. Nie uzywaj konta administratora, bo administrator
+   ma dostep do wszystkich kursow bez zakupu.
+5. Zaloguj sie tym kontem, otworz `/kup`, zaakceptuj zgody i kliknij
+   `Przejdz do symulatora`.
+6. Sprawdz oba scenariusze:
+
+- `Zasymuluj sukces` - zamowienie otrzyma status `paid`, a kurs pojawi sie w
+  panelu i bibliotece,
+- `Zasymuluj odrzucenie` - zamowienie otrzyma status `failed`, bez dostepu do
+  kursu.
+
+Po testach wylacz tryb:
+
+```env
+TEST_PAYMENTS_ENABLED=false
+TEST_PAYMENT_EMAILS=
+```
+
+Nastepnie wykonaj `docker compose up -d --build`. Tryb testowy jest dodatkowo
+automatycznie blokowany, gdy `P24_ENABLED=true` albo `P24_ENV=production`.
+
+## 10. Przelewy24 Sandbox
 
 Sandbox nie pobiera prawdziwych pieniedzy. Zgodnie z oficjalna dokumentacja P24
 potrzebne sa `posId`, klucz API, CRC oraz w razie wymagania publiczny adres IP
@@ -308,7 +364,7 @@ Przetestuj w Sandboxie:
 Testy automatyczne pokrywaja bledny podpis, zla kwote, duplikat i `orderId`
 typu int64, ale nie zastepuja prawdziwego testu Sandbox.
 
-## 10. Przelaczenie na produkcje
+## 11. Przelaczenie na produkcje
 
 Nie zmieniaj `P24_ENV=production`, dopoki:
 
@@ -322,7 +378,7 @@ Nie zmieniaj `P24_ENV=production`, dopoki:
 Produkcja wymaga osobnych kluczy API i CRC. Po zmianie wykonaj ponownie test API,
 ale przed wlaczeniem `sales_enabled`.
 
-## 11. Diagnostyka
+## 12. Diagnostyka
 
 ```bash
 docker compose ps

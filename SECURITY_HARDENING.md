@@ -19,6 +19,18 @@
 - oddzielenie grantu administratora od statusu platnosci,
 - dziennik `admin_audit_events`.
 
+## Platnosci testowe
+
+Symulator jest domyslnie wylaczony. Wymaga
+`TEST_PAYMENTS_ENABLED=true`, adresu na `TEST_PAYMENT_EMAILS`, zalogowanej sesji,
+zgodnego Origin i limitu zadan. Nie dziala, gdy wlaczono P24 albo ustawiono
+`P24_ENV=production`.
+
+Tryb testowy zapisuje zamowienia z providerem `test`, dlatego sa odroznialne od
+transakcji P24 w panelu i bazie. Nie wolno dodawac do listy zwyklych kont
+klientow. Przed prawdziwa sprzedaza wyczysc `TEST_PAYMENT_EMAILS` i ustaw
+`TEST_PAYMENTS_ENABLED=false`.
+
 ## Audyt zaleznosci
 
 Na 27 lipca 2026 r. `npm audit --omit=dev` zwraca zero znanych podatnosci.

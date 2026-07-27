@@ -17,11 +17,14 @@ Gotowe w kodzie:
 - notatki i postep lekcji,
 - historia zamowien uzytkownika,
 - panel administratora, zdarzenia platnicze i audytowane nadanie dostepu,
+- kontrolowany symulator platnosci dla wskazanych kont testowych,
 - Docker Compose z PostgreSQL i siecia Nginx Proxy Manager.
 
 Integracja P24 jest domyslnie wylaczona. Przed sprzedaza trzeba uzupelnic
 finalny regulamin i polityke prywatnosci, skonfigurowac konto Sandbox, wykonac
 testy z prawdziwymi danymi Sandbox i dopiero potem osobno zatwierdzic produkcje.
+Bez konta P24 mozna sprawdzic caly przeplyw przez tryb testowy opisany w
+`WGRAC_NA_VPS.md`.
 
 ## Najwazniejsze adresy
 

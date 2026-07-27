@@ -1823,6 +1823,58 @@ header nav a:hover::after {
   text-align: center;
 }
 
+.order-summary__provider--test {
+  border: 1px solid #d7b978;
+  border-radius: 6px;
+  background: #fff8e8;
+  color: #624515;
+  padding: 0.75rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.payment-result.payment-result--test {
+  border-color: #c8a269;
+}
+
+.payment-test-summary {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  margin: 1.5rem 0;
+  border-block: 1px solid var(--line);
+}
+
+.payment-test-summary div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.payment-test-summary div:last-child {
+  border-bottom: 0;
+}
+
+.payment-test-summary dt {
+  color: var(--muted);
+}
+
+.payment-test-summary dd {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.payment-result__actions form {
+  flex: 1 1 12rem;
+}
+
+.payment-result__actions form button {
+  width: 100%;
+}
+
 .purchase-includes {
   display: grid;
   grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1.35fr);
@@ -2004,6 +2056,11 @@ header nav a:hover::after {
 
   .purchase-includes__grid {
     grid-template-columns: 1fr;
+  }
+
+  .payment-test-summary div {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
   }
 
   .course-choice {
