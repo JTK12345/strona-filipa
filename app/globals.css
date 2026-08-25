@@ -1551,6 +1551,24 @@ header nav a:hover::after {
   margin-top: 1.5rem;
 }
 
+.admin-course-picker {
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 2rem;
+}
+
+.admin-course-picker .admin-section__heading {
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-course-picker h3 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.45rem, 2vw, 1.9rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
 .admin-course-editor {
   display: grid;
   gap: 1.5rem;
