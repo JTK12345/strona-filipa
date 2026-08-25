@@ -52,6 +52,52 @@ const catalogSelect = `
   LEFT JOIN course_modules ON course_modules.course_id = courses.id
 `;
 
+const previewCourses: CourseCatalogItem[] = [
+  {
+    id: "preview-kregoslup",
+    slug: "kregoslup-bez-przeciazen",
+    title: "Kręgosłup bez przeciążeń",
+    description:
+      "Program dla osób z napięciem pleców, długim siedzeniem i potrzebą bezpiecznego powrotu do ruchu.",
+    status: "published",
+    level: "Start",
+    duration: "4 moduły",
+    priceCents: null,
+    currency: "PLN",
+    salesEnabled: false,
+    modules: [
+      "Ocena napięcia i punkt wyjścia",
+      "Mobilność odcinka piersiowego",
+      "Biodra, oddech i stabilizacja",
+      "Plan tygodniowy",
+    ],
+  },
+  {
+    id: "preview-kark-barki",
+    slug: "kark-barki-praca-siedzaca",
+    title: "Kark i barki przy pracy siedzącej",
+    description:
+      "Ścieżka dla osób, które czują sztywność szyi, barków i górnych pleców po pracy przy biurku.",
+    status: "published",
+    level: "Podstawowy",
+    duration: "5 modułów",
+    priceCents: null,
+    currency: "PLN",
+    salesEnabled: false,
+    modules: [
+      "Ergonomia bez dogmatów",
+      "Ruch łopatek",
+      "Oddech i żebra",
+      "Szyja i górny odcinek pleców",
+      "Rutyna 12 minut",
+    ],
+  },
+];
+
+function canUseDatabase() {
+  return Boolean(process.env.DATABASE_URL);
+}
+
 function mapCourse(row: CourseCatalogRow): CourseCatalogItem {
   return {
     id: row.id,
@@ -90,6 +136,10 @@ export function getCourseStatusLabel(course: CourseCatalogItem) {
 }
 
 export const getPublishedCourses = cache(async () => {
+  if (!canUseDatabase()) {
+    return previewCourses;
+  }
+
   const result = await queryDatabase<CourseCatalogRow>(
     `${catalogSelect}
      WHERE courses.status = 'published'
@@ -102,6 +152,10 @@ export const getPublishedCourses = cache(async () => {
 
 export const getAccessibleCourses = cache(
   async (userId: string, isAdmin: boolean) => {
+    if (!canUseDatabase()) {
+      return isAdmin ? previewCourses : [];
+    }
+
     const result = await queryDatabase<CourseCatalogRow>(
       `${catalogSelect}
        WHERE courses.status <> 'archived'
