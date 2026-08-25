@@ -141,6 +141,10 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
   const courseResult =
     typeof searchParams.course === "string" ? searchParams.course : "";
   const courseMessage = courseMessages[courseResult];
+  const selectedCourseId =
+    typeof searchParams.editCourse === "string" ? searchParams.editCourse : "";
+  const selectedCourse =
+    courseEditor.find((course) => course.id === selectedCourseId) ?? null;
 
   return (
     <section className="admin-page">
@@ -331,8 +335,58 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
             </button>
           </form>
 
+          <div className="admin-course-picker">
+            <div className="admin-section__heading">
+              <div>
+                <p className="checkout-plan__name">Wybór edycji</p>
+                <h3>Wybierz kurs do edytowania</h3>
+              </div>
+            </div>
+            <div className="admin-table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Kurs</th>
+                    <th>Status</th>
+                    <th>Moduły</th>
+                    <th>Akcja</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {courseEditor.map((course) => (
+                    <tr key={course.id}>
+                      <td>
+                        <strong>{course.title}</strong>
+                        <small>{course.description || "Bez opisu"}</small>
+                      </td>
+                      <td>{course.status}</td>
+                      <td>{course.modules.length}</td>
+                      <td>
+                        <Link
+                          href={`/panel/admin?editCourse=${course.id}#kursy-admin`}
+                          className="button-secondary"
+                        >
+                          Edytuj
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {courseEditor.length === 0 ? (
+                <p className="admin-empty-row">Brak kursów.</p>
+              ) : null}
+            </div>
+          </div>
+
           <div className="admin-course-editor">
-            {courseEditor.map((course) => (
+            {!selectedCourse ? (
+              <p className="admin-empty-row">
+                Wybierz kurs z listy powyżej, żeby edytować jego moduły, lekcje
+                i filmy.
+              </p>
+            ) : null}
+            {(selectedCourse ? [selectedCourse] : []).map((course) => (
               <article key={course.id} className="admin-course-block">
                 <div className="admin-course-block__heading">
                   <div>
@@ -353,6 +407,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
 
                 <form action="/api/admin/courses" method="post" className="admin-inline-form">
                   <input type="hidden" name="action" value="update-course" />
+                  <input type="hidden" name="editCourse" value={course.id} />
                   <input type="hidden" name="courseId" value={course.id} />
                   <label>
                     <span>Nazwa</span>
@@ -384,6 +439,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
 
                 <form action="/api/admin/courses" method="post" className="admin-inline-form">
                   <input type="hidden" name="action" value="create-module" />
+                  <input type="hidden" name="editCourse" value={course.id} />
                   <input type="hidden" name="courseId" value={course.id} />
                   <label>
                     <span>Nazwa modułu</span>
@@ -409,6 +465,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
                         </div>
                         <form action="/api/admin/courses" method="post">
                           <input type="hidden" name="action" value="delete-module" />
+                          <input type="hidden" name="editCourse" value={course.id} />
                           <input type="hidden" name="moduleId" value={courseModule.id} />
                           <button type="submit" className="button-secondary">
                             Usuń moduł
@@ -418,6 +475,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
 
                       <form action="/api/admin/courses" method="post" className="admin-inline-form">
                         <input type="hidden" name="action" value="update-module" />
+                        <input type="hidden" name="editCourse" value={course.id} />
                         <input type="hidden" name="moduleId" value={courseModule.id} />
                         <label>
                           <span>Nazwa modułu</span>
@@ -439,6 +497,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
                         className="admin-inline-form"
                       >
                         <input type="hidden" name="action" value="create-lesson" />
+                        <input type="hidden" name="editCourse" value={course.id} />
                         <input type="hidden" name="moduleId" value={courseModule.id} />
                         <label>
                           <span>Tytuł lekcji</span>
@@ -478,6 +537,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
                             className="admin-lesson-editor"
                           >
                             <input type="hidden" name="action" value="update-lesson" />
+                            <input type="hidden" name="editCourse" value={course.id} />
                             <input type="hidden" name="lessonId" value={lesson.id} />
                             <div className="admin-lesson-editor__heading">
                               <strong>{lesson.position}. {lesson.title}</strong>

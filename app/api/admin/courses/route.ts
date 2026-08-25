@@ -26,10 +26,16 @@ export const runtime = "nodejs";
 const maxVideoBytes = 1024 * 1024 * 1200;
 const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
 
-function redirectToAdmin(result: string) {
+function redirectToAdmin(result: string, editCourseId = "") {
+  const searchParams = new URLSearchParams({ course: result });
+
+  if (editCourseId) {
+    searchParams.set("editCourse", editCourseId);
+  }
+
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/panel/admin?course=${result}#kursy-admin` },
+    headers: { Location: `/panel/admin?${searchParams.toString()}#kursy-admin` },
   });
 }
 
@@ -114,6 +120,9 @@ export async function POST(request: Request) {
 
   const actionValues = formData.getAll("action");
   const action = String(actionValues.at(-1) ?? "");
+  const editCourseId = String(formData.get("editCourse") ?? "");
+  const redirectToCourseEditor = (result: string) =>
+    redirectToAdmin(result, editCourseId);
 
   try {
     if (action === "create-course") {
@@ -136,7 +145,7 @@ export async function POST(request: Request) {
         durationLabel: String(formData.get("durationLabel") ?? "").trim(),
         status: normalizeStatus(formData.get("status")),
       });
-      return redirectToAdmin("course_updated");
+      return redirectToCourseEditor("course_updated");
     }
 
     if (action === "archive-course") {
@@ -150,7 +159,7 @@ export async function POST(request: Request) {
         title: String(formData.get("title") ?? "").trim(),
         description: String(formData.get("description") ?? "").trim(),
       });
-      return redirectToAdmin("module_created");
+      return redirectToCourseEditor("module_created");
     }
 
     if (action === "update-module") {
@@ -159,7 +168,7 @@ export async function POST(request: Request) {
         title: String(formData.get("title") ?? "").trim(),
         description: String(formData.get("description") ?? "").trim(),
       });
-      return redirectToAdmin("module_updated");
+      return redirectToCourseEditor("module_updated");
     }
 
     if (action === "delete-module") {
@@ -175,7 +184,7 @@ export async function POST(request: Request) {
       await deleteAdminModule(moduleId);
       await Promise.all(videoKeys.rows.map((row) => unlinkVideoKey(row.video_storage_key)));
 
-      return redirectToAdmin("module_deleted");
+      return redirectToCourseEditor("module_deleted");
     }
 
     if (action === "create-lesson") {
@@ -189,7 +198,7 @@ export async function POST(request: Request) {
         status: normalizeStatus(formData.get("status")),
         videoStorageKey,
       });
-      return redirectToAdmin("lesson_created");
+      return redirectToCourseEditor("lesson_created");
     }
 
     if (action === "update-lesson") {
@@ -210,7 +219,7 @@ export async function POST(request: Request) {
         await unlinkVideoKey(oldVideoKey);
       }
 
-      return redirectToAdmin("lesson_updated");
+      return redirectToCourseEditor("lesson_updated");
     }
 
     if (action === "delete-lesson") {
@@ -220,16 +229,16 @@ export async function POST(request: Request) {
       await deleteAdminLesson(lessonId);
       await unlinkVideoKey(videoKey);
 
-      return redirectToAdmin("lesson_deleted");
+      return redirectToCourseEditor("lesson_deleted");
     }
   } catch (error) {
     if (error instanceof AdminCourseEditorError) {
-      return redirectToAdmin(error.code);
+      return redirectToCourseEditor(error.code);
     }
 
     console.error("Admin course update failed with an unexpected error.");
-    return redirectToAdmin("server");
+    return redirectToCourseEditor("server");
   }
 
-  return redirectToAdmin("invalid");
+  return redirectToCourseEditor("invalid");
 }
