@@ -49,10 +49,6 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
             <div>
               <p className="auth-card__label">Panel i materiały</p>
               <h2>Logowanie</h2>
-              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
-                Dla administratora oraz osób, które mają konto z kodem dostępu
-                do biblioteki.
-              </p>
             </div>
 
             {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
