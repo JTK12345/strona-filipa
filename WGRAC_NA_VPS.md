@@ -148,6 +148,11 @@ printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-
 unset ADMIN_PASSWORD
 ```
 
+Nowe konta tworzone przez `/rejestracja` nie dostaja dostepu do narzedzi
+administracyjnych. Role admina nadaje i odbiera sie w `/panel/admin`, sekcja
+`Użytkownicy`. Panel pokazuje liczbe aktywnych adminow i blokuje odebranie roli
+ostatniemu administratorowi.
+
 ## 5. Kody dostepu
 
 1. Zaloguj sie jako administrator.

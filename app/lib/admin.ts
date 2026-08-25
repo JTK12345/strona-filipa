@@ -108,7 +108,108 @@ export async function getAdminDashboard() {
     users: users.rows,
     courses: courses.rows,
     auditEvents: auditEvents.rows,
+    adminCount: users.rows.filter((user) => user.role === "admin").length,
+    userCount: users.rows.filter((user) => user.role === "user").length,
   };
+}
+
+export class AdminRoleError extends Error {
+  constructor(
+    public readonly code:
+      | "invalid"
+      | "user_not_found"
+      | "already_admin"
+      | "already_user"
+      | "last_admin",
+  ) {
+    super(code);
+    this.name = "AdminRoleError";
+  }
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
+export async function setUserAdminRoleByAdmin(input: {
+  adminUserId: string;
+  targetUserId: string;
+  role: "user" | "admin";
+}) {
+  if (!isUuid(input.targetUserId)) {
+    throw new AdminRoleError("invalid");
+  }
+
+  return withDatabaseTransaction(async (client) => {
+    const targetResult = await client.query<{
+      id: string;
+      role: "user" | "admin";
+    }>(
+      `SELECT id, role
+       FROM users
+       WHERE id = $1
+         AND status = 'active'
+       FOR UPDATE`,
+      [input.targetUserId],
+    );
+    const targetUser = targetResult.rows[0];
+
+    if (!targetUser) {
+      throw new AdminRoleError("user_not_found");
+    }
+
+    if (targetUser.role === input.role) {
+      throw new AdminRoleError(
+        input.role === "admin" ? "already_admin" : "already_user",
+      );
+    }
+
+    if (targetUser.role === "admin" && input.role === "user") {
+      const adminCountResult = await client.query<{ count: string }>(
+        `SELECT count(*)::text AS count
+         FROM users
+         WHERE role = 'admin'
+           AND status = 'active'`,
+      );
+      const adminCount = Number(adminCountResult.rows[0]?.count ?? 0);
+
+      if (adminCount <= 1) {
+        throw new AdminRoleError("last_admin");
+      }
+    }
+
+    await client.query(
+      `UPDATE users
+       SET role = $2
+       WHERE id = $1`,
+      [targetUser.id, input.role],
+    );
+    await client.query(
+      `INSERT INTO admin_audit_events (
+         admin_user_id,
+         action,
+         target_user_id,
+         metadata
+       )
+       VALUES (
+         $1,
+         $2,
+         $3,
+         jsonb_build_object('previous_role', $4, 'new_role', $5)
+       )`,
+      [
+        input.adminUserId,
+        input.role === "admin" ? "admin_role_granted" : "admin_role_revoked",
+        targetUser.id,
+        targetUser.role,
+        input.role,
+      ],
+    );
+
+    return { targetUserId: targetUser.id, role: input.role };
+  });
 }
 
 export class AdminGrantError extends Error {

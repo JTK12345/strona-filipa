@@ -38,6 +38,18 @@ const materialMessages: Record<string, string> = {
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
 
+const roleMessages: Record<string, string> = {
+  granted: "Uprawnienia administratora zostały nadane.",
+  revoked: "Uprawnienia administratora zostały odebrane.",
+  invalid: "Nieprawidłowa operacja użytkownika.",
+  user_not_found: "Nie znaleziono aktywnego użytkownika.",
+  already_admin: "Ten użytkownik jest już administratorem.",
+  already_user: "Ten użytkownik nie ma uprawnień administratora.",
+  last_admin: "Nie można odebrać uprawnień ostatniemu administratorowi.",
+  server: "Nie udało się zmienić uprawnień użytkownika.",
+  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
+};
+
 function formatDate(value: Date | null) {
   return value
     ? new Intl.DateTimeFormat("pl-PL", {
@@ -88,6 +100,9 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
   const materialResult =
     typeof searchParams.material === "string" ? searchParams.material : "";
   const materialMessage = materialMessages[materialResult];
+  const roleResult =
+    typeof searchParams.role === "string" ? searchParams.role : "";
+  const roleMessage = roleMessages[roleResult];
 
   return (
     <section className="admin-page">
@@ -110,6 +125,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
         <nav className="admin-tabs" aria-label="Sekcje administracyjne">
           <a href="#kody">Kody dostępu</a>
           <a href="#materialy">Materiały</a>
+          <a href="#uzytkownicy">Użytkownicy</a>
           <a href="#dostepy">Nadaj kurs ręcznie</a>
           <a href="#audyt">Audyt</a>
         </nav>
@@ -395,6 +411,74 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
               Nadaj dostęp
             </button>
           </form>
+        </section>
+
+        <section id="uzytkownicy" className="admin-section">
+          <div className="admin-section__heading">
+            <div>
+              <p className="checkout-plan__name">Role i uprawnienia</p>
+              <h2>Użytkownicy platformy</h2>
+            </div>
+            <span>
+              {dashboard.adminCount} admin / {dashboard.userCount} użytkowników
+            </span>
+          </div>
+          {roleMessage ? (
+            <p
+              className={
+                roleResult === "granted" || roleResult === "revoked"
+                  ? "auth-notice"
+                  : "auth-error"
+              }
+            >
+              {roleMessage}
+            </p>
+          ) : null}
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>E-mail</th>
+                  <th>Rola</th>
+                  <th>Akcja</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dashboard.users.map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.email}</td>
+                    <td>
+                      <span className={`status-badge status-badge--${user.role}`}>
+                        {user.role === "admin" ? "admin" : "użytkownik"}
+                      </span>
+                    </td>
+                    <td>
+                      <form action="/api/admin/users/role" method="post">
+                        <input
+                          type="hidden"
+                          name="action"
+                          value={
+                            user.role === "admin"
+                              ? "revoke-admin"
+                              : "grant-admin"
+                          }
+                        />
+                        <input type="hidden" name="userId" value={user.id} />
+                        <button type="submit" className="button-secondary">
+                          {user.role === "admin"
+                            ? "Odbierz admina"
+                            : "Nadaj admina"}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {dashboard.users.length === 0 ? (
+              <p className="admin-empty-row">Brak aktywnych użytkowników.</p>
+            ) : null}
+          </div>
         </section>
 
         <section id="audyt" className="admin-section">

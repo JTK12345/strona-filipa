@@ -98,6 +98,10 @@ Uzupelnij `DEFAULT_ADMIN_PASSWORD` w `.env` wlasnym haslem przed startem. Przy
 kazdym starcie kontenera konto z `DEFAULT_ADMIN_EMAIL` zostanie ustawione jako
 aktywny admin, a haslo zostanie zsynchronizowane z `DEFAULT_ADMIN_PASSWORD`.
 
+Nowe konta z `/rejestracja` sa zawsze zwyklymi uzytkownikami. Administrator moze
+nadac albo odebrac role admina w `/panel/admin`, sekcja `Użytkownicy`. Panel
+pokazuje tez liczbe aktywnych kont z rola admina.
+
 ## Dostep i materialy
 
 1. Administrator loguje sie do `/panel/admin`.
