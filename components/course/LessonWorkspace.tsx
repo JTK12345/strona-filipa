@@ -108,6 +108,14 @@ export function LessonWorkspace({ lesson }: { lesson: AccessibleLesson }) {
           <article className="lesson-content">
             <LessonContent markdown={lesson.contentMarkdown} />
           </article>
+          {lesson.hasAttachment ? (
+            <a
+              className="button-secondary lesson-attachment"
+              href={`/api/media/lessons/${lesson.id}/attachment`}
+            >
+              Pobierz plik{lesson.attachmentFileName ? `: ${lesson.attachmentFileName}` : ""}
+            </a>
+          ) : null}
         </div>
 
         <aside className="lesson-note">

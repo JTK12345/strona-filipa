@@ -2520,6 +2520,10 @@ header nav a:hover::after {
   margin-top: 1rem;
 }
 
+.lesson-attachment {
+  margin-top: 1rem;
+}
+
 .lesson-content h2 {
   margin-top: 1.5rem;
   font-size: 1.4rem;

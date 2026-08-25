@@ -67,22 +67,21 @@ export default async function LibraryPage() {
                     {item.contentMarkdown}
                   </p>
                 ) : null}
-                {item.storageKey ? (
-                  item.itemType === "video" ? (
-                    <video
-                      className="mt-5 w-full rounded-[8px]"
-                      controls
-                      preload="metadata"
-                      src={`/api/library-items/${item.id}/media`}
-                    />
-                  ) : (
-                    <Link
-                      href={`/api/library-items/${item.id}/media`}
-                      className="button-secondary mt-5"
-                    >
-                      Otwórz plik
-                    </Link>
-                  )
+                {item.videoStorageKey ? (
+                  <video
+                    className="mt-5 w-full rounded-[8px]"
+                    controls
+                    preload="metadata"
+                    src={`/api/library-items/${item.id}/media?kind=video`}
+                  />
+                ) : null}
+                {item.attachmentStorageKey ? (
+                  <Link
+                    href={`/api/library-items/${item.id}/media?kind=attachment`}
+                    className="button-secondary mt-5"
+                  >
+                    Pobierz plik
+                  </Link>
                 ) : null}
               </article>
             ))}

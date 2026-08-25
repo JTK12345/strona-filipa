@@ -540,6 +540,10 @@ export async function AdminPanelPage({
                           <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
                         </label>
                         <label>
+                          <span>Plik do pobrania</span>
+                          <input name="attachment" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" />
+                        </label>
+                        <label>
                           <span>Status</span>
                           <select name="status" defaultValue="draft">
                             <option value="draft">Szkic</option>
@@ -565,7 +569,12 @@ export async function AdminPanelPage({
                             <input type="hidden" name="lessonId" value={lesson.id} />
                             <div className="admin-lesson-editor__heading">
                               <strong>{lesson.position}. {lesson.title}</strong>
-                              <span>{lesson.hasVideo ? "film dodany" : "bez filmu"}</span>
+                              <span>
+                                {lesson.hasVideo ? "film dodany" : "bez filmu"} ·{" "}
+                                {lesson.hasAttachment
+                                  ? lesson.attachmentFileName ?? "plik dodany"
+                                  : "bez pliku"}
+                              </span>
                             </div>
                             <label>
                               <span>Tytuł</span>
@@ -582,6 +591,10 @@ export async function AdminPanelPage({
                             <label>
                               <span>Podmień film</span>
                               <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
+                            </label>
+                            <label>
+                              <span>Podmień plik do pobrania</span>
+                              <input name="attachment" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" />
                             </label>
                             <label>
                               <span>Status</span>
@@ -651,8 +664,12 @@ export async function AdminPanelPage({
               <textarea name="contentMarkdown" rows={7} placeholder="Możesz wkleić zalecenia, plan ćwiczeń albo opis materiału." />
             </label>
             <label>
-              <span>Plik lub film</span>
-              <input name="file" type="file" accept=".mp4,.webm,.pdf,.docx,.jpg,.jpeg,.png,video/mp4,video/webm,application/pdf" />
+              <span>Film</span>
+              <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
+            </label>
+            <label>
+              <span>Plik do pobrania</span>
+              <input name="attachment" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" />
             </label>
             <label>
               <span>Status</span>
@@ -694,7 +711,14 @@ export async function AdminPanelPage({
                       <small>{item.summary}</small>
                     </td>
                     <td>{item.itemType}</td>
-                    <td>{item.fileName ?? formatFileSize(item.fileSizeBytes)}</td>
+                    <td>
+                      <span>
+                        Film: {item.videoFileName ?? formatFileSize(item.videoFileSizeBytes)}
+                      </span>
+                      <small>
+                        Plik: {item.attachmentFileName ?? formatFileSize(item.attachmentFileSizeBytes)}
+                      </small>
+                    </td>
                     <td>{item.status}</td>
                     <td>
                       <form action="/api/admin/library-items" method="post">
@@ -746,8 +770,12 @@ export async function AdminPanelPage({
                   <textarea name="contentMarkdown" rows={6} defaultValue={item.contentMarkdown} />
                 </label>
                 <label>
-                  <span>Podmień plik</span>
-                  <input name="file" type="file" accept=".mp4,.webm,.pdf,.docx,.jpg,.jpeg,.png,video/mp4,video/webm,application/pdf" />
+                  <span>Podmień film</span>
+                  <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
+                </label>
+                <label>
+                  <span>Podmień plik do pobrania</span>
+                  <input name="attachment" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" />
                 </label>
                 <label>
                   <span>Status</span>

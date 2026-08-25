@@ -35,6 +35,8 @@ type LessonRow = {
   content_markdown: string;
   video_storage_key: string | null;
   video_duration_seconds: number | null;
+  attachment_storage_key: string | null;
+  attachment_file_name: string | null;
   progress_seconds: number | null;
   completed_at: Date | null;
   note_content: string | null;
@@ -70,6 +72,8 @@ export type AccessibleLesson = {
   summary: string;
   contentMarkdown: string;
   hasVideo: boolean;
+  hasAttachment: boolean;
+  attachmentFileName: string | null;
   videoDurationSeconds: number | null;
   progressSeconds: number;
   completed: boolean;
@@ -209,6 +213,8 @@ export async function getAccessibleLesson(
        lessons.content_markdown,
        lessons.video_storage_key,
        lessons.video_duration_seconds,
+       lessons.attachment_storage_key,
+       lessons.attachment_file_name,
        lesson_progress.progress_seconds,
        lesson_progress.completed_at,
        user_notes.content AS note_content
@@ -245,6 +251,8 @@ export async function getAccessibleLesson(
     summary: lesson.summary,
     contentMarkdown: lesson.content_markdown,
     hasVideo: lesson.video_storage_key !== null,
+    hasAttachment: lesson.attachment_storage_key !== null,
+    attachmentFileName: lesson.attachment_file_name,
     videoDurationSeconds: lesson.video_duration_seconds,
     progressSeconds: lesson.progress_seconds ?? 0,
     completed: lesson.completed_at !== null,
@@ -266,6 +274,35 @@ export async function getAccessibleLessonMedia(
      JOIN courses ON courses.id = course_modules.course_id
      WHERE lessons.id = $3
        AND lessons.video_storage_key IS NOT NULL
+       AND courses.status <> 'archived'
+       AND ($2::boolean OR lessons.status = 'published')
+       AND ${accessPredicate()}
+     LIMIT 1`,
+    [userId, isAdmin(role), lessonId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export async function getAccessibleLessonAttachment(
+  userId: string,
+  role: UserRole,
+  lessonId: string,
+) {
+  const result = await queryDatabase<{
+    storage_key: string;
+    file_name: string | null;
+    mime_type: string | null;
+  }>(
+    `SELECT
+       lessons.attachment_storage_key AS storage_key,
+       lessons.attachment_file_name AS file_name,
+       lessons.attachment_mime_type AS mime_type
+     FROM lessons
+     JOIN course_modules ON course_modules.id = lessons.module_id
+     JOIN courses ON courses.id = course_modules.course_id
+     WHERE lessons.id = $3
+       AND lessons.attachment_storage_key IS NOT NULL
        AND courses.status <> 'archived'
        AND ($2::boolean OR lessons.status = 'published')
        AND ${accessPredicate()}

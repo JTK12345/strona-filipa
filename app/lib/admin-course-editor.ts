@@ -24,6 +24,8 @@ type AdminCourseRow = {
   lesson_status: "draft" | "published" | null;
   lesson_position: number | null;
   lesson_video_storage_key: string | null;
+  lesson_attachment_storage_key: string | null;
+  lesson_attachment_file_name: string | null;
 };
 
 export type AdminCourseEditorLesson = {
@@ -34,6 +36,8 @@ export type AdminCourseEditorLesson = {
   status: "draft" | "published";
   position: number;
   hasVideo: boolean;
+  hasAttachment: boolean;
+  attachmentFileName: string | null;
 };
 
 export type AdminCourseEditorModule = {
@@ -98,7 +102,9 @@ export async function getAdminCourseEditor() {
        lessons.content_markdown AS lesson_content_markdown,
        lessons.status AS lesson_status,
        lessons.position AS lesson_position,
-       lessons.video_storage_key AS lesson_video_storage_key
+       lessons.video_storage_key AS lesson_video_storage_key,
+       lessons.attachment_storage_key AS lesson_attachment_storage_key,
+       lessons.attachment_file_name AS lesson_attachment_file_name
      FROM courses
      LEFT JOIN course_modules ON course_modules.course_id = courses.id
      LEFT JOIN lessons ON lessons.module_id = course_modules.id
@@ -156,6 +162,8 @@ export async function getAdminCourseEditor() {
         status: row.lesson_status,
         position: row.lesson_position,
         hasVideo: row.lesson_video_storage_key !== null,
+        hasAttachment: row.lesson_attachment_storage_key !== null,
+        attachmentFileName: row.lesson_attachment_file_name,
       });
     }
   }
@@ -340,6 +348,14 @@ export async function createAdminLesson(input: {
   contentMarkdown: string;
   status: "draft" | "published";
   videoStorageKey: string | null;
+  attachment:
+    | {
+        storageKey: string;
+        fileName: string;
+        mimeType: string;
+        fileSizeBytes: number;
+      }
+    | null;
 }) {
   if (!isUuid(input.moduleId) || !validateTitle(input.title)) {
     throw new AdminCourseEditorError("invalid");
@@ -375,10 +391,14 @@ export async function createAdminLesson(input: {
          summary,
          content_markdown,
          video_storage_key,
+         attachment_storage_key,
+         attachment_file_name,
+         attachment_mime_type,
+         attachment_file_size_bytes,
          status,
          position
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       [
         input.moduleId,
         `${slugifyLibraryTitle(input.title)}-${Date.now().toString(36)}`,
@@ -386,6 +406,10 @@ export async function createAdminLesson(input: {
         input.summary.slice(0, 400),
         input.contentMarkdown.slice(0, 20_000),
         input.videoStorageKey,
+        input.attachment?.storageKey ?? null,
+        input.attachment?.fileName ?? null,
+        input.attachment?.mimeType ?? null,
+        input.attachment?.fileSizeBytes ?? null,
         normalizeStatus(input.status),
         positionResult.rows[0]?.position ?? 1,
       ],
@@ -400,6 +424,12 @@ export async function updateAdminLesson(input: {
   contentMarkdown: string;
   status: "draft" | "published";
   videoStorageKey?: string;
+  attachment?: {
+    storageKey: string;
+    fileName: string;
+    mimeType: string;
+    fileSizeBytes: number;
+  };
 }) {
   if (!isUuid(input.lessonId) || !validateTitle(input.title)) {
     throw new AdminCourseEditorError("invalid");
@@ -412,7 +442,11 @@ export async function updateAdminLesson(input: {
        summary = $3,
        content_markdown = $4,
        status = $5,
-       video_storage_key = COALESCE($6, video_storage_key)
+       video_storage_key = COALESCE($6, video_storage_key),
+       attachment_storage_key = COALESCE($7, attachment_storage_key),
+       attachment_file_name = COALESCE($8, attachment_file_name),
+       attachment_mime_type = COALESCE($9, attachment_mime_type),
+       attachment_file_size_bytes = COALESCE($10, attachment_file_size_bytes)
      WHERE id = $1`,
     [
       input.lessonId,
@@ -421,6 +455,10 @@ export async function updateAdminLesson(input: {
       input.contentMarkdown.slice(0, 20_000),
       normalizeStatus(input.status),
       input.videoStorageKey,
+      input.attachment?.storageKey,
+      input.attachment?.fileName,
+      input.attachment?.mimeType,
+      input.attachment?.fileSizeBytes,
     ],
   );
 
@@ -443,6 +481,22 @@ export async function getAdminLessonVideoKey(lessonId: string) {
   );
 
   return result.rows[0]?.video_storage_key ?? null;
+}
+
+export async function getAdminLessonAttachmentKey(lessonId: string) {
+  if (!isUuid(lessonId)) {
+    return null;
+  }
+
+  const result = await queryDatabase<{ attachment_storage_key: string | null }>(
+    `SELECT attachment_storage_key
+     FROM lessons
+     WHERE id = $1
+     LIMIT 1`,
+    [lessonId],
+  );
+
+  return result.rows[0]?.attachment_storage_key ?? null;
 }
 
 export async function deleteAdminLesson(lessonId: string) {

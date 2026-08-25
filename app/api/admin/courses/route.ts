@@ -11,6 +11,7 @@ import {
   deleteAdminLesson,
   deleteAdminModule,
   getAdminLessonVideoKey,
+  getAdminLessonAttachmentKey,
   updateAdminCourse,
   updateAdminLesson,
   updateAdminModule,
@@ -24,7 +25,14 @@ import { resolveVideoStoragePath } from "@/app/lib/video-storage";
 export const runtime = "nodejs";
 
 const maxVideoBytes = 1024 * 1024 * 1200;
+const maxAttachmentBytes = 1024 * 1024 * 200;
 const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
+const allowedAttachmentTypes = new Set([
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/jpeg",
+  "image/png",
+]);
 
 function redirectToAdmin(result: string, editCourseId = "") {
   const searchParams = new URLSearchParams({ course: result });
@@ -78,6 +86,37 @@ async function saveVideo(upload: FormDataEntryValue | null) {
   await writeFile(targetPath, Buffer.from(await upload.arrayBuffer()));
 
   return key;
+}
+
+async function saveAttachment(upload: FormDataEntryValue | null) {
+  if (!(upload instanceof File) || upload.size === 0) {
+    return null;
+  }
+
+  if (
+    upload.size > maxAttachmentBytes ||
+    !allowedAttachmentTypes.has(upload.type)
+  ) {
+    throw new AdminCourseEditorError("invalid");
+  }
+
+  const folder = "lesson-files";
+  const key = `${folder}/${randomUUID()}${safeExtension(upload.name)}`;
+  const targetPath = resolveVideoStoragePath(videoStorageRoot(), key);
+
+  if (!targetPath) {
+    throw new AdminCourseEditorError("invalid");
+  }
+
+  await mkdir(join(videoStorageRoot(), folder), { recursive: true });
+  await writeFile(targetPath, Buffer.from(await upload.arrayBuffer()));
+
+  return {
+    storageKey: key,
+    fileName: upload.name.slice(0, 180),
+    mimeType: upload.type,
+    fileSizeBytes: upload.size,
+  };
 }
 
 async function unlinkVideoKey(storageKey: string | null) {
@@ -180,15 +219,30 @@ export async function POST(request: Request) {
            AND video_storage_key IS NOT NULL`,
         [moduleId],
       );
+      const attachmentKeys = await queryDatabase<{
+        attachment_storage_key: string | null;
+      }>(
+        `SELECT attachment_storage_key
+         FROM lessons
+         WHERE module_id = $1
+           AND attachment_storage_key IS NOT NULL`,
+        [moduleId],
+      );
 
       await deleteAdminModule(moduleId);
       await Promise.all(videoKeys.rows.map((row) => unlinkVideoKey(row.video_storage_key)));
+      await Promise.all(
+        attachmentKeys.rows.map((row) =>
+          unlinkVideoKey(row.attachment_storage_key),
+        ),
+      );
 
       return redirectToCourseEditor("module_deleted");
     }
 
     if (action === "create-lesson") {
       const videoStorageKey = await saveVideo(formData.get("video"));
+      const attachment = await saveAttachment(formData.get("attachment"));
 
       await createAdminLesson({
         moduleId: String(formData.get("moduleId") ?? ""),
@@ -197,6 +251,7 @@ export async function POST(request: Request) {
         contentMarkdown: String(formData.get("contentMarkdown") ?? "").trim(),
         status: normalizeStatus(formData.get("status")),
         videoStorageKey,
+        attachment,
       });
       return redirectToCourseEditor("lesson_created");
     }
@@ -204,7 +259,9 @@ export async function POST(request: Request) {
     if (action === "update-lesson") {
       const lessonId = String(formData.get("lessonId") ?? "");
       const oldVideoKey = await getAdminLessonVideoKey(lessonId);
+      const oldAttachmentKey = await getAdminLessonAttachmentKey(lessonId);
       const videoStorageKey = await saveVideo(formData.get("video"));
+      const attachment = await saveAttachment(formData.get("attachment"));
 
       await updateAdminLesson({
         lessonId,
@@ -213,10 +270,15 @@ export async function POST(request: Request) {
         contentMarkdown: String(formData.get("contentMarkdown") ?? "").trim(),
         status: normalizeStatus(formData.get("status")),
         videoStorageKey: videoStorageKey ?? undefined,
+        attachment: attachment ?? undefined,
       });
 
       if (videoStorageKey) {
         await unlinkVideoKey(oldVideoKey);
+      }
+
+      if (attachment) {
+        await unlinkVideoKey(oldAttachmentKey);
       }
 
       return redirectToCourseEditor("lesson_updated");
@@ -225,9 +287,11 @@ export async function POST(request: Request) {
     if (action === "delete-lesson") {
       const lessonId = String(formData.get("lessonId") ?? "");
       const videoKey = await getAdminLessonVideoKey(lessonId);
+      const attachmentKey = await getAdminLessonAttachmentKey(lessonId);
 
       await deleteAdminLesson(lessonId);
       await unlinkVideoKey(videoKey);
+      await unlinkVideoKey(attachmentKey);
 
       return redirectToCourseEditor("lesson_deleted");
     }

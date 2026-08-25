@@ -25,7 +25,10 @@ async function serveLibraryMedia(
   }
 
   const { itemId } = await context.params;
-  const media = await getLibraryItemMedia(itemId);
+  const url = new URL(request.url);
+  const kind =
+    url.searchParams.get("kind") === "attachment" ? "attachment" : "video";
+  const media = await getLibraryItemMedia(itemId, kind);
   const filePath = media ? resolveLibraryStoragePath(storageRoot(), media.storage_key) : null;
 
   if (!media || !filePath) {
