@@ -120,7 +120,8 @@ export class AdminRoleError extends Error {
       | "user_not_found"
       | "already_admin"
       | "already_user"
-      | "last_admin",
+      | "last_admin"
+      | "self_delete",
   ) {
     super(code);
     this.name = "AdminRoleError";
@@ -131,6 +132,33 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value,
   );
+}
+
+async function writeAdminAuditEvent(input: {
+  adminUserId: string;
+  action: string;
+  targetUserId: string;
+  metadata: Record<string, string>;
+}) {
+  try {
+    await queryDatabase(
+      `INSERT INTO admin_audit_events (
+         admin_user_id,
+         action,
+         target_user_id,
+         metadata
+       )
+       VALUES ($1, $2, $3, $4::jsonb)`,
+      [
+        input.adminUserId,
+        input.action,
+        input.targetUserId,
+        JSON.stringify(input.metadata),
+      ],
+    );
+  } catch (error) {
+    console.error("Admin audit insert failed.", error);
+  }
 }
 
 export async function setUserAdminRoleByAdmin(input: {
@@ -194,33 +222,96 @@ export async function setUserAdminRoleByAdmin(input: {
     };
   });
 
-  try {
-    await queryDatabase(
-      `INSERT INTO admin_audit_events (
-         admin_user_id,
-         action,
-         target_user_id,
-         metadata
-       )
-       VALUES (
-         $1,
-         $2,
-         $3,
-        jsonb_build_object('previous_role', $4, 'new_role', $5)
-       )`,
-      [
-        input.adminUserId,
-        result.role === "admin" ? "admin_role_granted" : "admin_role_revoked",
-        result.targetUserId,
-        result.previousRole,
-        result.role,
-      ],
-    );
-  } catch (error) {
-    console.error("Admin role audit insert failed.", error);
-  }
+  await writeAdminAuditEvent({
+    adminUserId: input.adminUserId,
+    action: result.role === "admin" ? "admin_role_granted" : "admin_role_revoked",
+    targetUserId: result.targetUserId,
+    metadata: {
+      previous_role: result.previousRole,
+      new_role: result.role,
+    },
+  });
 
   return { targetUserId: result.targetUserId, role: result.role };
+}
+
+export async function deleteUserByAdmin(input: {
+  adminUserId: string;
+  targetUserId: string;
+}) {
+  if (!isUuid(input.targetUserId)) {
+    throw new AdminRoleError("invalid");
+  }
+
+  if (input.adminUserId === input.targetUserId) {
+    throw new AdminRoleError("self_delete");
+  }
+
+  const result = await withDatabaseTransaction(async (client) => {
+    const targetResult = await client.query<{
+      id: string;
+      email: string;
+      role: "user" | "admin";
+    }>(
+      `SELECT id, email, role
+       FROM users
+       WHERE id = $1
+         AND status = 'active'
+       FOR UPDATE`,
+      [input.targetUserId],
+    );
+    const targetUser = targetResult.rows[0];
+
+    if (!targetUser) {
+      throw new AdminRoleError("user_not_found");
+    }
+
+    if (targetUser.role === "admin") {
+      const adminCountResult = await client.query<{ count: string }>(
+        `SELECT count(*)::text AS count
+         FROM users
+         WHERE role = 'admin'
+           AND status = 'active'`,
+      );
+      const adminCount = Number(adminCountResult.rows[0]?.count ?? 0);
+
+      if (adminCount <= 1) {
+        throw new AdminRoleError("last_admin");
+      }
+    }
+
+    await client.query(
+      `UPDATE users
+       SET
+         email = $2,
+         password_hash = NULL,
+         role = 'user',
+         status = 'deleted'
+       WHERE id = $1`,
+      [targetUser.id, `deleted-${targetUser.id}@deleted.local`],
+    );
+    await client.query("DELETE FROM user_sessions WHERE user_id = $1", [
+      targetUser.id,
+    ]);
+
+    return {
+      email: targetUser.email,
+      role: targetUser.role,
+      targetUserId: targetUser.id,
+    };
+  });
+
+  await writeAdminAuditEvent({
+    adminUserId: input.adminUserId,
+    action: "user_deleted",
+    targetUserId: result.targetUserId,
+    metadata: {
+      previous_email: result.email,
+      previous_role: result.role,
+    },
+  });
+
+  return { targetUserId: result.targetUserId };
 }
 
 export class AdminGrantError extends Error {

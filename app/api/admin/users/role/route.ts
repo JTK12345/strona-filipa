@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   AdminRoleError,
+  deleteUserByAdmin,
   setUserAdminRoleByAdmin,
 } from "@/app/lib/admin";
 import { isSameOriginFormRequest } from "@/app/lib/auth";
@@ -46,6 +47,23 @@ export async function POST(request: Request) {
 
   const action = String(formData.get("action") ?? "");
   const role = action === "grant-admin" ? "admin" : action === "revoke-admin" ? "user" : null;
+
+  if (action === "delete-user") {
+    try {
+      await deleteUserByAdmin({
+        adminUserId: session.userId,
+        targetUserId: String(formData.get("userId") ?? ""),
+      });
+      return redirectToAdmin("deleted");
+    } catch (error) {
+      if (error instanceof AdminRoleError) {
+        return redirectToAdmin(error.code);
+      }
+
+      console.error("Admin user delete failed with an unexpected error.", error);
+      return redirectToAdmin("server");
+    }
+  }
 
   if (!role) {
     return redirectToAdmin("invalid");

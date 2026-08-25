@@ -1468,6 +1468,22 @@ header nav a:hover::after {
   color: var(--muted);
 }
 
+.admin-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.button-danger {
+  border-color: rgba(124, 63, 36, 0.32);
+  color: #7c3f24;
+}
+
+.button-danger:hover {
+  border-color: rgba(124, 63, 36, 0.55);
+  background: rgba(194, 118, 79, 0.08);
+}
+
 .admin-empty-row {
   color: var(--muted);
   padding: 1.25rem 0.8rem;

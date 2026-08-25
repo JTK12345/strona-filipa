@@ -42,11 +42,13 @@ const materialMessages: Record<string, string> = {
 const roleMessages: Record<string, string> = {
   granted: "Uprawnienia administratora zostały nadane.",
   revoked: "Uprawnienia administratora zostały odebrane.",
+  deleted: "Konto użytkownika zostało usunięte.",
   invalid: "Nieprawidłowa operacja użytkownika.",
   user_not_found: "Nie znaleziono aktywnego użytkownika.",
   already_admin: "Ten użytkownik jest już administratorem.",
   already_user: "Ten użytkownik nie ma uprawnień administratora.",
   last_admin: "Nie można odebrać uprawnień ostatniemu administratorowi.",
+  self_delete: "Nie możesz usunąć własnego konta administratora.",
   server: "Nie udało się zmienić uprawnień użytkownika.",
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
@@ -841,6 +843,7 @@ export async function AdminPanelPage({
             <p
               className={
                 roleResult === "granted" || roleResult === "revoked"
+                  || roleResult === "deleted"
                   ? "auth-notice"
                   : "auth-error"
               }
@@ -867,23 +870,32 @@ export async function AdminPanelPage({
                       </span>
                     </td>
                     <td>
-                      <form action="/api/admin/users/role" method="post">
-                        <input
-                          type="hidden"
-                          name="action"
-                          value={
-                            user.role === "admin"
-                              ? "revoke-admin"
-                              : "grant-admin"
-                          }
-                        />
-                        <input type="hidden" name="userId" value={user.id} />
-                        <button type="submit" className="button-secondary">
-                          {user.role === "admin"
-                            ? "Odbierz admina"
-                            : "Nadaj admina"}
-                        </button>
-                      </form>
+                      <div className="admin-table-actions">
+                        <form action="/api/admin/users/role" method="post">
+                          <input
+                            type="hidden"
+                            name="action"
+                            value={
+                              user.role === "admin"
+                                ? "revoke-admin"
+                                : "grant-admin"
+                            }
+                          />
+                          <input type="hidden" name="userId" value={user.id} />
+                          <button type="submit" className="button-secondary">
+                            {user.role === "admin"
+                              ? "Odbierz admina"
+                              : "Nadaj admina"}
+                          </button>
+                        </form>
+                        <form action="/api/admin/users/role" method="post">
+                          <input type="hidden" name="action" value="delete-user" />
+                          <input type="hidden" name="userId" value={user.id} />
+                          <button type="submit" className="button-secondary button-danger">
+                            Usuń konto
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))}
