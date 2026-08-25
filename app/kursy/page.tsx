@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  formatCoursePrice,
   getCourseStatusLabel,
   getPublishedCourses,
 } from "@/app/lib/courses";
@@ -22,7 +21,7 @@ export default async function CoursesPage() {
         <div className="page-hero">
           <span className="eyebrow">Kursy wideo</span>
           <h1 className="section-title max-w-4xl">
-            Programy do samodzielnej pracy z ciałem, dostępne po wykupieniu dostępu.
+            Programy do samodzielnej pracy z ciałem, dostępne po wpisaniu kodu.
           </h1>
           <p className="section-lead">
             Każdy kurs będzie ułożony w moduły: krótka edukacja, lekcje wideo,
@@ -39,7 +38,7 @@ export default async function CoursesPage() {
                   <p className="text-sm font-bold text-[var(--muted)]">
                     {course.duration}
                   </p>
-                  <p className="mt-1 font-bold">{formatCoursePrice(course)}</p>
+                  <p className="mt-1 font-bold">Kod dostępu</p>
                 </div>
               </div>
               <h2 className="mt-6 text-2xl font-bold leading-tight">{course.title}</h2>
@@ -50,10 +49,10 @@ export default async function CoursesPage() {
                 ))}
               </div>
               <Link
-                href={`/kup?course=${course.slug}`}
+                href="/dostep"
                 className="button-primary mt-8 w-full"
               >
-                Zobacz cenę i dostęp
+                Wpisz kod dostępu
               </Link>
             </article>
           ))}

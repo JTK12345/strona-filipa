@@ -5,7 +5,7 @@ import { siteConfig } from "@/content/site";
 const publicLinks = [
   { href: "/#uslugi", label: "Cennik" },
   { href: "/kursy", label: "Kursy" },
-  { href: "/kup", label: "Kup dostęp" },
+  { href: "/dostep", label: "Kod dostępu" },
 ];
 
 export async function Navbar() {

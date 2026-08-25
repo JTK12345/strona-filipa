@@ -3,13 +3,16 @@
 Instrukcja dotyczy repozytorium:
 `https://github.com/JTK12345/strona-filipa.git`.
 
+Aktualny model dostepu nie uzywa platnosci. Administrator generuje kody i
+dodaje materialy w panelu, a uzytkownik wpisuje kod na stronie.
+
 ## 1. Wymagania
 
 - Ubuntu z Docker Engine i `docker compose`,
 - Nginx Proxy Manager w zewnetrznej sieci Docker `proxy`,
 - publiczna domena HTTPS,
-- minimum kilkanascie GB wolnego miejsca poza miejscem na filmy,
-- osobny backup bazy i filmow poza tym VPS.
+- wolne miejsce na pliki wideo i dokumenty,
+- backup bazy oraz katalogu `data/videos` poza VPS.
 
 Sprawdz:
 
@@ -40,13 +43,7 @@ Pierwszy ustaw jako `POSTGRES_PASSWORD`, drugi jako
 `TRUSTED_PROXY_SECRET`, a trzeci jako `LOG_SALT`. Haslo bazy wpisz takze w
 `DATABASE_URL`.
 
-Edytuj konfiguracje:
-
-```bash
-nano .env
-```
-
-Minimalny przyklad dla domeny `profil-ciala.jtk.ovh`:
+Minimalny przyklad `.env` dla domeny `profil-ciala.jtk.ovh`:
 
 ```env
 SMTP_HOST=smtp.example.com
@@ -68,6 +65,7 @@ DATABASE_POOL_MAX=10
 APP_URL=https://profil-ciala.jtk.ovh
 VIDEO_STORAGE_PATH=/data/videos
 VIDEO_STORAGE_HOST_PATH=./data/videos
+LIBRARY_STORAGE_PATH=
 
 P24_ENABLED=false
 P24_ENV=sandbox
@@ -89,17 +87,25 @@ ekranu.
 
 ## 3. Start i migracje
 
-Utworz katalog filmow i uruchom caly stack:
+Utworz katalog na filmy i pliki biblioteki:
 
 ```bash
 cd /home/ubuntu/strona-filipa
-mkdir -p data/videos/kregoslup data/videos/kark-barki backups
+mkdir -p data/videos backups
 docker compose up -d --build
 docker compose ps
 ```
 
-Kontener aplikacji automatycznie wykonuje migracje `001`-`005` przed startem
-Next.js. Sprawdz:
+Kontener aplikacji automatycznie wykonuje migracje SQL, w tym:
+
+- `001_initial_platform.sql`,
+- `002_payment_foundation.sql`,
+- `003_course_catalog.sql`,
+- `004_course_lessons.sql`,
+- `005_admin_audit_log.sql`,
+- `006_access_codes_and_library_admin.sql`.
+
+Sprawdz:
 
 ```bash
 docker compose exec strona node scripts/db-status.mjs
@@ -118,7 +124,7 @@ bezposrednio do internetu.
 
 ## 4. Administrator
 
-Utworz administratora dla ustalonego adresu:
+Utworz administratora:
 
 ```bash
 read -s -p "Haslo administratora: " ADMIN_PASSWORD; echo
@@ -126,13 +132,69 @@ printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-
 unset ADMIN_PASSWORD
 ```
 
-Brak znakow podczas wpisywania hasla jest prawidlowy. `unset` usuwa haslo z
-biezacej zmiennej powloki po przekazaniu go do kontenera. W bazie jest tylko
-hash bcrypt.
-
 Administrator loguje sie przez `/logowanie` i ma dostep do `/panel/admin`.
 
-## 5. Nginx Proxy Manager
+## 5. Kody dostepu
+
+1. Zaloguj sie jako administrator.
+2. Otworz `/panel/admin`.
+3. W sekcji `Kody dostepu` wpisz opis, liczbe uzyc i opcjonalna date waznosci.
+4. Kliknij `Wygeneruj kod`.
+5. Skopiuj kod od razu. Po odswiezeniu panel pokazuje tylko hash/statystyki,
+   a nie jawna wartosc kodu.
+
+Uzytkownik:
+
+1. tworzy konto na `/rejestracja` albo loguje sie na `/logowanie`,
+2. otwiera `/dostep`,
+3. wpisuje otrzymany kod,
+4. po aktywacji widzi `/biblioteka` i materialy w `/panel`.
+
+Kod moze zostac wylaczony w panelu admina. Wykorzystany kod nie zabiera
+uzytkownikowi juz nadanego dostepu; to tylko blokuje kolejne aktywacje tym
+kodem.
+
+## 6. Materialy i upload
+
+Materialy dodaje sie w `/panel/admin`, sekcja `Dodaj film, instrukcje albo
+notatke`.
+
+Dozwolone pliki:
+
+- MP4,
+- WebM,
+- PDF,
+- DOCX,
+- JPG,
+- PNG.
+
+Limit pojedynczego uploadu w kodzie: 600 MB.
+
+Domyslnie pliki sa zapisywane w kontenerze pod `/data/videos`, czyli na hoście
+pod `VIDEO_STORAGE_HOST_PATH` (`./data/videos`). Mount w `docker-compose.yml`
+musi byc zapisywalny, bo panel admina zapisuje tam nowe pliki.
+
+Opcjonalnie mozna ustawic osobny katalog:
+
+```env
+LIBRARY_STORAGE_PATH=/data/library
+```
+
+Wtedy trzeba dodac odpowiedni mount do `docker-compose.yml`. Przy domyslnej
+konfiguracji nie trzeba tego robic.
+
+Material mozna:
+
+- dodac,
+- opublikowac jako szkic lub material widoczny,
+- edytowac tytul, opis, tresc i status,
+- podmienic plik,
+- usunac z widocznej biblioteki.
+
+Pliki nie sa serwowane z `public`. Endpoint sprawdza sesje i aktywny dostep
+uzytkownika przed wydaniem pliku.
+
+## 7. Nginx Proxy Manager
 
 W Proxy Host ustaw:
 
@@ -176,30 +238,7 @@ curl -I https://profil-ciala.jtk.ovh
 Odpowiedz powinna zawierac CSP, HSTS, `X-Frame-Options: DENY`,
 `X-Content-Type-Options: nosniff`, `Referrer-Policy` i `Permissions-Policy`.
 
-## 6. Filmy na VPS
-
-Filmy trzymaj pod `data/videos`, nigdy w `public` ani w repozytorium.
-Przyklad:
-
-```bash
-cp /sciezka/do/punkt-wyjscia.mp4 \
-  /home/ubuntu/strona-filipa/data/videos/kregoslup/punkt-wyjscia.mp4
-```
-
-Przypisz plik do lekcji:
-
-```bash
-docker compose exec strona npm run db:set-video -- \
-  --course kregoslup-bez-przeciazen \
-  --lesson punkt-wyjscia \
-  --file kregoslup/punkt-wyjscia.mp4 \
-  --duration 720
-```
-
-Kontener widzi filmy tylko do odczytu. Endpoint filmu sprawdza sesje, dostep do
-kursu, sciezke pliku oraz zakres HTTP potrzebny do przewijania.
-
-## 7. Backup przed aktualizacja
+## 8. Backup przed aktualizacja
 
 Wykonaj backup przed kazda wersja z nowa migracja:
 
@@ -209,27 +248,14 @@ mkdir -p backups
 docker compose exec -T postgres sh -c \
   'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' \
   > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
+tar -czf "backups/storage-$(date +%Y%m%d-%H%M%S).tar.gz" data/videos
 ls -lh backups
 ```
 
-Skopiuj plik `.dump` i katalog `data/videos` poza VPS. Backup na tym samym
-dysku nie chroni przed awaria serwera.
+Skopiuj pliki `.dump` i `.tar.gz` poza VPS. Backup na tym samym dysku nie
+chroni przed awaria serwera.
 
-Przywracanie wymaga okna serwisowego:
-
-```bash
-docker compose stop strona
-docker compose exec -T postgres sh -c \
-  'dropdb -U "$POSTGRES_USER" --if-exists "$POSTGRES_DB" && createdb -U "$POSTGRES_USER" "$POSTGRES_DB"'
-docker compose exec -T postgres sh -c \
-  'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists' \
-  < backups/NAZWA_PLIKU.dump
-docker compose start strona
-```
-
-Najpierw przetestuj odtwarzanie na kopii, nie na jedynej bazie.
-
-## 8. Aktualizacja z GitHuba
+## 9. Aktualizacja z GitHuba
 
 ```bash
 cd /home/ubuntu/strona-filipa
@@ -252,133 +278,18 @@ docker compose up -d --build
 
 Nie uzywaj `git reset --hard`, jezeli nie sprawdziles lokalnych zmian.
 
-## 9. Testy bez Przelewy24
+## 10. Szybki test po wdrozeniu
 
-Symulator tworzy prawdziwe zamowienie w bazie, zapisuje wynik oraz nadaje
-dostep przez te sama tabele `access_grants`, ale nie laczy sie z bankiem i nie
-pobiera pieniedzy. Jest dostepny tylko dla adresow wpisanych w `.env`.
+1. Otworz strone publiczna i `/kursy`.
+2. Zaloguj sie jako administrator.
+3. Otworz `/panel/admin`.
+4. Wygeneruj kod jednorazowy.
+5. Dodaj testowy material tekstowy albo maly PDF.
+6. Utworz zwykle konto uzytkownika.
+7. Wpisz kod na `/dostep`.
+8. Otworz `/biblioteka` i sprawdz, czy material jest widoczny.
 
-1. W `.env` ustaw:
-
-```env
-P24_ENABLED=false
-P24_ENV=sandbox
-TEST_PAYMENTS_ENABLED=true
-TEST_PAYMENT_EMAILS=lokiju12345-test@wp.pl
-```
-
-Kilka kont oddziel przecinkami. Nie wpisuj tutaj kont klientow.
-
-2. Przebuduj aplikacje:
-
-```bash
-docker compose up -d --build
-```
-
-3. Wlacz sprzedaz testowanych kursow:
-
-```bash
-docker compose exec strona npm run db:set-sales -- \
-  --course kregoslup-bez-przeciazen --enable
-docker compose exec strona npm run db:set-sales -- \
-  --course kark-barki-praca-siedzaca --enable
-```
-
-4. Przez `/rejestracja` utworz zwykle konto
-   `lokiju12345-test@wp.pl`. Nie uzywaj konta administratora, bo administrator
-   ma dostep do wszystkich kursow bez zakupu.
-5. Zaloguj sie tym kontem, otworz `/kup`, zaakceptuj zgody i kliknij
-   `Przejdz do symulatora`.
-6. Sprawdz oba scenariusze:
-
-- `Zasymuluj sukces` - zamowienie otrzyma status `paid`, a kurs pojawi sie w
-  panelu i bibliotece,
-- `Zasymuluj odrzucenie` - zamowienie otrzyma status `failed`, bez dostepu do
-  kursu.
-
-Po testach wylacz tryb:
-
-```env
-TEST_PAYMENTS_ENABLED=false
-TEST_PAYMENT_EMAILS=
-```
-
-Nastepnie wykonaj `docker compose up -d --build`. Tryb testowy jest dodatkowo
-automatycznie blokowany, gdy `P24_ENABLED=true` albo `P24_ENV=production`.
-
-## 10. Przelewy24 Sandbox
-
-Sandbox nie pobiera prawdziwych pieniedzy. Zgodnie z oficjalna dokumentacja P24
-potrzebne sa `posId`, klucz API, CRC oraz w razie wymagania publiczny adres IP
-VPS wpisany w panelu P24:
-https://developers.przelewy24.pl/
-
-1. W panelu P24 utworz/skonfiguruj konto Sandbox.
-2. W sekcji danych API Sandbox odczytaj Merchant ID, POS ID, API key i CRC.
-3. Wpisz publiczny IPv4 VPS w konfiguracji API P24, jezeli panel tego wymaga.
-4. W `.env` ustaw:
-
-```env
-P24_ENABLED=true
-P24_ENV=sandbox
-P24_MERCHANT_ID=...
-P24_POS_ID=...
-P24_API_KEY=...
-P24_CRC=...
-```
-
-5. Przebuduj aplikacje:
-
-```bash
-docker compose up -d --build
-```
-
-6. Zaloguj sie jako administrator, otworz `/panel/admin`, sekcje Przelewy24 i
-   kliknij `Sprawdz dostep API`.
-7. Dopiero po komunikacie sukcesu wlacz sprzedaz wybranych kursow:
-
-```bash
-docker compose exec strona npm run db:set-sales -- \
-  --course kregoslup-bez-przeciazen --enable
-docker compose exec strona npm run db:set-sales -- \
-  --course kark-barki-praca-siedzaca --enable
-```
-
-Wylaczenie sprzedazy:
-
-```bash
-docker compose exec strona npm run db:set-sales -- \
-  --course kregoslup-bez-przeciazen --disable
-docker compose exec strona npm run db:set-sales -- \
-  --course kark-barki-praca-siedzaca --disable
-```
-
-Przetestuj w Sandboxie:
-
-- poprawna platnosc i automatyczny dostep,
-- anulowanie albo brak zaplaty bez dostepu,
-- ponowiona notyfikacja bez podwojnego grantu,
-- zgodnosc kwoty i kursu w panelu administratora,
-- widocznosc kursu po ponownym zalogowaniu.
-
-Testy automatyczne pokrywaja bledny podpis, zla kwote, duplikat i `orderId`
-typu int64, ale nie zastepuja prawdziwego testu Sandbox.
-
-## 11. Przelaczenie na produkcje
-
-Nie zmieniaj `P24_ENV=production`, dopoki:
-
-- konto P24 nie jest zweryfikowane,
-- finalny regulamin i polityka prywatnosci nie sa opublikowane,
-- tresc zgody na natychmiastowe dostarczenie zostala zatwierdzona,
-- e-mail z potwierdzeniem umowy jest gotowy,
-- backup i monitoring zostaly sprawdzone,
-- pelny scenariusz Sandbox zakonczyl sie poprawnie.
-
-Produkcja wymaga osobnych kluczy API i CRC. Po zmianie wykonaj ponownie test API,
-ale przed wlaczeniem `sales_enabled`.
-
-## 12. Diagnostyka
+## 11. Diagnostyka
 
 ```bash
 docker compose ps
@@ -388,12 +299,16 @@ docker compose exec strona node scripts/db-status.mjs
 curl http://127.0.0.1:3010/api/health
 curl -I https://profil-ciala.jtk.ovh
 docker ps --format "table {{.Names}}\t{{.Networks}}\t{{.Ports}}"
+ls -lah data/videos
 ```
 
 Najczestsze przyczyny problemow:
 
 - `403 Host nie jest dozwolony` - popraw `ALLOWED_ORIGINS`,
 - formularze odrzucane za proxy - sprawdz `X-Trusted-Proxy-Secret`,
-- `testAccess` nie dziala - sprawdz dane Sandbox i IP VPS w panelu P24,
-- kurs ma przycisk nieaktywny - sprawdz `P24_ENABLED` i `sales_enabled`,
-- brak filmu - sprawdz mount `VIDEO_STORAGE_HOST_PATH` i przypisanie lekcji.
+- upload nie dziala - sprawdz, czy `VIDEO_STORAGE_HOST_PATH` istnieje i jest
+  zapisywalny dla kontenera,
+- brak materialu w bibliotece - sprawdz, czy material ma status
+  `Opublikowany`,
+- brak dostepu u uzytkownika - sprawdz kod, limit uzyc i aktywne granty w
+  bazie.

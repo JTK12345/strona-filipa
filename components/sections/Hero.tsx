@@ -69,7 +69,7 @@ export function Hero() {
 
           <div className="hero-badge hero-badge--bottom">
             <p className="text-xs font-bold uppercase text-[var(--accent)]">
-              Dostęp za paywallem
+              Dostęp po kodzie
             </p>
             <p className="mt-3 text-lg font-semibold leading-7">
               Lekcje wideo, moduły i zadania tylko dla osób z aktywnym dostępem.

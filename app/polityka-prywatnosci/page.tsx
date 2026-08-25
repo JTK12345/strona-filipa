@@ -10,24 +10,23 @@ export default function PrivacyPage() {
     <section className="legal-page">
       <div className="container-main legal-document">
         <BackHomeLink />
-        <span className="legal-draft">Projekt przed uruchomieniem sprzedaży</span>
+        <span className="legal-draft">Projekt polityki prywatności</span>
         <h1>Polityka prywatności</h1>
         <p>
           Ten dokument jest miejscem na finalną politykę prywatności. Przed
-          uruchomieniem sprzedaży musi zawierać dane administratora, cele i
+          uruchomieniem platformy musi zawierać dane administratora, cele i
           podstawy przetwarzania, okresy przechowywania, odbiorców danych oraz
           opis praw użytkownika.
         </p>
-        <h2>Konto i zakup</h2>
+        <h2>Konto i dostęp</h2>
         <p>
-          Platforma przetwarza adres e-mail, dane sesji, historię zamówień,
+          Platforma przetwarza adres e-mail, dane sesji, aktywowane kody,
           nadane dostępy, postęp lekcji i notatki potrzebne do działania konta.
         </p>
-        <h2>Operator płatności</h2>
+        <h2>Pliki i materiały</h2>
         <p>
-          Po rozpoczęciu płatności użytkownik przechodzi do Przelewy24. Finalny
-          dokument musi opisywać zakres przekazywanych danych i właściwe podstawy
-          ich przetwarzania.
+          Administrator może dodawać materiały wideo, instrukcje i pliki
+          dostępne tylko dla kont z aktywnym uprawnieniem.
         </p>
       </div>
     </section>

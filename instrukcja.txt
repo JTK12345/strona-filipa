@@ -2,9 +2,10 @@ SZYBKA AKTUALIZACJA VPS
 
 cd /home/ubuntu/strona-filipa
 
-1. Backup bazy:
+1. Backup bazy i plikow:
 mkdir -p backups
 docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "backups/strona-$(date +%Y%m%d-%H%M%S).dump"
+tar -czf "backups/storage-$(date +%Y%m%d-%H%M%S).tar.gz" data/videos
 
 2. Aktualizacja:
 git status --short
@@ -17,12 +18,17 @@ docker compose exec strona node scripts/db-status.mjs
 curl http://127.0.0.1:3010/api/health
 curl -I https://profil-ciala.jtk.ovh
 
+4. Test funkcji:
+- zaloguj admina na /logowanie,
+- otworz /panel/admin,
+- wygeneruj kod dostepu,
+- dodaj testowy material,
+- na zwyklym koncie wpisz kod na /dostep,
+- sprawdz /biblioteka.
+
 Nginx Proxy Manager:
 Forward Hostname / IP: profil-ciala
 Forward Port: 3000
 
-Pelna instrukcja, konfiguracja .env, backup, filmy i Sandbox P24:
+Pelna instrukcja:
 WGRAC_NA_VPS.md
-
-Test zakupow bez konta P24:
-sekcja "Testy bez Przelewy24" w WGRAC_NA_VPS.md

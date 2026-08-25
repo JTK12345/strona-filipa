@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  formatCoursePrice,
   getCourseStatusLabel,
   getPublishedCourses,
 } from "@/app/lib/courses";
@@ -43,7 +42,7 @@ export async function Services() {
 
         <div className="mt-12 premium-panel">
           <div>
-            <span className="eyebrow">Kursy za paywallem</span>
+            <span className="eyebrow">Kursy po kodzie</span>
             <h3 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">
               Programy wideo do pracy między wizytami albo jako samodzielna ścieżka.
             </h3>
@@ -57,7 +56,7 @@ export async function Services() {
                 <h4 className="mt-3 text-xl font-bold">{course.title}</h4>
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{course.description}</p>
                 <p className="mt-5 text-sm font-bold">
-                  {course.duration} · {course.level} · {formatCoursePrice(course)}
+                  {course.duration} · {course.level} · kod dostępu
                 </p>
               </article>
             ))}

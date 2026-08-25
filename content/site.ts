@@ -15,8 +15,8 @@ export const siteConfig = {
       description: "Indywidualna analiza problemu, ruchu, stylu życia i plan działania dobrany do Twojej sytuacji.",
     },
     {
-      title: "Kursy wideo za paywallem",
-      description: "Programy o bólu, mobilności, oddechu i regeneracji dostępne po wykupieniu dostępu.",
+      title: "Kursy wideo po kodzie",
+      description: "Programy o bólu, mobilności, oddechu i regeneracji dostępne po aktywacji kodu dostępu.",
     },
     {
       title: "Biblioteka zdrowia i ruchu",

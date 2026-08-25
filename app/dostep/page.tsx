@@ -1,21 +1,34 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  formatCoursePrice,
-  getCourseStatusLabel,
-  getPublishedCourses,
-} from "@/app/lib/courses";
+import { getCurrentAccessSession } from "@/app/lib/access";
 import { BackHomeLink } from "@/components/BackHomeLink";
 import { accessFeatures, premiumAccessBlocks } from "@/content/courses";
 
 export const metadata: Metadata = {
-  title: "Dostęp premium | Świadomy Profil Ciała",
-  description: "Dostęp premium do kursów wideo i biblioteki ruchu.",
+  title: "Kod dostępu | Świadomy Profil Ciała",
+  description: "Wpisz kod i odblokuj materiały wideo oraz instrukcje.",
 };
 
-export default async function AccessPage() {
-  const courses = await getPublishedCourses();
-  const featuredCourse = courses[0];
+const codeMessages: Record<string, string> = {
+  success: "Kod został przyjęty. Materiały są już dostępne na Twoim koncie.",
+  invalid: "Wpisz poprawny kod.",
+  not_found: "Ten kod nie istnieje.",
+  expired: "Ten kod wygasł albo został wyłączony.",
+  used: "Ten kod został już wykorzystany.",
+  already_has_access: "To konto ma już aktywny dostęp.",
+  already_redeemed: "Ten kod był już użyty na tym koncie.",
+  rate: "Zbyt wiele prób. Odczekaj kilka minut.",
+  server: "Nie udało się aktywować kodu. Spróbuj ponownie.",
+};
+
+export default async function AccessPage(props: PageProps<"/dostep">) {
+  const [session, searchParams] = await Promise.all([
+    getCurrentAccessSession(),
+    props.searchParams,
+  ]);
+  const codeResult =
+    typeof searchParams.code === "string" ? searchParams.code : "";
+  const codeMessage = codeMessages[codeResult];
 
   return (
     <section className="access-premium-page">
@@ -23,22 +36,29 @@ export default async function AccessPage() {
         <BackHomeLink />
         <div className="access-premium-hero">
           <div className="access-premium-copy">
-            <span className="eyebrow">Dostęp premium</span>
-            <h1>Dostęp do kursów i biblioteki świadomej pracy z ciałem.</h1>
+            <span className="eyebrow">Kod dostępu</span>
+            <h1>Odblokuj filmy, instrukcje i materiały od administratora.</h1>
             <p>
-              Programy wideo, krótkie lekcje i materiały do samodzielnej praktyki.
-              Załóż konto, wybierz dostęp i korzystaj z przypisanych materiałów
-              po bezpiecznym zalogowaniu.
+              Załóż konto albo zaloguj się, wpisz otrzymany kod i korzystaj z
+              materiałów opublikowanych w bibliotece.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/kup" className="button-primary">
-                Kup dostęp
-              </Link>
-              <Link href="/logowanie" className="button-secondary">
-                Zaloguj się
-              </Link>
-              <Link href="/panel" className="button-secondary">
-                Otwórz panel
+              {session ? (
+                <Link href="/panel" className="button-secondary">
+                  Otwórz panel
+                </Link>
+              ) : (
+                <>
+                  <Link href="/logowanie?next=/dostep" className="button-primary">
+                    Zaloguj się
+                  </Link>
+                  <Link href="/rejestracja?next=/dostep" className="button-secondary">
+                    Utwórz konto
+                  </Link>
+                </>
+              )}
+              <Link href="/biblioteka" className="button-secondary">
+                Biblioteka
               </Link>
             </div>
           </div>
@@ -46,24 +66,33 @@ export default async function AccessPage() {
           <aside className="access-dashboard">
             <div className="access-dashboard__top">
               <div>
-                <p className="access-dashboard__label">Twój dostęp</p>
-                <h2>Panel kursów</h2>
+                <p className="access-dashboard__label">Aktywacja</p>
+                <h2>Wpisz kod</h2>
               </div>
-              <span>Konto</span>
+              <span>{session ? "Konto" : "Login"}</span>
             </div>
 
-            <div className="access-dashboard__progress">
-              <div>
-                <p>{featuredCourse?.title ?? "Pierwszy kurs"}</p>
-                <span>{featuredCourse?.duration ?? "Materiały w przygotowaniu"}</span>
-              </div>
-              <progress
-                className="access-progress-bar"
-                value={62}
-                max={100}
-                aria-label="Przykładowy postęp kursu: 62 procent"
-              />
-            </div>
+            {session ? (
+              <form action="/api/access-codes/redeem" method="post" className="admin-grant-form">
+                {codeMessage ? (
+                  <p className={codeResult === "success" || codeResult === "already_has_access" ? "auth-notice" : "auth-error"}>
+                    {codeMessage}
+                  </p>
+                ) : null}
+                <label>
+                  <span>Kod dostępu</span>
+                  <input name="code" required autoComplete="one-time-code" />
+                </label>
+                <button type="submit" className="button-primary">
+                  Aktywuj dostęp
+                </button>
+              </form>
+            ) : (
+              <p className="auth-notice">
+                Najpierw zaloguj się lub utwórz konto, żeby przypisać kod do
+                konkretnego użytkownika.
+              </p>
+            )}
 
             <div className="access-dashboard__list">
               {accessFeatures.map((feature) => (
@@ -85,25 +114,13 @@ export default async function AccessPage() {
         <div className="access-roadmap">
           <div>
             <span className="eyebrow">Jak działa teraz</span>
-            <h2>Konto łączy zakup, postęp i materiały w jednym miejscu.</h2>
+            <h2>Kod łączy konto i materiały w jednym miejscu.</h2>
           </div>
           <div className="access-roadmap__steps">
-            <p><strong>1.</strong> Rejestracja tworzy konto chronione hasłem.</p>
-            <p><strong>2.</strong> Po płatności Przelewy24 potwierdza transakcję i aktywuje zakupiony kurs.</p>
-            <p><strong>3.</strong> Biblioteka jest dostępna tylko dla kont z odpowiednim uprawnieniem.</p>
+            <p><strong>1.</strong> Użytkownik tworzy konto albo loguje się do istniejącego.</p>
+            <p><strong>2.</strong> Wpisuje kod otrzymany od administratora.</p>
+            <p><strong>3.</strong> Biblioteka i materiały pojawiają się w panelu konta.</p>
           </div>
-        </div>
-
-        <div className="access-course-strip">
-          {courses.map((course) => (
-            <article key={course.slug}>
-              <p>{getCourseStatusLabel(course)}</p>
-              <h3>{course.title}</h3>
-              <span>
-                {course.duration} · {course.level} · {formatCoursePrice(course)}
-              </span>
-            </article>
-          ))}
         </div>
       </div>
     </section>

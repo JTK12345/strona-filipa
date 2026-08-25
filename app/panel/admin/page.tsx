@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminDashboard } from "@/app/lib/admin";
+import { listAccessCodes } from "@/app/lib/access-codes";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { getAdminLibraryItems } from "@/app/lib/library";
 import { BackHomeLink } from "@/components/BackHomeLink";
-import { isP24Enabled } from "@/app/lib/payments/przelewy24-config";
 
 export const metadata: Metadata = {
   title: "Administracja | Świadomy Profil Ciała",
@@ -21,12 +22,20 @@ const grantMessages: Record<string, string> = {
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
 
-const p24Messages: Record<string, string> = {
-  success: "Przelewy24 potwierdziło poprawny dostęp do API.",
-  disabled: "Integracja P24 jest wyłączona przez P24_ENABLED=false.",
-  config: "Konfiguracja P24 jest niepełna lub nieprawidłowa.",
-  failed: "P24 nie potwierdziło dostępu. Sprawdź dane i dozwolony adres IP.",
-  rate: "Wykonano zbyt wiele testów. Odczekaj kilka minut.",
+const accessCodeMessages: Record<string, string> = {
+  created: "Kod został utworzony. Skopiuj go teraz, bo później nie będzie już pokazany.",
+  revoked: "Kod został wyłączony.",
+  invalid: "Sprawdź dane kodu.",
+  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
+};
+
+const materialMessages: Record<string, string> = {
+  created: "Materiał został dodany do biblioteki.",
+  updated: "Materiał został zaktualizowany.",
+  archived: "Materiał został usunięty z widocznej biblioteki.",
+  invalid: "Uzupełnij tytuł oraz treść albo plik.",
+  file: "Ten typ pliku jest niedozwolony albo plik jest zbyt duży.",
+  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
 
 function formatDate(value: Date | null) {
@@ -38,11 +47,16 @@ function formatDate(value: Date | null) {
     : "—";
 }
 
-function formatAmount(amountCents: number, currency: string) {
-  return new Intl.NumberFormat("pl-PL", {
-    style: "currency",
-    currency: currency.trim(),
-  }).format(amountCents / 100);
+function formatFileSize(value: number | null) {
+  if (value === null) {
+    return "bez pliku";
+  }
+
+  if (value < 1024 * 1024) {
+    return `${Math.max(1, Math.round(value / 1024))} KB`;
+  }
+
+  return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
 export default async function AdminPage(props: PageProps<"/panel/admin">) {
@@ -57,16 +71,23 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
     redirect("/panel");
   }
 
-  const dashboard = await getAdminDashboard();
+  const [dashboard, accessCodes, libraryItems] = await Promise.all([
+    getAdminDashboard(),
+    listAccessCodes(),
+    getAdminLibraryItems(),
+  ]);
+
   const grantResult =
     typeof searchParams.grant === "string" ? searchParams.grant : "";
   const grantMessage = grantMessages[grantResult];
-  const p24Result =
-    typeof searchParams.p24 === "string" ? searchParams.p24 : "";
-  const p24Message = p24Messages[p24Result];
-  const paymentsEnabled = isP24Enabled();
-  const paymentEnvironment =
-    process.env.P24_ENV === "production" ? "production" : "sandbox";
+  const accessCodeResult =
+    typeof searchParams.accessCode === "string" ? searchParams.accessCode : "";
+  const accessCodeMessage = accessCodeMessages[accessCodeResult];
+  const generatedCode =
+    typeof searchParams.value === "string" ? searchParams.value : "";
+  const materialResult =
+    typeof searchParams.material === "string" ? searchParams.material : "";
+  const materialMessage = materialMessages[materialResult];
 
   return (
     <section className="admin-page">
@@ -75,10 +96,10 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
         <header className="admin-header">
           <div>
             <span className="eyebrow">Administracja platformą</span>
-            <h1>Zamówienia, zdarzenia i dostępy</h1>
+            <h1>Kody dostępu i materiały</h1>
             <p>
-              Panel pokazuje stan zapisany w bazie. Płatność może zostać
-              potwierdzona wyłącznie przez zweryfikowaną notyfikację Przelewy24.
+              Płatności są pominięte. Administrator tworzy kody, dodaje pliki i
+              filmy, a użytkownik po wpisaniu kodu widzi bibliotekę.
             </p>
           </div>
           <Link href="/panel" className="button-secondary">
@@ -87,113 +108,258 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
         </header>
 
         <nav className="admin-tabs" aria-label="Sekcje administracyjne">
-          <a href="#zamowienia">Zamówienia</a>
-          <a href="#zdarzenia">Zdarzenia płatnicze</a>
-          <a href="#dostepy">Nadaj dostęp</a>
-          <a href="#p24">Przelewy24</a>
+          <a href="#kody">Kody dostępu</a>
+          <a href="#materialy">Materiały</a>
+          <a href="#dostepy">Nadaj kurs ręcznie</a>
           <a href="#audyt">Audyt</a>
         </nav>
 
-        <section id="zamowienia" className="admin-section">
+        <section id="kody" className="admin-section admin-grant-section">
+          <div>
+            <p className="checkout-plan__name">Dostęp bez płatności</p>
+            <h2>Utwórz kod dostępu</h2>
+            <p>
+              Kod nadaje pełny dostęp do biblioteki i materiałów. Po utworzeniu
+              pokaże się tylko raz.
+            </p>
+          </div>
+          <form action="/api/admin/access-codes" method="post" className="admin-grant-form">
+            <input type="hidden" name="action" value="create" />
+            {accessCodeMessage ? (
+              <p className={accessCodeResult === "created" || accessCodeResult === "revoked" ? "auth-notice" : "auth-error"}>
+                {accessCodeMessage}
+              </p>
+            ) : null}
+            {generatedCode ? (
+              <p className="auth-notice">
+                Nowy kod: <strong>{generatedCode}</strong>
+              </p>
+            ) : null}
+            <label>
+              <span>Opis</span>
+              <input name="label" placeholder="np. Klient z konsultacji" maxLength={120} />
+            </label>
+            <label>
+              <span>Liczba użyć</span>
+              <input name="maxUses" type="number" min={1} max={500} defaultValue={1} required />
+            </label>
+            <label>
+              <span>Ważny do</span>
+              <input name="expiresAt" type="date" />
+            </label>
+            <button type="submit" className="button-primary">
+              Wygeneruj kod
+            </button>
+          </form>
+        </section>
+
+        <section className="admin-section">
           <div className="admin-section__heading">
             <div>
               <p className="checkout-plan__name">Ostatnie 100</p>
-              <h2>Zamówienia</h2>
+              <h2>Aktywne i historyczne kody</h2>
             </div>
-            <span>{dashboard.purchases.length} rekordów</span>
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Zamówienie</th>
-                  <th>Użytkownik</th>
-                  <th>Kurs</th>
-                  <th>Kwota</th>
+                  <th>Opis</th>
+                  <th>Użycia</th>
+                  <th>Ważny do</th>
                   <th>Status</th>
-                  <th>Utworzono</th>
+                  <th>Akcja</th>
                 </tr>
               </thead>
               <tbody>
-                {dashboard.purchases.map((purchase) => (
-                  <tr key={purchase.public_order_number}>
+                {accessCodes.map((code) => (
+                  <tr key={code.id}>
+                    <td>{code.label || "Bez opisu"}</td>
+                    <td>{code.used_count} / {code.max_uses}</td>
+                    <td>{formatDate(code.expires_at)}</td>
+                    <td>{code.revoked_at ? "wyłączony" : "aktywny"}</td>
                     <td>
-                      <strong>{purchase.public_order_number}</strong>
-                      <small>{purchase.provider}</small>
+                      {!code.revoked_at ? (
+                        <form action="/api/admin/access-codes" method="post">
+                          <input type="hidden" name="action" value="revoke" />
+                          <input type="hidden" name="codeId" value={code.id} />
+                          <button type="submit" className="button-secondary">
+                            Wyłącz
+                          </button>
+                        </form>
+                      ) : "—"}
                     </td>
-                    <td>{purchase.buyer_email}</td>
-                    <td>{purchase.course_title}</td>
-                    <td>
-                      {formatAmount(
-                        purchase.amount_cents,
-                        purchase.currency,
-                      )}
-                    </td>
-                    <td>
-                      <span className={`status-badge status-badge--${purchase.status}`}>
-                        {purchase.status}
-                      </span>
-                    </td>
-                    <td>{formatDate(purchase.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {dashboard.purchases.length === 0 ? (
-              <p className="admin-empty-row">Brak zamówień.</p>
+            {accessCodes.length === 0 ? (
+              <p className="admin-empty-row">Brak kodów.</p>
             ) : null}
           </div>
         </section>
 
-        <section id="zdarzenia" className="admin-section">
+        <section id="materialy" className="admin-section admin-grant-section">
+          <div>
+            <p className="checkout-plan__name">Biblioteka użytkownika</p>
+            <h2>Dodaj film, instrukcję albo notatkę</h2>
+            <p>
+              Pliki są zapisywane na serwerze. Dozwolone: MP4, WebM, PDF, DOCX,
+              JPG i PNG.
+            </p>
+          </div>
+          <form
+            action="/api/admin/library-items"
+            method="post"
+            encType="multipart/form-data"
+            className="admin-grant-form"
+          >
+            {materialMessage ? (
+              <p className={materialResult === "created" || materialResult === "archived" ? "auth-notice" : "auth-error"}>
+                {materialMessage}
+              </p>
+            ) : null}
+            <label>
+              <span>Tytuł</span>
+              <input name="title" required maxLength={160} />
+            </label>
+            <label>
+              <span>Krótki opis</span>
+              <textarea name="summary" rows={3} maxLength={400} />
+            </label>
+            <label>
+              <span>Treść instrukcji</span>
+              <textarea name="contentMarkdown" rows={7} placeholder="Możesz wkleić zalecenia, plan ćwiczeń albo opis materiału." />
+            </label>
+            <label>
+              <span>Plik lub film</span>
+              <input name="file" type="file" accept=".mp4,.webm,.pdf,.docx,.jpg,.jpeg,.png,video/mp4,video/webm,application/pdf" />
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="status" defaultValue="published">
+                <option value="published">Opublikowany</option>
+                <option value="draft">Szkic</option>
+              </select>
+            </label>
+            <button type="submit" className="button-primary">
+              Dodaj materiał
+            </button>
+          </form>
+        </section>
+
+        <section className="admin-section">
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Diagnostyka</p>
-              <h2>Zdarzenia płatnicze</h2>
+              <p className="checkout-plan__name">Biblioteka</p>
+              <h2>Materiały na stronie</h2>
             </div>
-            <span>{dashboard.events.length} rekordów</span>
+            <span>{libraryItems.length} rekordów</span>
           </div>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th>Tytuł</th>
                   <th>Typ</th>
-                  <th>Odebrano</th>
-                  <th>Przetworzono</th>
-                  <th>Wynik</th>
+                  <th>Plik</th>
+                  <th>Status</th>
+                  <th>Akcja</th>
                 </tr>
               </thead>
               <tbody>
-                {dashboard.events.map((event) => (
-                  <tr key={event.id}>
-                    <td>{event.event_type}</td>
-                    <td>{formatDate(event.created_at)}</td>
-                    <td>{formatDate(event.processed_at)}</td>
-                    <td>{event.error_message ?? "OK"}</td>
+                {libraryItems.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <strong>{item.title}</strong>
+                      <small>{item.summary}</small>
+                    </td>
+                    <td>{item.itemType}</td>
+                    <td>{item.fileName ?? formatFileSize(item.fileSizeBytes)}</td>
+                    <td>{item.status}</td>
+                    <td>
+                      <form action="/api/admin/library-items" method="post">
+                        <input type="hidden" name="action" value="archive" />
+                        <input type="hidden" name="itemId" value={item.id} />
+                        <button type="submit" className="button-secondary">
+                          Usuń
+                        </button>
+                      </form>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {dashboard.events.length === 0 ? (
-              <p className="admin-empty-row">Brak zdarzeń płatniczych.</p>
+            {libraryItems.length === 0 ? (
+              <p className="admin-empty-row">Brak materiałów.</p>
             ) : null}
           </div>
+        </section>
+
+        <section className="admin-section">
+          <div className="admin-section__heading">
+            <div>
+              <p className="checkout-plan__name">Edycja</p>
+              <h2>Edytuj istniejący materiał</h2>
+            </div>
+          </div>
+          <div className="panel-courses">
+            {libraryItems.map((item) => (
+              <form
+                key={item.id}
+                action="/api/admin/library-items"
+                method="post"
+                encType="multipart/form-data"
+                className="panel-course-card"
+              >
+                <input type="hidden" name="action" value="update" />
+                <input type="hidden" name="itemId" value={item.id} />
+                <label>
+                  <span>Tytuł</span>
+                  <input name="title" required maxLength={160} defaultValue={item.title} />
+                </label>
+                <label>
+                  <span>Krótki opis</span>
+                  <textarea name="summary" rows={3} maxLength={400} defaultValue={item.summary} />
+                </label>
+                <label>
+                  <span>Treść instrukcji</span>
+                  <textarea name="contentMarkdown" rows={6} defaultValue={item.contentMarkdown} />
+                </label>
+                <label>
+                  <span>Podmień plik</span>
+                  <input name="file" type="file" accept=".mp4,.webm,.pdf,.docx,.jpg,.jpeg,.png,video/mp4,video/webm,application/pdf" />
+                </label>
+                <label>
+                  <span>Status</span>
+                  <select name="status" defaultValue={item.status === "draft" ? "draft" : "published"}>
+                    <option value="published">Opublikowany</option>
+                    <option value="draft">Szkic</option>
+                  </select>
+                </label>
+                <button type="submit" className="button-primary">
+                  Zapisz zmiany
+                </button>
+              </form>
+            ))}
+          </div>
+          {libraryItems.length === 0 ? (
+            <p className="admin-empty-row">Brak materiałów do edycji.</p>
+          ) : null}
         </section>
 
         <section id="dostepy" className="admin-section admin-grant-section">
           <div>
             <p className="checkout-plan__name">Operacja administracyjna</p>
-            <h2>Nadaj dostęp do kursu</h2>
+            <h2>Nadaj dostęp do konkretnego kursu</h2>
             <p>
-              Ta operacja nie zmienia statusu płatności. Tworzy osobny dostęp
-              administracyjny i wpis w dzienniku audytowym.
+              Opcjonalne narzędzie do ręcznego przypisania kursu istniejącemu
+              użytkownikowi.
             </p>
           </div>
           <form action="/api/admin/access-grants" method="post" className="admin-grant-form">
             {grantMessage ? (
-              <p
-                className={grantResult === "success" ? "auth-notice" : "auth-error"}
-              >
+              <p className={grantResult === "success" ? "auth-notice" : "auth-error"}>
                 {grantMessage}
               </p>
             ) : null}
@@ -227,38 +393,6 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
             </label>
             <button type="submit" className="button-primary">
               Nadaj dostęp
-            </button>
-          </form>
-        </section>
-
-        <section id="p24" className="admin-section admin-p24-section">
-          <div>
-            <p className="checkout-plan__name">Połączenie operatora</p>
-            <h2>Test dostępu Przelewy24</h2>
-            <p>
-              Tryb: <strong>{paymentEnvironment}</strong>. Integracja:{" "}
-              <strong>{paymentsEnabled ? "włączona" : "wyłączona"}</strong>.
-              Test nie tworzy płatności i nie zmienia zamówień.
-            </p>
-          </div>
-          <form
-            action="/api/admin/payments/przelewy24/test-access"
-            method="post"
-            className="admin-p24-action"
-          >
-            {p24Message ? (
-              <p
-                className={p24Result === "success" ? "auth-notice" : "auth-error"}
-              >
-                {p24Message}
-              </p>
-            ) : null}
-            <button
-              type="submit"
-              className="button-primary"
-              disabled={!paymentsEnabled}
-            >
-              Sprawdź dostęp API
             </button>
           </form>
         </section>

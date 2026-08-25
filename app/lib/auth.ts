@@ -24,7 +24,9 @@ export function isValidPassword(password: string) {
 
 export function sanitizeAuthDestination(value: FormDataEntryValue | string | null) {
   const destination = String(value ?? "");
-  return destination === "/biblioteka" || destination === "/panel" || destination === "/kup"
+  return destination === "/biblioteka" ||
+    destination === "/panel" ||
+    destination === "/dostep"
     ? destination
     : "/panel";
 }

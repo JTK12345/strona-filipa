@@ -1,57 +1,56 @@
 # Swiadomy Profil Ciala
 
-Platforma gabinetu i jednorazowo platnych kursow wideo. Aplikacja laczy
-publiczny katalog, konta uzytkownikow, chronione filmy z VPS, notatki, postep,
-zamowienia Przelewy24 oraz panel administratora.
+Platforma gabinetu, kursow wideo i prywatnej biblioteki materialow. Aktualny
+model nie uzywa platnosci: administrator tworzy konto admina, generuje kody
+dostepu oraz dodaje filmy, instrukcje i pliki z panelu. Uzytkownik zaklada
+konto, wpisuje otrzymany kod i po zalogowaniu widzi udostepnione materialy.
 
 ## Stan projektu
 
 Gotowe w kodzie:
 
 - rejestracja, logowanie i sesje bazodanowe,
-- publiczny katalog kursow z cenami z PostgreSQL,
-- zakup jednego kursu przez Przelewy24,
-- podpisy SHA-384, `testAccess`, rejestracja i weryfikacja transakcji,
-- idempotentny callback P24 i atomowe nadanie dostepu,
-- prywatne filmy z obsluga HTTP Range,
+- role `admin` i `user`,
+- publiczny katalog kursow,
+- aktywacja dostepu kodem,
+- panel administratora do generowania i wylaczania kodow,
+- panel administratora do dodawania, edycji i usuwania materialow biblioteki,
+- upload MP4, WebM, PDF, DOCX, JPG i PNG na serwer,
+- prywatne wydawanie plikow i filmow tylko dla kont z dostepem,
+- prywatne filmy lekcji z obsluga HTTP Range,
 - notatki i postep lekcji,
-- historia zamowien uzytkownika,
-- panel administratora, zdarzenia platnicze i audytowane nadanie dostepu,
-- kontrolowany symulator platnosci dla wskazanych kont testowych,
+- reczne nadawanie dostepu do konkretnego kursu,
 - Docker Compose z PostgreSQL i siecia Nginx Proxy Manager.
 
-Integracja P24 jest domyslnie wylaczona. Przed sprzedaza trzeba uzupelnic
-finalny regulamin i polityke prywatnosci, skonfigurowac konto Sandbox, wykonac
-testy z prawdziwymi danymi Sandbox i dopiero potem osobno zatwierdzic produkcje.
-Bez konta P24 mozna sprawdzic caly przeplyw przez tryb testowy opisany w
-`WGRAC_NA_VPS.md`.
+Stare moduly Przelewy24 pozostaja w repozytorium jako nieuzywany zapas, ale
+widoczna sciezka uzytkownika prowadzi przez kody dostepu. `/kup` przekierowuje
+na `/dostep`.
 
 ## Najwazniejsze adresy
 
-- `/kursy` - publiczny katalog,
-- `/kup` - wybor kursu i rozpoczecie platnosci,
+- `/dostep` - wpisanie kodu dostepu,
 - `/rejestracja` i `/logowanie` - konto uzytkownika,
-- `/panel` - kursy i historia zamowien zalogowanego uzytkownika,
-- `/panel/admin` - panel dostepny tylko dla administratora,
-- `/biblioteka` - prywatna biblioteka,
-- `/platnosc/sukces` - kontrolowany odczyt statusu lokalnego zamowienia,
-- `/regulamin` i `/polityka-prywatnosci` - obecnie oznaczone projekty.
+- `/panel` - materialy uzytkownika i link do aktywacji kodu,
+- `/panel/admin` - kody, materialy, upload i reczne granty,
+- `/biblioteka` - prywatna biblioteka po aktywacji kodu,
+- `/kursy` - publiczny katalog kursow,
+- `/regulamin` i `/polityka-prywatnosci` - projekty dokumentow prawnych.
 
-Panel i biblioteka nie sa pokazywane niezalogowanym osobom. Samo ukrycie linku
-nie jest zabezpieczeniem: kazda trasa kursu, lekcji, notatek i filmu ponownie
-sprawdza sesje oraz `access_grants` po stronie serwera.
+Panel i biblioteka nie sa pokazywane niezalogowanym osobom. Kazda trasa
+materialow, lekcji, notatek i plikow ponownie sprawdza sesje oraz aktywny grant
+po stronie serwera.
 
 ## Architektura
 
-- Next.js 16.2.2, App Router, React 19, TypeScript,
+- Next.js 16.2.12, App Router, React 19, TypeScript,
 - PostgreSQL 16 i migracje SQL tylko do przodu,
 - Docker Compose,
 - Nginx Proxy Manager przez zewnetrzna siec Docker `proxy`,
-- pliki wideo poza `public`, montowane tylko do odczytu,
-- Przelewy24 REST API, Sandbox albo produkcja wybierane tylko przez `P24_ENV`.
+- pliki poza `public`, zapisywane w katalogu storage na VPS,
+- kody w bazie jako SHA-256, bez mozliwosci odczytania kodu po utworzeniu.
 
-Kontener aplikacji uruchamia migracje przed startem serwera. Baza i filmy nie sa
-czescia obrazu aplikacji.
+Kontener aplikacji uruchamia migracje przed startem serwera. Baza i przeslane
+pliki nie sa czescia obrazu aplikacji.
 
 ## Uruchomienie
 
@@ -82,29 +81,26 @@ Przydatne polecenia:
 npm run db:status
 npm run db:create-admin
 npm run db:set-video
-npm run db:set-sales
 ```
 
-## Platnosci
+## Dostep i materialy
 
-Frontend wysyla tylko identyfikator kursu i wymagane potwierdzenia zgody.
-Backend ponownie pobiera cene, walute, tytul i stan sprzedazy z PostgreSQL.
-Powrot uzytkownika z bramki nie oznacza zaplaty. Dostep powstaje dopiero po:
+1. Administrator loguje sie do `/panel/admin`.
+2. W sekcji kodow tworzy kod i przekazuje go uzytkownikowi.
+3. Uzytkownik tworzy konto lub loguje sie na `/logowanie`.
+4. Uzytkownik wpisuje kod na `/dostep`.
+5. Po aktywacji widzi `/biblioteka` i przypisane materialy w `/panel`.
 
-1. poprawnym podpisie notyfikacji,
-2. zgodnosci sprzedawcy, sesji, kwoty, waluty i `orderId`,
-3. sukcesie `PUT /transaction/verify`,
-4. transakcyjnym zapisie `paid`, zdarzenia i `access_grants`.
-
-Nie istnieje funkcja recznego oznaczania zakupu jako `paid`. Administrator moze
-nadac kurs poza platnoscia, ale jest to osobny grant ze zrodlem `admin` i wpisem
-w `admin_audit_events`.
+Materialy biblioteki dodaje sie w `/panel/admin`. Pliki sa zapisywane na
+serwerze pod `LIBRARY_STORAGE_PATH`, a gdy ta zmienna jest pusta, pod
+`VIDEO_STORAGE_PATH`. W Docker Compose domyslnie jest to `/data/videos`
+montowane z `./data/videos`.
 
 ## Dokumentacja
 
 - [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md) - pierwsze wdrozenie, aktualizacja,
-  backup, filmy, Nginx i Sandbox P24,
-- [docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md) - kontrakt i
-  architektura platnosci,
-- [SECURITY_HARDENING.md](./SECURITY_HARDENING.md) - zabezpieczenia i bramki
-  przed produkcja.
+  backup, storage, Nginx i panel admina,
+- [instrukcja.txt](./instrukcja.txt) - skrocona aktualizacja VPS,
+- [SECURITY_HARDENING.md](./SECURITY_HARDENING.md) - zabezpieczenia i checklisty,
+- [docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md) - status
+  starego modulu platnosci jako nieaktywnego zapasu.

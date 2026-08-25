@@ -17,6 +17,6 @@ export const faqItems = [
   {
     question: "Jak będzie działał dostęp do materiałów?",
     answer:
-      "Docelowo po zakupie użytkownik zaloguje się do panelu i zobaczy swoje kursy oraz materiały premium. Obecnie strona jest przygotowana wizualnie i strukturalnie pod ten etap.",
+      "Użytkownik zakłada konto, wpisuje kod otrzymany od administratora i po zalogowaniu widzi przypisane kursy oraz materiały w bibliotece.",
   },
 ];

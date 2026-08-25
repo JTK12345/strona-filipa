@@ -10,7 +10,7 @@ export const libraryTopics = [
 ];
 
 export const accessFeatures = [
-  "dostęp do wykupionych kursów",
+  "dostęp po aktywacji kodu",
   "lekcje wideo ułożone w moduły",
   "notatki i zadania do wdrożenia",
   "materiały tylko dla osób z aktywnym dostępem",

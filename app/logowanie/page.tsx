@@ -18,10 +18,13 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
   const requestedNext =
     searchParams.next === "/biblioteka" ||
     searchParams.next === "/panel" ||
-    searchParams.next === "/kup"
+    searchParams.next === "/dostep"
       ? searchParams.next
       : "/panel";
-  const requiresLogin = searchParams.next === "/biblioteka" || searchParams.next === "/panel";
+  const requiresLogin =
+    searchParams.next === "/biblioteka" ||
+    searchParams.next === "/panel" ||
+    searchParams.next === "/dostep";
   const errorMessage =
     typeof searchParams.error === "string" ? errorMessages[searchParams.error] : null;
 

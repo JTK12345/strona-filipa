@@ -8,41 +8,50 @@
 - scisle sprawdzanie Host i Origin dla operacji przegladarki,
 - limity rozmiaru i dozwolonych pol formularzy,
 - CSRF, honeypot i Cloudflare Turnstile dla formularzy publicznych,
-- limitowanie formularzy, logowania, rejestracji, checkoutu i operacji admina,
+- limitowanie formularzy, logowania, rejestracji, kodow i operacji admina,
 - CSP z nonce, HSTS i pozostale naglowki bezpieczenstwa,
-- brak danych SMTP, P24, hasel i tresci formularzy w logach,
+- brak danych SMTP, hasel, kodow jawnych i tresci formularzy w logach,
 - aplikacja dostepna na hoscie tylko przez `127.0.0.1:3010`,
 - PostgreSQL bez opublikowanego portu,
-- filmy poza `public`, montowane tylko do odczytu,
-- podpis i `transaction/verify` przed nadaniem dostepu,
-- transakcyjny i idempotentny callback platnosci,
-- oddzielenie grantu administratora od statusu platnosci,
-- dziennik `admin_audit_events`.
+- pliki poza `public`, wydawane przez endpoint z kontrola sesji,
+- kody dostepu zapisywane w bazie tylko jako SHA-256,
+- kody moga miec limit uzyc, date wygasniecia i blokade administracyjna,
+- oddzielenie grantu administratora od aktywacji kodem,
+- dziennik `admin_audit_events` dla recznych grantow.
 
-## Platnosci testowe
+## Upload plikow
 
-Symulator jest domyslnie wylaczony. Wymaga
-`TEST_PAYMENTS_ENABLED=true`, adresu na `TEST_PAYMENT_EMAILS`, zalogowanej sesji,
-zgodnego Origin i limitu zadan. Nie dziala, gdy wlaczono P24 albo ustawiono
-`P24_ENV=production`.
+Panel administratora przyjmuje tylko wybrane typy:
 
-Tryb testowy zapisuje zamowienia z providerem `test`, dlatego sa odroznialne od
-transakcji P24 w panelu i bazie. Nie wolno dodawac do listy zwyklych kont
-klientow. Przed prawdziwa sprzedaza wyczysc `TEST_PAYMENT_EMAILS` i ustaw
-`TEST_PAYMENTS_ENABLED=false`.
+- `video/mp4`,
+- `video/webm`,
+- `application/pdf`,
+- `application/vnd.openxmlformats-officedocument.wordprocessingml.document`,
+- `image/jpeg`,
+- `image/png`.
 
-## Audyt zaleznosci
+Limit pojedynczego uploadu wynosi 600 MB. Pliki sa zapisywane pod
+`LIBRARY_STORAGE_PATH`, a gdy ta zmienna jest pusta, pod `VIDEO_STORAGE_PATH`.
+Sciezka jest normalizowana i sprawdzana tak, aby nie wyjsc poza katalog storage.
 
-Na 27 lipca 2026 r. `npm audit --omit=dev` zwraca zero znanych podatnosci.
-Next.js, Nodemailer oraz biblioteki runtime PostCSS i Sharp sa przypiete do
-poprawionych wersji w `package-lock.json`.
+Materialy nie sa w `public`. Pobranie pliku i odtworzenie filmu wymaga aktywnej
+sesji oraz dostepu do biblioteki.
 
-Pelny audyt narzedzi deweloperskich moze nadal raportowac `brace-expansion`
-uzywany przez ESLint 9. Nie jest on instalowany w produkcyjnym etapie obrazu i
-nie przetwarza danych uzytkownikow. Wymuszenie `brace-expansion` 5 psuje API
-pluginow ESLint, a ESLint 10 nie jest jeszcze objety deklarowanym zakresem
-zgodnosci tych pluginow. Nalezy usunac ten wyjatek po wydaniu zgodnego zestawu
-ESLint i `eslint-config-next`; nie uzywac `npm audit fix --force`.
+## Kody dostepu
+
+Jawny kod jest pokazywany tylko raz po utworzeniu. W bazie zostaje `code_hash`.
+Redeem dziala w transakcji z blokada rekordu kodu, wiec rownolegle uzycia nie
+powinny przekroczyc `max_uses`.
+
+Kod moze byc:
+
+- jednorazowy albo wielokrotnego uzycia,
+- ograniczony data waznosci,
+- wylaczony przez administratora.
+
+Wylaczenie kodu blokuje kolejne aktywacje, ale nie cofa juz nadanych grantow.
+Jesli potrzebne bedzie cofanie dostepu, nalezy dodac osobna funkcje do
+zarzadzania `access_grants.revoked_at`.
 
 ## Reverse proxy
 
@@ -63,34 +72,33 @@ Resetuje sie po restarcie kontenera. Jest poprawny dla obecnej pojedynczej
 instancji, ale nie zastapi limitow na brzegu. Przed wiekszym ruchem dodaj limity
 w Nginx/Cloudflare albo wspoldzielony magazyn dla wielu instancji.
 
-## Platnosci
+## Audyt zaleznosci
 
-Adres API jest wybierany tylko z dwoch stalych hostow:
+Regularnie uruchamiaj:
 
-- Sandbox: `https://sandbox.przelewy24.pl/api/v1`,
-- produkcja: `https://secure.przelewy24.pl/api/v1`.
+```bash
+npm audit --omit=dev
+npm test
+npm run lint
+npm run build
+```
 
-Frontend nie wysyla ceny. Callback P24 nie uzywa CSRF, bo nie jest formularzem
-przegladarki; chronia go limit rozmiaru, scisly parser JSON, podpis SHA-384,
-zgodnosc danych zamowienia i dodatkowa weryfikacja API.
-
-`orderId` jest parsowany bez utraty precyzji i zapisywany jako tekst. Bledy P24
-nie zwracaja tresci odpowiedzi operatora uzytkownikowi.
+Nie uzywaj `npm audit fix --force` bez sprawdzenia zmian Next.js, Reacta i
+ESLint, bo moze to wymusic niezgodne wersje.
 
 ## Bramki przed produkcja
 
-Kod nie oznacza jeszcze gotowosci prawnej i operacyjnej. Przed prawdziwa
-sprzedaza wymagane sa:
+Przed pokazaniem platformy klientom sprawdz:
 
 - finalny regulamin i polityka prywatnosci,
-- potwierdzenie zawarcia umowy wysylane na trwalym nosniku,
-- zweryfikowane konto P24 i pelny test Sandbox,
-- odzyskiwanie hasla oraz decyzja o weryfikacji e-mail,
-- monitoring bledow i alarm dla nieprzetworzonych `payment_events`,
-- automatyczny backup PostgreSQL i filmow poza VPS,
+- odzyskiwanie hasla albo ustalona procedura recznej pomocy,
+- decyzja o weryfikacji e-mail,
+- monitoring bledow aplikacji,
+- automatyczny backup PostgreSQL i katalogu storage poza VPS,
 - test odtwarzania backupu,
 - limitowanie na reverse proxy,
-- przeglad konfiguracji firewall i naglowka zaufanego proxy.
+- konfiguracja firewall,
+- poprawny naglowek zaufanego proxy,
+- prawa zapisu do `VIDEO_STORAGE_HOST_PATH`.
 
-Nie zapisuj sekretow w Git ani w dokumentacji. `P24_ENABLED=false` i
-`sales_enabled=false` sa bezpiecznym stanem domyslnym.
+Nie zapisuj sekretow w Git ani w dokumentacji.

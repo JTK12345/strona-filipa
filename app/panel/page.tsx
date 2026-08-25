@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
-import { getUserPurchaseHistory } from "@/app/lib/account";
 import {
   getAccessibleCourses,
   getCourseStatusLabel,
@@ -14,28 +13,6 @@ export const metadata: Metadata = {
   description: "Panel dostępu do kursów i materiałów premium.",
 };
 
-const purchaseStatusLabels = {
-  pending: "Oczekuje",
-  paid: "Opłacone",
-  failed: "Nieudane",
-  cancelled: "Anulowane",
-  refunded: "Zwrócone",
-  expired: "Wygasło",
-};
-
-function formatDate(value: Date) {
-  return new Intl.DateTimeFormat("pl-PL", {
-    dateStyle: "medium",
-  }).format(value);
-}
-
-function formatAmount(amountCents: number, currency: string) {
-  return new Intl.NumberFormat("pl-PL", {
-    style: "currency",
-    currency,
-  }).format(amountCents / 100);
-}
-
 export default async function PanelPage() {
   const session = await getCurrentAccessSession();
 
@@ -43,10 +20,10 @@ export default async function PanelPage() {
     redirect("/logowanie?next=/panel");
   }
 
-  const [courses, purchases] = await Promise.all([
-    getAccessibleCourses(session.userId, session.role === "admin"),
-    getUserPurchaseHistory(session.userId),
-  ]);
+  const courses = await getAccessibleCourses(
+    session.userId,
+    session.role === "admin",
+  );
 
   return (
     <section className="panel-page">
@@ -71,7 +48,7 @@ export default async function PanelPage() {
         <div className="panel-layout">
           <aside className="panel-sidebar">
             <a href="#moje-kursy">Moje kursy</a>
-            <a href="#zamowienia">Zamówienia</a>
+            <Link href="/dostep">Wpisz kod</Link>
             {session.hasLibraryAccess ? (
               <Link href="/biblioteka">Biblioteka</Link>
             ) : null}
@@ -118,59 +95,15 @@ export default async function PanelPage() {
               ) : (
                 <div className="panel-empty panel-empty--compact">
                   <span className="eyebrow">Brak aktywnego dostępu</span>
-                  <h2>Nie masz jeszcze wykupionego kursu.</h2>
+                  <h2>Nie masz jeszcze aktywowanego kodu.</h2>
                   <p>
-                    Po potwierdzeniu płatności zakupione materiały pojawią się
-                    tutaj automatycznie.
+                    Wpisz kod otrzymany od administratora. Po aktywacji
+                    materiały pojawią się tutaj automatycznie.
                   </p>
-                  <Link href="/kup" className="button-primary">
-                    Zobacz kursy
+                  <Link href="/dostep" className="button-primary">
+                    Wpisz kod
                   </Link>
                 </div>
-              )}
-            </section>
-
-            <section id="zamowienia" className="account-orders">
-              <div className="panel-section-heading">
-                <div>
-                  <p className="checkout-plan__name">Historia konta</p>
-                  <h2>Zamówienia</h2>
-                </div>
-              </div>
-              {purchases.length > 0 ? (
-                <div className="account-order-list">
-                  {purchases.map((purchase) => (
-                    <article
-                      key={purchase.publicOrderNumber}
-                      className="account-order"
-                    >
-                      <div>
-                        <strong>{purchase.courseTitle}</strong>
-                        <span>
-                          {purchase.publicOrderNumber} ·{" "}
-                          {formatDate(purchase.createdAt)}
-                        </span>
-                      </div>
-                      <div className="account-order__amount">
-                        <strong>
-                          {formatAmount(
-                            purchase.amountCents,
-                            purchase.currency,
-                          )}
-                        </strong>
-                        <span
-                          className={`status-badge status-badge--${purchase.status}`}
-                        >
-                          {purchaseStatusLabels[purchase.status]}
-                        </span>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="account-orders__empty">
-                  Na tym koncie nie ma jeszcze zamówień.
-                </p>
               )}
             </section>
           </div>

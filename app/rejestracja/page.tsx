@@ -20,7 +20,7 @@ export default async function RegisterPage(props: PageProps<"/rejestracja">) {
   const requestedNext =
     searchParams.next === "/biblioteka" ||
     searchParams.next === "/panel" ||
-    searchParams.next === "/kup"
+    searchParams.next === "/dostep"
       ? searchParams.next
       : "/panel";
   const errorMessage =
@@ -35,8 +35,8 @@ export default async function RegisterPage(props: PageProps<"/rejestracja">) {
             <span className="eyebrow">Nowe konto</span>
             <h1>Utwórz konto do kursów i biblioteki.</h1>
             <p>
-              Konto pozwala bezpiecznie logować się do panelu. Dostęp do płatnych
-              materiałów pojawi się po zakupie lub nadaniu uprawnienia.
+              Konto pozwala bezpiecznie logować się do panelu. Dostęp do
+              materiałów pojawi się po wpisaniu kodu albo nadaniu uprawnienia.
             </p>
             <Link href="/logowanie" className="button-secondary mt-8">
               Mam już konto

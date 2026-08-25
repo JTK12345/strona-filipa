@@ -1,186 +1,83 @@
-# Platnosci Przelewy24 - architektura i stan
+# Platnosci Przelewy24 - status modulu
 
-Stan dokumentu: 27 lipca 2026 r.
+Stan dokumentu: 25 sierpnia 2026 r.
 
-## Status
+## Aktualny status
 
-Etapy implementacyjne 0-8 sa zakonczone w kodzie. Etap 9 jest gotowy od strony
-narzedzi i instrukcji, ale wymaga zewnetrznych danych Sandbox oraz decyzji
-prawnych wlasciciela:
+Platnosci nie sa aktualnie uzywane w publicznym przeplywie aplikacji. Model
+dostepu zostal zmieniony na:
 
-- [x] konfiguracja `sandbox|production` bez dowolnego `P24_BASE_URL`,
-- [x] klient `testAccess`, register i verify z timeoutem,
-- [x] tworzenie `pending` przed kontaktem z operatorem,
-- [x] cena i waluta tylko z PostgreSQL,
-- [x] kryptograficzny `sessionId`,
-- [x] podpisy SHA-384,
-- [x] bezstratny `orderId` int64,
-- [x] idempotentny callback i atomowy grant,
-- [x] chroniony status zamowienia,
-- [x] frontend zakupu, zgody i limit pollingu 60 sekund,
-- [x] panel uzytkownika i administratora,
-- [x] audytowane reczne nadanie dostepu,
-- [x] usuniety publiczny checkout testowy,
-- [x] kontrolowany symulator tylko dla jawnej listy kont testowych,
-- [ ] prawdziwe dane konta P24 Sandbox,
-- [ ] poprawny `testAccess` wykonany z VPS,
-- [ ] pelne scenariusze platnosci w Sandbox,
-- [ ] finalne dokumenty prawne i potwierdzenie umowy e-mailem,
-- [ ] osobna akceptacja uruchomienia produkcji.
+1. administrator generuje kod w `/panel/admin`,
+2. administrator dodaje materialy w panelu,
+3. uzytkownik zaklada konto lub loguje sie,
+4. uzytkownik wpisuje kod na `/dostep`,
+5. aktywny grant odblokowuje `/biblioteka` i materialy.
 
-P24 i sprzedaz kursow pozostaja domyslnie wylaczone.
+`/kup` przekierowuje na `/dostep`, a publiczne linki nie prowadza do checkoutu.
 
-Symulator bez P24 jest osobnym providerem `test`. Wymaga zalogowanego konta z
-allowlisty, nie przyjmuje ceny z frontendu i nie jest dostepny po wlaczeniu P24
-ani w `P24_ENV=production`. Sluzy do testowania platformy, ale nie zastepuje
-prawdziwego scenariusza Sandbox operatora.
+## Co zostalo w repozytorium
 
-## Oficjalny kontrakt
+W kodzie nadal istnieja stare moduly:
 
-Zrodla:
+- `app/lib/payments/*`,
+- `app/api/checkout/*`,
+- `app/api/payments/*`,
+- strony `/platnosc/*`,
+- testy jednostkowe P24 i symulatora.
 
-- https://developers.przelewy24.pl/
-- https://developers.przelewy24.pl/yaml/pl_documentation_1.0.yaml
+Pozostaja jako nieaktywny zapas oraz zabezpieczenie przed przypadkowym
+uszkodzeniem dawnych kontraktow. Nie sa czescia obecnego procesu uzytkownika.
 
-Sprawdzona dokumentacja REST: wersja `1.0.17`.
-
-- Sandbox API: `https://sandbox.przelewy24.pl/api/v1`
-- Production API: `https://secure.przelewy24.pl/api/v1`
-- `GET /testAccess`
-- `POST /transaction/register`
-- `PUT /transaction/verify`
-- Basic Auth: uzytkownik `posId`, haslo `API key/secretId`
-- podpisy: SHA-384 z obiektu JSON i CRC
-
-`urlReturn` nie potwierdza zaplaty. Dostep moze powstac tylko po notyfikacji
-`urlStatus` i sukcesie `transaction/verify`.
-
-## Model danych
-
-Nie ma osobnej tabeli `orders`. Uzywane sa:
-
-- `purchases` - zamowienie i stan platnosci,
-- `purchase_items` - zakupiony kurs i cena w chwili zakupu,
-- `payment_events` - odebrane notyfikacje i bledy,
-- `access_grants` - aktywny dostep,
-- `admin_audit_events` - reczne operacje administratora.
-
-Najwazniejsze identyfikatory:
-
-- `public_order_number` - bezpieczny numer pokazywany uzytkownikowi,
-- `provider_session_id` - unikalna sesja wysylana do P24,
-- `provider_token` - token rejestracji,
-- `provider_order_id` - `orderId` P24 zapisany jako tekst.
-
-## Tworzenie zakupu
-
-`POST /api/checkout/przelewy24`:
-
-1. wymaga sesji i poprawnego Origin,
-2. ogranicza czestotliwosc wywolan,
-3. przyjmuje `courseId` i dwa wymagane potwierdzenia zgody,
-4. pobiera kurs, cene, walute i `sales_enabled` z bazy,
-5. blokuje administratora i konto z istniejacym dostepem,
-6. tworzy `purchases.status='pending'` oraz `purchase_items`,
-7. rejestruje transakcje w P24,
-8. zapisuje token i zwraca oficjalny adres bramki.
-
-Nieudana rejestracja zmienia probe na `failed`. Tresc bledu operatora nie jest
-zwracana klientowi.
-
-## Callback
-
-`POST /api/payments/przelewy24/status` nie uzywa CSRF. Wykonuje:
-
-1. limit 32 KiB i bezstratne parsowanie JSON z odrzuceniem duplikatow kluczy,
-2. walidacje typow i int64,
-3. porownanie Merchant ID, POS ID i PLN,
-4. timing-safe porownanie podpisu,
-5. zapis/aktualizacje `payment_events`,
-6. porownanie sesji, kwoty, ceny pozycji, waluty i `orderId`,
-7. `PUT /transaction/verify`,
-8. transakcje PostgreSQL: `paid`, `provider_order_id`, grant i processed event.
-
-Powtorzona notyfikacja zwraca sukces bez kolejnego verify i bez drugiego grantu.
-Rownolegla notyfikacja jest ponownie sprawdzana po blokadzie rekordu.
-
-## Status uzytkownika
-
-`GET /api/purchases/{publicOrderNumber}/status` wymaga sesji i filtruje zakup po
-`user_id`. Nie mozna odczytac cudzego zamowienia. Strona powrotu odpytuje status
-co 2 sekundy, najwyzej przez 60 sekund. Sama niczego nie oznacza jako zaplacone.
-
-## Administrator
-
-`/panel/admin` pokazuje:
-
-- ostatnie zamowienia,
-- zdarzenia platnicze bez surowego payloadu,
-- audyt recznych grantow,
-- formularz nadania kursu,
-- przycisk `testAccess`.
-
-Nie ma i nie powinno byc przycisku `Oznacz jako paid`.
-
-## Konfiguracja
+Domyslna konfiguracja nadal utrzymuje:
 
 ```env
-APP_URL=https://profil-ciala.jtk.ovh
 P24_ENABLED=false
-P24_ENV=sandbox
-P24_MERCHANT_ID=
-P24_POS_ID=
-P24_API_KEY=
-P24_CRC=
-P24_HTTP_TIMEOUT_MS=8000
 TEST_PAYMENTS_ENABLED=false
-TEST_PAYMENT_EMAILS=
 ```
 
-Gdy `P24_ENABLED=false`, puste dane sa prawidlowe. Gdy jest `true`, aplikacja
-wymaga kompletu, dodatnich identyfikatorow i publicznego HTTPS `APP_URL`.
+Nie wlaczaj tych opcji, jezeli projekt ma dzialac w modelu kodow dostepu.
 
-## Uruchomienie Sandbox
+## Obecny model danych dla dostepu
 
-Pelna procedura jest w `WGRAC_NA_VPS.md`. Kolejnosc:
+Nowe elementy:
 
-1. backup,
-2. dane Sandbox i IP VPS w panelu P24,
-3. `P24_ENABLED=true`, `P24_ENV=sandbox`,
-4. rebuild,
-5. `testAccess` z `/panel/admin`,
-6. wlaczenie `sales_enabled` skryptem,
-7. scenariusze sukcesu i anulowania,
-8. kontrola panelu, eventow i duplikatu,
-9. ponowne wylaczenie sprzedazy po testach.
+- `access_codes` - hash kodu, opis, limit uzyc, wygasniecie i blokada,
+- `access_code_redemptions` - historia uzyc kodow,
+- `access_grants.source='code'` - grant utworzony po wpisaniu kodu,
+- dodatkowe metadane plikow w `library_items`.
 
-## Dokumenty prawne
+Kody sa hashowane SHA-256. Jawny kod jest widoczny tylko raz po utworzeniu.
 
-`/regulamin` i `/polityka-prywatnosci` sa projektami, nie finalnymi dokumentami.
-Przed sprzedaza potrzebne sa dane sprzedawcy, zasady reklamacji, dostarczania
-tresci cyfrowych, odstapienia, wymagania techniczne, okres dostepu i zasady
-przetwarzania danych.
+## Materialy
 
-Oficjalne informacje UOKiK o tresciach cyfrowych:
-https://prawakonsumenta.uokik.gov.pl/prawo-odstapienia-od-umowy/wylaczenia-prawa-do-odstapienia/
+Materialy biblioteki sa zapisywane w `library_items` i opcjonalnie w storage na
+dysku. Endpointy:
 
-Sama zgoda w checkboxie nie wystarcza. Nalezy przekazac konsumentowi
-potwierdzenie zawarcia umowy i otrzymanej zgody na trwalym nosniku.
+- `POST /api/admin/library-items` - dodanie, edycja, usuniecie materialu,
+- `GET /api/library-items/{itemId}/media` - chronione wydanie pliku,
+- `HEAD /api/library-items/{itemId}/media` - metadane pliku.
 
-## Testy
+Dozwolone typy:
 
-`npm test` obejmuje:
+- MP4,
+- WebM,
+- PDF,
+- DOCX,
+- JPG,
+- PNG.
 
-- podpisy register, verify i callback,
-- stala konfiguracje hostow,
-- Basic Auth klienta i kontrolowane bledy,
-- kolejnosc `pending -> register -> token`,
-- blad rejestracji,
-- zla kwote i zly podpis callbacku,
-- powtorzona notyfikacje,
-- maksymalny `orderId` int64,
-- sciezki i zakresy filmow,
-- rate limiting i scisle rozpoznawanie loopback.
+## Jesli kiedys wrocisz do platnosci
 
-Wszystkie wywolania P24 w testach sa mockowane. Testy nie wykonuja prawdziwej
-platnosci.
+Przed przywroceniem sprzedazy trzeba ponownie przejrzec i przetestowac caly
+modul, bo obecne UI i dokumentacja sa juz ustawione pod kody. Minimalna lista:
+
+- decyzja prawna i biznesowa o sprzedazy,
+- finalny regulamin i polityka prywatnosci dla platnosci,
+- przywrocenie linkow do `/kup`,
+- sprawdzenie komponentu `CourseCheckout`,
+- sprawdzenie tras `/platnosc/*`,
+- pelny test Sandbox Przelewy24 na VPS,
+- wlaczenie `P24_ENABLED=true` dopiero po testach,
+- decyzja, jak kody maja wspolistniec z zakupami.
+
+Bez tej pracy traktuj P24 jako kod nieaktywny.

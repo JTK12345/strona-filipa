@@ -37,7 +37,7 @@ services:
     ports:
       - "127.0.0.1:3010:3000"
     volumes:
-      - ${VIDEO_STORAGE_HOST_PATH:-./data/videos}:/data/videos:ro
+      - ${VIDEO_STORAGE_HOST_PATH:-./data/videos}:/data/videos
     depends_on:
       postgres:
         condition: service_healthy
