@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminDashboard } from "@/app/lib/admin";
 import { listAccessCodes } from "@/app/lib/access-codes";
+import { getAdminCourseEditor } from "@/app/lib/admin-course-editor";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAdminLibraryItems } from "@/app/lib/library";
 import { BackHomeLink } from "@/components/BackHomeLink";
@@ -13,11 +14,11 @@ export const metadata: Metadata = {
 };
 
 const grantMessages: Record<string, string> = {
-  success: "Dostęp do kursu został nadany i zapisany w dzienniku audytowym.",
-  invalid: "Sprawdź adres e-mail i wybrany kurs.",
+  success: "Dostęp został nadany i zapisany w dzienniku audytowym.",
+  invalid: "Sprawdź adres e-mail i wybrany zakres dostępu.",
   user_not_found: "Nie znaleziono aktywnego użytkownika z tym adresem e-mail.",
   course_not_found: "Wybrany kurs nie istnieje lub jest zarchiwizowany.",
-  already_granted: "Ten użytkownik ma już dostęp do wybranego kursu.",
+  already_granted: "Ten użytkownik ma już taki dostęp.",
   server: "Nie udało się nadać dostępu. Spróbuj ponownie.",
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
@@ -50,6 +51,24 @@ const roleMessages: Record<string, string> = {
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
 
+const courseMessages: Record<string, string> = {
+  course_created: "Kurs został utworzony.",
+  course_updated: "Kurs został zaktualizowany.",
+  course_archived: "Kurs został usunięty ze strony.",
+  module_created: "Moduł został dodany.",
+  module_updated: "Moduł został zaktualizowany.",
+  module_deleted: "Moduł został usunięty.",
+  lesson_created: "Lekcja została dodana.",
+  lesson_updated: "Lekcja została zaktualizowana.",
+  lesson_deleted: "Lekcja została usunięta.",
+  invalid: "Sprawdź dane kursu, modułu albo lekcji.",
+  course_not_found: "Nie znaleziono kursu.",
+  module_not_found: "Nie znaleziono modułu.",
+  lesson_not_found: "Nie znaleziono lekcji.",
+  server: "Nie udało się zapisać zmian w kursie.",
+  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
+};
+
 function formatDate(value: Date | null) {
   return value
     ? new Intl.DateTimeFormat("pl-PL", {
@@ -71,6 +90,21 @@ function formatFileSize(value: number | null) {
   return `${(value / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function formatAccessScope(code: {
+  scope: "library" | "all_access" | "course";
+  course_title: string | null;
+}) {
+  if (code.scope === "course") {
+    return code.course_title ? `Kurs: ${code.course_title}` : "Kurs";
+  }
+
+  if (code.scope === "library") {
+    return "Biblioteka";
+  }
+
+  return "Cała platforma";
+}
+
 export default async function AdminPage(props: PageProps<"/panel/admin">) {
   const session = await getCurrentAccessSession();
   const searchParams = await props.searchParams;
@@ -83,10 +117,11 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
     redirect("/panel");
   }
 
-  const [dashboard, accessCodes, libraryItems] = await Promise.all([
+  const [dashboard, accessCodes, libraryItems, courseEditor] = await Promise.all([
     getAdminDashboard(),
     listAccessCodes(),
     getAdminLibraryItems(),
+    getAdminCourseEditor(),
   ]);
 
   const grantResult =
@@ -103,6 +138,9 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
   const roleResult =
     typeof searchParams.role === "string" ? searchParams.role : "";
   const roleMessage = roleMessages[roleResult];
+  const courseResult =
+    typeof searchParams.course === "string" ? searchParams.course : "";
+  const courseMessage = courseMessages[courseResult];
 
   return (
     <section className="admin-page">
@@ -124,9 +162,10 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
 
         <nav className="admin-tabs" aria-label="Sekcje administracyjne">
           <a href="#kody">Kody dostępu</a>
+          <a href="#kursy-admin">Kursy</a>
           <a href="#materialy">Materiały</a>
           <a href="#uzytkownicy">Użytkownicy</a>
-          <a href="#dostepy">Nadaj kurs ręcznie</a>
+          <a href="#dostepy">Nadaj dostęp</a>
           <a href="#audyt">Audyt</a>
         </nav>
 
@@ -135,8 +174,8 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
             <p className="checkout-plan__name">Dostęp bez płatności</p>
             <h2>Utwórz kod dostępu</h2>
             <p>
-              Kod nadaje pełny dostęp do biblioteki i materiałów. Po utworzeniu
-              pokaże się tylko raz.
+              Kod może nadać dostęp do całej platformy albo do wybranego kursu.
+              Po utworzeniu pokaże się tylko raz.
             </p>
           </div>
           <form action="/api/admin/access-codes" method="post" className="admin-grant-form">
@@ -154,6 +193,24 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
             <label>
               <span>Opis</span>
               <input name="label" placeholder="np. Klient z konsultacji" maxLength={120} />
+            </label>
+            <label>
+              <span>Zakres dostępu</span>
+              <select name="scope" defaultValue="all_access">
+                <option value="all_access">Cała platforma</option>
+                <option value="course">Konkretny kurs</option>
+              </select>
+            </label>
+            <label>
+              <span>Kurs, jeśli wybrano konkretny kurs</span>
+              <select name="courseId" defaultValue="">
+                <option value="">Bez konkretnego kursu</option>
+                {dashboard.courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title} ({course.status})
+                  </option>
+                ))}
+              </select>
             </label>
             <label>
               <span>Liczba użyć</span>
@@ -181,6 +238,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
               <thead>
                 <tr>
                   <th>Opis</th>
+                  <th>Dostęp</th>
                   <th>Użycia</th>
                   <th>Ważny do</th>
                   <th>Status</th>
@@ -191,6 +249,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
                 {accessCodes.map((code) => (
                   <tr key={code.id}>
                     <td>{code.label || "Bez opisu"}</td>
+                    <td>{formatAccessScope(code)}</td>
                     <td>{code.used_count} / {code.max_uses}</td>
                     <td>{formatDate(code.expires_at)}</td>
                     <td>{code.revoked_at ? "wyłączony" : "aktywny"}</td>
@@ -215,6 +274,262 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
           </div>
         </section>
 
+        <section id="kursy-admin" className="admin-section">
+          <div className="admin-section__heading">
+            <div>
+              <p className="checkout-plan__name">Zawartość kursów</p>
+              <h2>Kursy, moduły i lekcje</h2>
+            </div>
+            <span>{courseEditor.length} kursów</span>
+          </div>
+          {courseMessage ? (
+            <p
+              className={
+                courseResult === "invalid" ||
+                courseResult === "server" ||
+                courseResult.endsWith("_not_found") ||
+                courseResult === "rate"
+                  ? "auth-error"
+                  : "auth-notice"
+              }
+            >
+              {courseMessage}
+            </p>
+          ) : null}
+
+          <form
+            action="/api/admin/courses"
+            method="post"
+            className="admin-grant-form admin-course-create"
+          >
+            <input type="hidden" name="action" value="create-course" />
+            <label>
+              <span>Nazwa kursu</span>
+              <input name="title" required maxLength={160} />
+            </label>
+            <label>
+              <span>Opis kursu</span>
+              <textarea name="description" rows={4} maxLength={800} />
+            </label>
+            <label>
+              <span>Poziom</span>
+              <input name="levelLabel" placeholder="np. Start" maxLength={80} />
+            </label>
+            <label>
+              <span>Czas / liczba modułów</span>
+              <input name="durationLabel" placeholder="np. 4 moduły" maxLength={80} />
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="status" defaultValue="draft">
+                <option value="draft">Szkic</option>
+                <option value="published">Opublikowany</option>
+              </select>
+            </label>
+            <button type="submit" className="button-primary">
+              Dodaj kurs
+            </button>
+          </form>
+
+          <div className="admin-course-editor">
+            {courseEditor.map((course) => (
+              <article key={course.id} className="admin-course-block">
+                <div className="admin-course-block__heading">
+                  <div>
+                    <span className={`status-badge status-badge--${course.status}`}>
+                      {course.status}
+                    </span>
+                    <h3>{course.title}</h3>
+                    <p>{course.description}</p>
+                  </div>
+                  <form action="/api/admin/courses" method="post">
+                    <input type="hidden" name="action" value="archive-course" />
+                    <input type="hidden" name="courseId" value={course.id} />
+                    <button type="submit" className="button-secondary">
+                      Usuń kurs
+                    </button>
+                  </form>
+                </div>
+
+                <form action="/api/admin/courses" method="post" className="admin-inline-form">
+                  <input type="hidden" name="action" value="update-course" />
+                  <input type="hidden" name="courseId" value={course.id} />
+                  <label>
+                    <span>Nazwa</span>
+                    <input name="title" required maxLength={160} defaultValue={course.title} />
+                  </label>
+                  <label>
+                    <span>Opis</span>
+                    <textarea name="description" rows={3} maxLength={800} defaultValue={course.description} />
+                  </label>
+                  <label>
+                    <span>Poziom</span>
+                    <input name="levelLabel" maxLength={80} defaultValue={course.levelLabel} />
+                  </label>
+                  <label>
+                    <span>Czas</span>
+                    <input name="durationLabel" maxLength={80} defaultValue={course.durationLabel} />
+                  </label>
+                  <label>
+                    <span>Status</span>
+                    <select name="status" defaultValue={course.status === "draft" ? "draft" : "published"}>
+                      <option value="draft">Szkic</option>
+                      <option value="published">Opublikowany</option>
+                    </select>
+                  </label>
+                  <button type="submit" className="button-primary">
+                    Zapisz kurs
+                  </button>
+                </form>
+
+                <form action="/api/admin/courses" method="post" className="admin-inline-form">
+                  <input type="hidden" name="action" value="create-module" />
+                  <input type="hidden" name="courseId" value={course.id} />
+                  <label>
+                    <span>Nazwa modułu</span>
+                    <input name="title" required maxLength={160} />
+                  </label>
+                  <label>
+                    <span>Opis modułu</span>
+                    <input name="description" maxLength={500} />
+                  </label>
+                  <button type="submit" className="button-secondary">
+                    Dodaj moduł
+                  </button>
+                </form>
+
+                <div className="admin-module-list">
+                  {course.modules.map((courseModule) => (
+                    <section key={courseModule.id} className="admin-module-block">
+                      <div className="admin-module-block__heading">
+                        <div>
+                          <span>Moduł {courseModule.position}</span>
+                          <h4>{courseModule.title}</h4>
+                          {courseModule.description ? <p>{courseModule.description}</p> : null}
+                        </div>
+                        <form action="/api/admin/courses" method="post">
+                          <input type="hidden" name="action" value="delete-module" />
+                          <input type="hidden" name="moduleId" value={courseModule.id} />
+                          <button type="submit" className="button-secondary">
+                            Usuń moduł
+                          </button>
+                        </form>
+                      </div>
+
+                      <form action="/api/admin/courses" method="post" className="admin-inline-form">
+                        <input type="hidden" name="action" value="update-module" />
+                        <input type="hidden" name="moduleId" value={courseModule.id} />
+                        <label>
+                          <span>Nazwa modułu</span>
+                          <input name="title" required maxLength={160} defaultValue={courseModule.title} />
+                        </label>
+                        <label>
+                          <span>Opis modułu</span>
+                          <input name="description" maxLength={500} defaultValue={courseModule.description} />
+                        </label>
+                        <button type="submit" className="button-secondary">
+                          Zapisz moduł
+                        </button>
+                      </form>
+
+                      <form
+                        action="/api/admin/courses"
+                        method="post"
+                        encType="multipart/form-data"
+                        className="admin-inline-form"
+                      >
+                        <input type="hidden" name="action" value="create-lesson" />
+                        <input type="hidden" name="moduleId" value={courseModule.id} />
+                        <label>
+                          <span>Tytuł lekcji</span>
+                          <input name="title" required maxLength={160} />
+                        </label>
+                        <label>
+                          <span>Krótki opis</span>
+                          <input name="summary" maxLength={400} />
+                        </label>
+                        <label>
+                          <span>Treść instrukcji</span>
+                          <textarea name="contentMarkdown" rows={5} />
+                        </label>
+                        <label>
+                          <span>Film lekcji</span>
+                          <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
+                        </label>
+                        <label>
+                          <span>Status</span>
+                          <select name="status" defaultValue="draft">
+                            <option value="draft">Szkic</option>
+                            <option value="published">Opublikowana</option>
+                          </select>
+                        </label>
+                        <button type="submit" className="button-primary">
+                          Dodaj lekcję
+                        </button>
+                      </form>
+
+                      <div className="admin-lesson-list">
+                        {courseModule.lessons.map((lesson) => (
+                          <form
+                            key={lesson.id}
+                            action="/api/admin/courses"
+                            method="post"
+                            encType="multipart/form-data"
+                            className="admin-lesson-editor"
+                          >
+                            <input type="hidden" name="action" value="update-lesson" />
+                            <input type="hidden" name="lessonId" value={lesson.id} />
+                            <div className="admin-lesson-editor__heading">
+                              <strong>{lesson.position}. {lesson.title}</strong>
+                              <span>{lesson.hasVideo ? "film dodany" : "bez filmu"}</span>
+                            </div>
+                            <label>
+                              <span>Tytuł</span>
+                              <input name="title" required maxLength={160} defaultValue={lesson.title} />
+                            </label>
+                            <label>
+                              <span>Krótki opis</span>
+                              <input name="summary" maxLength={400} defaultValue={lesson.summary} />
+                            </label>
+                            <label>
+                              <span>Treść instrukcji</span>
+                              <textarea name="contentMarkdown" rows={5} defaultValue={lesson.contentMarkdown} />
+                            </label>
+                            <label>
+                              <span>Podmień film</span>
+                              <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
+                            </label>
+                            <label>
+                              <span>Status</span>
+                              <select name="status" defaultValue={lesson.status}>
+                                <option value="draft">Szkic</option>
+                                <option value="published">Opublikowana</option>
+                              </select>
+                            </label>
+                            <div className="admin-form-actions">
+                              <button type="submit" className="button-primary">
+                                Zapisz lekcję
+                              </button>
+                              <button
+                                type="submit"
+                                name="action"
+                                value="delete-lesson"
+                                className="button-secondary"
+                              >
+                                Usuń lekcję
+                              </button>
+                            </div>
+                          </form>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section id="materialy" className="admin-section admin-grant-section">
           <div>
             <p className="checkout-plan__name">Biblioteka użytkownika</p>
@@ -231,7 +546,7 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
             className="admin-grant-form"
           >
             {materialMessage ? (
-              <p className={materialResult === "created" || materialResult === "archived" ? "auth-notice" : "auth-error"}>
+              <p className={materialResult === "created" || materialResult === "updated" || materialResult === "archived" ? "auth-notice" : "auth-error"}>
                 {materialMessage}
               </p>
             ) : null}
@@ -367,10 +682,10 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
         <section id="dostepy" className="admin-section admin-grant-section">
           <div>
             <p className="checkout-plan__name">Operacja administracyjna</p>
-            <h2>Nadaj dostęp do konkretnego kursu</h2>
+            <h2>Nadaj dostęp użytkownikowi</h2>
             <p>
-              Opcjonalne narzędzie do ręcznego przypisania kursu istniejącemu
-              użytkownikowi.
+              Wybierz, czy użytkownik ma dostać całą platformę, czy tylko
+              konkretny kurs.
             </p>
           </div>
           <form action="/api/admin/access-grants" method="post" className="admin-grant-form">
@@ -395,11 +710,16 @@ export default async function AdminPage(props: PageProps<"/panel/admin">) {
               </select>
             </label>
             <label>
-              <span>Kurs</span>
-              <select name="courseId" required defaultValue="">
-                <option value="" disabled>
-                  Wybierz kurs
-                </option>
+              <span>Zakres dostępu</span>
+              <select name="scope" defaultValue="all_access">
+                <option value="all_access">Cała platforma</option>
+                <option value="course">Konkretny kurs</option>
+              </select>
+            </label>
+            <label>
+              <span>Kurs, jeśli wybrano konkretny kurs</span>
+              <select name="courseId" defaultValue="">
+                <option value="">Bez konkretnego kursu</option>
                 {dashboard.courses.map((course) => (
                   <option key={course.id} value={course.id}>
                     {course.title} ({course.status})

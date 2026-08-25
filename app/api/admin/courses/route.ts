@@ -1,0 +1,235 @@
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { extname, join } from "node:path";
+import { randomUUID } from "node:crypto";
+import { NextResponse } from "next/server";
+import {
+  AdminCourseEditorError,
+  archiveAdminCourse,
+  createAdminCourse,
+  createAdminLesson,
+  createAdminModule,
+  deleteAdminLesson,
+  deleteAdminModule,
+  getAdminLessonVideoKey,
+  updateAdminCourse,
+  updateAdminLesson,
+  updateAdminModule,
+} from "@/app/lib/admin-course-editor";
+import { queryDatabase } from "@/app/lib/db";
+import { isSameOriginFormRequest } from "@/app/lib/auth";
+import { getCurrentUserSession } from "@/app/lib/session";
+import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
+import { resolveVideoStoragePath } from "@/app/lib/video-storage";
+
+export const runtime = "nodejs";
+
+const maxVideoBytes = 1024 * 1024 * 1200;
+const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
+
+function redirectToAdmin(result: string) {
+  return new NextResponse(null, {
+    status: 303,
+    headers: { Location: `/panel/admin?course=${result}#kursy-admin` },
+  });
+}
+
+function normalizeStatus(value: FormDataEntryValue | null) {
+  return String(value ?? "") === "draft" ? "draft" : "published";
+}
+
+function videoStorageRoot() {
+  return process.env.VIDEO_STORAGE_PATH ?? "/data/videos";
+}
+
+function safeExtension(fileName: string) {
+  const extension = extname(fileName).toLowerCase();
+
+  if (/^\.[a-z0-9]{1,8}$/.test(extension)) {
+    return extension;
+  }
+
+  return "";
+}
+
+async function saveVideo(upload: FormDataEntryValue | null) {
+  if (!(upload instanceof File) || upload.size === 0) {
+    return null;
+  }
+
+  if (upload.size > maxVideoBytes || !allowedVideoTypes.has(upload.type)) {
+    throw new AdminCourseEditorError("invalid");
+  }
+
+  const folder = "lessons";
+  const key = `${folder}/${randomUUID()}${safeExtension(upload.name)}`;
+  const targetPath = resolveVideoStoragePath(videoStorageRoot(), key);
+
+  if (!targetPath) {
+    throw new AdminCourseEditorError("invalid");
+  }
+
+  await mkdir(join(videoStorageRoot(), folder), { recursive: true });
+  await writeFile(targetPath, Buffer.from(await upload.arrayBuffer()));
+
+  return key;
+}
+
+async function unlinkVideoKey(storageKey: string | null) {
+  const filePath = storageKey
+    ? resolveVideoStoragePath(videoStorageRoot(), storageKey)
+    : null;
+
+  if (filePath) {
+    await unlink(filePath).catch(() => undefined);
+  }
+}
+
+export async function POST(request: Request) {
+  if (!isSameOriginFormRequest(request)) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  const session = await getCurrentUserSession();
+
+  if (!session || session.role !== "admin") {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  const rateLimit = await checkRateLimit("admin-courses", session.userId, {
+    endpointLimit: 30,
+    globalLimit: 60,
+  });
+
+  if (!rateLimit.allowed) {
+    return redirectToAdmin("rate");
+  }
+
+  let formData: FormData;
+
+  try {
+    formData = await request.formData();
+  } catch {
+    return redirectToAdmin("invalid");
+  }
+
+  const actionValues = formData.getAll("action");
+  const action = String(actionValues.at(-1) ?? "");
+
+  try {
+    if (action === "create-course") {
+      await createAdminCourse({
+        title: String(formData.get("title") ?? "").trim(),
+        description: String(formData.get("description") ?? "").trim(),
+        levelLabel: String(formData.get("levelLabel") ?? "").trim(),
+        durationLabel: String(formData.get("durationLabel") ?? "").trim(),
+        status: normalizeStatus(formData.get("status")),
+      });
+      return redirectToAdmin("course_created");
+    }
+
+    if (action === "update-course") {
+      await updateAdminCourse({
+        courseId: String(formData.get("courseId") ?? ""),
+        title: String(formData.get("title") ?? "").trim(),
+        description: String(formData.get("description") ?? "").trim(),
+        levelLabel: String(formData.get("levelLabel") ?? "").trim(),
+        durationLabel: String(formData.get("durationLabel") ?? "").trim(),
+        status: normalizeStatus(formData.get("status")),
+      });
+      return redirectToAdmin("course_updated");
+    }
+
+    if (action === "archive-course") {
+      await archiveAdminCourse(String(formData.get("courseId") ?? ""));
+      return redirectToAdmin("course_archived");
+    }
+
+    if (action === "create-module") {
+      await createAdminModule({
+        courseId: String(formData.get("courseId") ?? ""),
+        title: String(formData.get("title") ?? "").trim(),
+        description: String(formData.get("description") ?? "").trim(),
+      });
+      return redirectToAdmin("module_created");
+    }
+
+    if (action === "update-module") {
+      await updateAdminModule({
+        moduleId: String(formData.get("moduleId") ?? ""),
+        title: String(formData.get("title") ?? "").trim(),
+        description: String(formData.get("description") ?? "").trim(),
+      });
+      return redirectToAdmin("module_updated");
+    }
+
+    if (action === "delete-module") {
+      const moduleId = String(formData.get("moduleId") ?? "");
+      const videoKeys = await queryDatabase<{ video_storage_key: string | null }>(
+        `SELECT video_storage_key
+         FROM lessons
+         WHERE module_id = $1
+           AND video_storage_key IS NOT NULL`,
+        [moduleId],
+      );
+
+      await deleteAdminModule(moduleId);
+      await Promise.all(videoKeys.rows.map((row) => unlinkVideoKey(row.video_storage_key)));
+
+      return redirectToAdmin("module_deleted");
+    }
+
+    if (action === "create-lesson") {
+      const videoStorageKey = await saveVideo(formData.get("video"));
+
+      await createAdminLesson({
+        moduleId: String(formData.get("moduleId") ?? ""),
+        title: String(formData.get("title") ?? "").trim(),
+        summary: String(formData.get("summary") ?? "").trim(),
+        contentMarkdown: String(formData.get("contentMarkdown") ?? "").trim(),
+        status: normalizeStatus(formData.get("status")),
+        videoStorageKey,
+      });
+      return redirectToAdmin("lesson_created");
+    }
+
+    if (action === "update-lesson") {
+      const lessonId = String(formData.get("lessonId") ?? "");
+      const oldVideoKey = await getAdminLessonVideoKey(lessonId);
+      const videoStorageKey = await saveVideo(formData.get("video"));
+
+      await updateAdminLesson({
+        lessonId,
+        title: String(formData.get("title") ?? "").trim(),
+        summary: String(formData.get("summary") ?? "").trim(),
+        contentMarkdown: String(formData.get("contentMarkdown") ?? "").trim(),
+        status: normalizeStatus(formData.get("status")),
+        videoStorageKey: videoStorageKey ?? undefined,
+      });
+
+      if (videoStorageKey) {
+        await unlinkVideoKey(oldVideoKey);
+      }
+
+      return redirectToAdmin("lesson_updated");
+    }
+
+    if (action === "delete-lesson") {
+      const lessonId = String(formData.get("lessonId") ?? "");
+      const videoKey = await getAdminLessonVideoKey(lessonId);
+
+      await deleteAdminLesson(lessonId);
+      await unlinkVideoKey(videoKey);
+
+      return redirectToAdmin("lesson_deleted");
+    }
+  } catch (error) {
+    if (error instanceof AdminCourseEditorError) {
+      return redirectToAdmin(error.code);
+    }
+
+    console.error("Admin course update failed with an unexpected error.");
+    return redirectToAdmin("server");
+  }
+
+  return redirectToAdmin("invalid");
+}

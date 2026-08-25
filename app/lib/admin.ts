@@ -228,12 +228,12 @@ export class AdminGrantError extends Error {
 export async function grantCourseAccessByAdmin(input: {
   adminUserId: string;
   targetEmail: string;
-  courseId: string;
+  scope: "all_access" | "course";
+  courseId: string | null;
 }) {
   if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      input.courseId,
-    )
+    input.scope === "course" &&
+    (!input.courseId || !isUuid(input.courseId))
   ) {
     throw new AdminGrantError("invalid");
   }
@@ -241,7 +241,7 @@ export async function grantCourseAccessByAdmin(input: {
   return withDatabaseTransaction(async (client) => {
     await client.query(
       "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
-      [`admin-grant:${input.targetEmail}:${input.courseId}`],
+      [`admin-grant:${input.targetEmail}:${input.scope}:${input.courseId ?? "all"}`],
     );
 
     const userResult = await client.query<{
@@ -261,17 +261,19 @@ export async function grantCourseAccessByAdmin(input: {
       throw new AdminGrantError("user_not_found");
     }
 
-    const courseResult = await client.query<{ id: string }>(
-      `SELECT id
-       FROM courses
-       WHERE id = $1
-         AND status <> 'archived'
-       LIMIT 1`,
-      [input.courseId],
-    );
+    if (input.scope === "course") {
+      const courseResult = await client.query<{ id: string }>(
+        `SELECT id
+         FROM courses
+         WHERE id = $1
+           AND status <> 'archived'
+         LIMIT 1`,
+        [input.courseId],
+      );
 
-    if (!courseResult.rows[0]) {
-      throw new AdminGrantError("course_not_found");
+      if (!courseResult.rows[0]) {
+        throw new AdminGrantError("course_not_found");
+      }
     }
 
     const accessResult = await client.query<{ has_access: boolean }>(
@@ -283,10 +285,10 @@ export async function grantCourseAccessByAdmin(input: {
            AND (expires_at IS NULL OR expires_at > now())
            AND (
              scope = 'all_access'
-             OR (scope = 'course' AND course_id = $2)
+             OR ($2::text = 'course' AND scope = 'course' AND course_id = $3)
            )
        ) AS has_access`,
-      [targetUser.id, input.courseId],
+      [targetUser.id, input.scope, input.courseId],
     );
 
     if (
@@ -303,8 +305,12 @@ export async function grantCourseAccessByAdmin(input: {
          course_id,
          source
        )
-       VALUES ($1, 'course', $2, 'admin')`,
-      [targetUser.id, input.courseId],
+       VALUES ($1, $2, $3, 'admin')`,
+      [
+        targetUser.id,
+        input.scope,
+        input.scope === "course" ? input.courseId : null,
+      ],
     );
     await client.query(
       `INSERT INTO admin_audit_events (
@@ -319,9 +325,9 @@ export async function grantCourseAccessByAdmin(input: {
          'course_access_granted',
          $2,
          $3,
-         jsonb_build_object('source', 'admin_panel')
+         jsonb_build_object('source', 'admin_panel', 'scope', $4::text)
        )`,
-      [input.adminUserId, targetUser.id, input.courseId],
+      [input.adminUserId, targetUser.id, input.courseId, input.scope],
     );
 
     return { targetUserId: targetUser.id };

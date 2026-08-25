@@ -1508,6 +1508,140 @@ header nav a:hover::after {
   font-weight: 900;
 }
 
+.admin-course-create {
+  margin-top: 1.5rem;
+}
+
+.admin-course-editor {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.admin-course-block,
+.admin-module-block,
+.admin-lesson-editor {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: clamp(1rem, 2vw, 1.4rem);
+}
+
+.admin-course-block__heading,
+.admin-module-block__heading,
+.admin-lesson-editor__heading,
+.admin-form-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-course-block__heading h3 {
+  margin-top: 0.6rem;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.admin-course-block__heading p,
+.admin-module-block__heading p {
+  margin-top: 0.45rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.admin-inline-form,
+.admin-lesson-editor {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-inline-form {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: end;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.admin-inline-form label,
+.admin-lesson-editor label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 800;
+}
+
+.admin-inline-form input,
+.admin-inline-form textarea,
+.admin-inline-form select,
+.admin-lesson-editor input,
+.admin-lesson-editor textarea,
+.admin-lesson-editor select {
+  width: 100%;
+  min-height: 3rem;
+  border: 2px solid #c8cec4;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 0.75rem 0.9rem;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.admin-inline-form textarea,
+.admin-lesson-editor textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.admin-module-list,
+.admin-lesson-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-module-block {
+  background: #f9faf7;
+}
+
+.admin-module-block__heading span,
+.admin-lesson-editor__heading span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-module-block__heading h4 {
+  margin-top: 0.35rem;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.admin-lesson-list {
+  margin-top: 0.5rem;
+}
+
+.admin-lesson-editor {
+  background: #ffffff;
+}
+
+.admin-form-actions {
+  flex-wrap: wrap;
+}
+
+.status-badge--admin,
+.status-badge--published {
+  background: rgba(47, 93, 80, 0.12);
+  color: #205044;
+}
+
+.status-badge--user,
+.status-badge--draft {
+  background: #e7e9e6;
+  color: #4d574c;
+}
+
 .admin-p24-section {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

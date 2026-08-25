@@ -50,9 +50,10 @@ export async function POST(request: Request) {
   }
 
   const targetEmail = normalizeEmail(formData.get("email"));
+  const scope = String(formData.get("scope") ?? "") === "course" ? "course" : "all_access";
   const courseId = String(formData.get("courseId") ?? "");
 
-  if (!isValidEmail(targetEmail)) {
+  if (!isValidEmail(targetEmail) || (scope === "course" && !courseId)) {
     return redirectToAdmin("invalid");
   }
 
@@ -60,7 +61,8 @@ export async function POST(request: Request) {
     await grantCourseAccessByAdmin({
       adminUserId: session.userId,
       targetEmail,
-      courseId,
+      scope,
+      courseId: scope === "course" ? courseId : null,
     });
     return redirectToAdmin("success");
   } catch (error) {

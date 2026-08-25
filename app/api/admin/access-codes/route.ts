@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { createAccessCode, revokeAccessCode } from "@/app/lib/access-codes";
+import {
+  AccessCodeError,
+  createAccessCode,
+  revokeAccessCode,
+} from "@/app/lib/access-codes";
 import { isSameOriginFormRequest } from "@/app/lib/auth";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
@@ -50,6 +54,8 @@ export async function POST(request: Request) {
     return redirectToAdmin({ accessCode: "revoked" });
   }
 
+  const scope = String(formData.get("scope") ?? "") === "course" ? "course" : "all_access";
+  const courseId = String(formData.get("courseId") ?? "");
   const maxUses = Number(formData.get("maxUses") ?? 1);
   const expiresAtValue = String(formData.get("expiresAt") ?? "");
   const expiresAt = expiresAtValue ? new Date(`${expiresAtValue}T23:59:59`) : null;
@@ -58,17 +64,31 @@ export async function POST(request: Request) {
     !Number.isInteger(maxUses) ||
     maxUses < 1 ||
     maxUses > 500 ||
+    (scope === "course" && !courseId) ||
     (expiresAt && Number.isNaN(expiresAt.getTime()))
   ) {
     return redirectToAdmin({ accessCode: "invalid" });
   }
 
-  const plainCode = await createAccessCode({
-    adminUserId: session.userId,
-    label: String(formData.get("label") ?? ""),
-    maxUses,
-    expiresAt,
-  });
+  let plainCode: string;
+
+  try {
+    plainCode = await createAccessCode({
+      adminUserId: session.userId,
+      label: String(formData.get("label") ?? ""),
+      scope,
+      courseId: scope === "course" ? courseId : null,
+      maxUses,
+      expiresAt,
+    });
+  } catch (error) {
+    if (error instanceof AccessCodeError) {
+      return redirectToAdmin({ accessCode: error.code });
+    }
+
+    console.error("Admin access code creation failed with an unexpected error.");
+    return redirectToAdmin({ accessCode: "invalid" });
+  }
 
   return redirectToAdmin({ accessCode: "created", value: plainCode });
 }
