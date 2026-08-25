@@ -27,7 +27,7 @@ const allowedMimeTypes = new Set([
 function redirectToAdmin(result: string) {
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/panel/admin?material=${result}#materialy` },
+    headers: { Location: `/panel/admin/materialy?material=${result}` },
   });
 }
 

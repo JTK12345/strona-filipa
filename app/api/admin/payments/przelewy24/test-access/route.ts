@@ -13,7 +13,7 @@ export const runtime = "nodejs";
 function redirectToAdmin(result: string) {
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/panel/admin?p24=${result}#p24` },
+    headers: { Location: `/panel/admin/audyt?p24=${result}` },
   });
 }
 

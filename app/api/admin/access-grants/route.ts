@@ -16,7 +16,7 @@ export const runtime = "nodejs";
 function redirectToAdmin(result: string) {
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/panel/admin?grant=${result}` },
+    headers: { Location: `/panel/admin/dostepy?grant=${result}` },
   });
 }
 

@@ -1225,6 +1225,45 @@ header nav a:hover::after {
   font-weight: 800;
 }
 
+.panel-course-card label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 800;
+}
+
+.panel-course-card input,
+.panel-course-card textarea,
+.panel-course-card select {
+  width: 100%;
+  min-height: 3.25rem;
+  border: 2px solid #c8cec4;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.85rem 1rem;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.panel-course-card textarea {
+  min-height: 8rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.panel-course-card input[type="file"] {
+  padding: 0.75rem;
+}
+
+.panel-course-card input[type="file"]::file-selector-button {
+  margin-right: 1rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--soft);
+  color: var(--accent);
+  padding: 0.65rem 0.85rem;
+  font-weight: 900;
+}
+
 .panel-empty--compact {
   margin-top: 1rem;
   padding: 2rem;

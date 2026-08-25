@@ -53,7 +53,7 @@ export default async function PanelPage() {
               <Link href="/biblioteka">Biblioteka</Link>
             ) : null}
             {session.role === "admin" ? (
-              <Link href="/panel/admin">Administracja</Link>
+              <Link href="/panel/admin/kody">Administracja</Link>
             ) : null}
           </aside>
 

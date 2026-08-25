@@ -15,7 +15,7 @@ function redirectToAdmin(params: Record<string, string>) {
 
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/panel/admin?${searchParams.toString()}#kody` },
+    headers: { Location: `/panel/admin/kody?${searchParams.toString()}` },
   });
 }
 

@@ -35,7 +35,7 @@ function redirectToAdmin(result: string, editCourseId = "") {
 
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/panel/admin?${searchParams.toString()}#kursy-admin` },
+    headers: { Location: `/panel/admin/kursy?${searchParams.toString()}` },
   });
 }
 
