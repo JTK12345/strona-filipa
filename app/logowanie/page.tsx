@@ -4,7 +4,7 @@ import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
   title: "Logowanie | Świadomy Profil Ciała",
-  description: "Logowanie do panelu kursów.",
+  description: "Logowanie do panelu admina i materiałów po kodzie dostępu.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -47,8 +47,12 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
 
           <form action="/api/auth/login" method="post" className="auth-card">
             <div>
-              <p className="auth-card__label">Twoje konto</p>
+              <p className="auth-card__label">Panel i materiały</p>
               <h2>Logowanie</h2>
+              <p className="mt-3 text-sm leading-6 text-[var(--muted)]">
+                Dla administratora oraz osób, które mają konto z kodem dostępu
+                do biblioteki.
+              </p>
             </div>
 
             {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
@@ -78,7 +82,7 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
             </label>
 
             <button type="submit" className="button-primary">
-              Zaloguj do panelu
+              Zaloguj się
             </button>
           </form>
         </div>
