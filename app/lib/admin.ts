@@ -142,7 +142,7 @@ export async function setUserAdminRoleByAdmin(input: {
     throw new AdminRoleError("invalid");
   }
 
-  return withDatabaseTransaction(async (client) => {
+  const result = await withDatabaseTransaction(async (client) => {
     const targetResult = await client.query<{
       id: string;
       role: "user" | "admin";
@@ -186,7 +186,16 @@ export async function setUserAdminRoleByAdmin(input: {
        WHERE id = $1`,
       [targetUser.id, input.role],
     );
-    await client.query(
+
+    return {
+      previousRole: targetUser.role,
+      role: input.role,
+      targetUserId: targetUser.id,
+    };
+  });
+
+  try {
+    await queryDatabase(
       `INSERT INTO admin_audit_events (
          admin_user_id,
          action,
@@ -197,19 +206,21 @@ export async function setUserAdminRoleByAdmin(input: {
          $1,
          $2,
          $3,
-         jsonb_build_object('previous_role', $4, 'new_role', $5)
+        jsonb_build_object('previous_role', $4, 'new_role', $5)
        )`,
       [
         input.adminUserId,
-        input.role === "admin" ? "admin_role_granted" : "admin_role_revoked",
-        targetUser.id,
-        targetUser.role,
-        input.role,
+        result.role === "admin" ? "admin_role_granted" : "admin_role_revoked",
+        result.targetUserId,
+        result.previousRole,
+        result.role,
       ],
     );
+  } catch (error) {
+    console.error("Admin role audit insert failed.", error);
+  }
 
-    return { targetUserId: targetUser.id, role: input.role };
-  });
+  return { targetUserId: result.targetUserId, role: result.role };
 }
 
 export class AdminGrantError extends Error {

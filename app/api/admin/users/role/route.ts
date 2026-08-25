@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       return redirectToAdmin(error.code);
     }
 
-    console.error("Admin role update failed with an unexpected error.");
+    console.error("Admin role update failed with an unexpected error.", error);
     return redirectToAdmin("server");
   }
 }
