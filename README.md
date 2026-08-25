@@ -79,9 +79,24 @@ Przydatne polecenia:
 
 ```bash
 npm run db:status
+npm run db:ensure-default-admin
 npm run db:create-admin
 npm run db:set-video
 ```
+
+## Domyslny administrator
+
+Kontener po migracjach uruchamia `scripts/ensure-default-admin.mjs`. Konto jest
+konfigurowane przez `.env`:
+
+```env
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_PASSWORD=replace-with-admin-password
+```
+
+Uzupelnij `DEFAULT_ADMIN_PASSWORD` w `.env` wlasnym haslem przed startem. Przy
+kazdym starcie kontenera konto z `DEFAULT_ADMIN_EMAIL` zostanie ustawione jako
+aktywny admin, a haslo zostanie zsynchronizowane z `DEFAULT_ADMIN_PASSWORD`.
 
 ## Dostep i materialy
 

@@ -39,4 +39,4 @@ USER nextjs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node scripts/db-migrate.mjs && exec node server.js"]
+CMD ["sh", "-c", "node scripts/db-migrate.mjs && node scripts/ensure-default-admin.mjs && exec node server.js"]

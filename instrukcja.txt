@@ -19,7 +19,7 @@ curl http://127.0.0.1:3010/api/health
 curl -I https://profil-ciala.jtk.ovh
 
 4. Test funkcji:
-- zaloguj admina na /logowanie,
+- zaloguj admina na /logowanie (domyslnie DEFAULT_ADMIN_EMAIL / DEFAULT_ADMIN_PASSWORD z .env),
 - otworz /panel/admin,
 - wygeneruj kod dostepu,
 - dodaj testowy material,

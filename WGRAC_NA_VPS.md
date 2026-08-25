@@ -61,6 +61,8 @@ POSTGRES_USER=strona_user
 POSTGRES_PASSWORD=tu_wpisz_pierwszy_losowy_sekret
 DATABASE_URL=postgresql://strona_user:tu_wpisz_pierwszy_losowy_sekret@postgres:5432/strona_db
 DATABASE_POOL_MAX=10
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_PASSWORD=tu_wpisz_haslo_admina
 
 APP_URL=https://profil-ciala.jtk.ovh
 VIDEO_STORAGE_PATH=/data/videos
@@ -124,15 +126,27 @@ bezposrednio do internetu.
 
 ## 4. Administrator
 
-Utworz administratora:
+Domyslne konto administratora jest tworzone automatycznie przy starcie
+kontenera, po migracjach bazy. Dane ustawiasz w `.env`:
+
+```env
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_PASSWORD=tu_wpisz_haslo_admina
+```
+
+Uzupelnij `DEFAULT_ADMIN_PASSWORD` wlasnym haslem przed startem. Przy kazdym
+`docker compose up` aplikacja ustawi konto z `DEFAULT_ADMIN_EMAIL` jako
+aktywnego admina i nada mu haslo z `DEFAULT_ADMIN_PASSWORD`.
+
+Administrator loguje sie przez `/logowanie` i ma dostep do `/panel/admin`.
+
+Opcjonalny reczny reset admina:
 
 ```bash
 read -s -p "Haslo administratora: " ADMIN_PASSWORD; echo
-printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email lokiju12345@wp.pl --password-stdin
+printf '%s' "$ADMIN_PASSWORD" | docker compose exec -T strona npm run db:create-admin -- --email admin@example.com --password-stdin
 unset ADMIN_PASSWORD
 ```
-
-Administrator loguje sie przez `/logowanie` i ma dostep do `/panel/admin`.
 
 ## 5. Kody dostepu
 
