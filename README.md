@@ -12,8 +12,7 @@ Gotowe w kodzie:
 
 - rejestracja, logowanie i sesje bazodanowe,
 - odswiezanie widoku sesji po powrocie do aktywnej karty,
-- brak wysylki maili z formularzy; kontakt odbywa sie przez telefon, e-mail i
-  Instagram,
+- wysylka maili systemowych przez SMTP, w tym reset hasla,
 - role `admin` i `user`,
 - publiczny katalog kursow,
 - aktywacja dostepu kodem,
@@ -33,6 +32,7 @@ platnosci zostaly usuniete z kodu aplikacji.
 
 - `/dostep` - wpisanie kodu dostepu,
 - `/rejestracja` i `/logowanie` - konto uzytkownika,
+- `/reset-hasla` - reset hasla przez link wysylany e-mailem,
 - `/panel` - materialy uzytkownika i link do aktywacji kodu,
 - `/panel/admin` - kody, materialy, upload i reczne granty,
 - `/biblioteka` - prywatna biblioteka po aktywacji kodu,

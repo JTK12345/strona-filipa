@@ -52,7 +52,7 @@ SMTP_SECURE=false
 SMTP_USER=kontakt@example.com
 SMTP_PASS=tu_wpisz_haslo_smtp
 MAIL_TO=kontakt@example.com
-MAIL_FROM="Formularz kontaktowy <kontakt@example.com>"
+MAIL_FROM="Swiadomy Profil Ciala <kontakt@example.com>"
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=tu_wpisz_site_key
 TURNSTILE_SECRET_KEY=tu_wpisz_secret_key
 
@@ -76,6 +76,57 @@ LOG_SALT=tu_wpisz_trzeci_losowy_sekret
 
 Nie zapisuj `.env` w Git. Nie wysylaj jego tresci w rozmowie ani na zrzucie
 ekranu.
+
+### Co wpisac w `.env`
+
+| Zmienna | Co wpisac | Skad wziac |
+| --- | --- | --- |
+| `SMTP_HOST` | adres serwera poczty, np. `smtp.twojadomena.pl` | panel poczty/hostingu domeny |
+| `SMTP_PORT` | zwykle `587` albo `465` | panel poczty; `587` dla STARTTLS, `465` dla SSL |
+| `SMTP_SECURE` | `false` dla portu `587`, `true` dla portu `465` | zalezy od portu SMTP |
+| `SMTP_USER` | login do skrzynki pocztowej | zwykle pelny adres e-mail, np. `kontakt@swiadomyprofilciala.pl` |
+| `SMTP_PASS` | haslo do SMTP | haslo skrzynki albo haslo aplikacji z panelu poczty |
+| `MAIL_TO` | adres odbiorcy wiadomosci kontaktowych | adres, na ktory maja przychodzic formularze |
+| `MAIL_FROM` | widoczny nadawca maili, np. `"Swiadomy Profil Ciala <kontakt@swiadomyprofilciala.pl>"` | najlepiej ten sam adres co `SMTP_USER` |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | publiczny klucz Cloudflare Turnstile | Cloudflare Turnstile, pole Site key |
+| `TURNSTILE_SECRET_KEY` | prywatny klucz Cloudflare Turnstile | Cloudflare Turnstile, pole Secret key |
+| `POSTGRES_DB` | nazwa bazy, np. `strona_db` | moze zostac wartosc z przykladu |
+| `POSTGRES_USER` | uzytkownik bazy, np. `strona_user` | moze zostac wartosc z przykladu |
+| `POSTGRES_PASSWORD` | mocne losowe haslo bazy | `openssl rand -hex 32` |
+| `DATABASE_URL` | pelny adres bazy | sklada sie z `POSTGRES_USER`, `POSTGRES_PASSWORD`, hosta `postgres`, portu `5432` i `POSTGRES_DB` |
+| `DATABASE_POOL_MAX` | maksymalna liczba polaczen aplikacji z baza | zwykle zostaw `10` |
+| `DEFAULT_ADMIN_EMAIL` | e-mail glownego admina | adres, ktory ma logowac sie do panelu admina |
+| `DEFAULT_ADMIN_PASSWORD` | haslo glownego admina | wymysl mocne haslo; nie uzywaj przykladu |
+| `APP_URL` | publiczny adres strony z `https://` | domena z Nginx Proxy Manager, np. `https://profil-ciala.jtk.ovh` |
+| `VIDEO_STORAGE_PATH` | sciezka w kontenerze na pliki | zostaw `/data/videos` |
+| `VIDEO_STORAGE_HOST_PATH` | sciezka na VPS montowana do kontenera | zwykle `./data/videos` |
+| `LIBRARY_STORAGE_PATH` | opcjonalna osobna sciezka w kontenerze dla biblioteki | zostaw puste, jesli biblioteka ma uzywac `VIDEO_STORAGE_PATH` |
+| `ALLOWED_ORIGINS` | publiczny adres strony | zwykle ta sama wartosc co `APP_URL` |
+| `TRUSTED_PROXY_SECRET` | sekret miedzy Nginx Proxy Manager i aplikacja | `openssl rand -hex 32`; te sama wartosc wpisz w naglowku `X-Trusted-Proxy-Secret` |
+| `LOG_SALT` | sekret do bezpieczniejszego hashowania danych w logach | `openssl rand -hex 32` |
+
+Najczesciej zmieniasz tylko: dane SMTP, klucze Turnstile, hasla, `APP_URL`,
+`ALLOWED_ORIGINS` i dane admina. Wartosc `DATABASE_URL` musi zawierac to samo
+haslo co `POSTGRES_PASSWORD`.
+
+Przyklad dla resetu hasla:
+
+```env
+APP_URL=https://profil-ciala.jtk.ovh
+SMTP_HOST=smtp.twojadomena.pl
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=kontakt@swiadomyprofilciala.pl
+SMTP_PASS=haslo_smtp_albo_haslo_aplikacji
+MAIL_FROM="Swiadomy Profil Ciala <kontakt@swiadomyprofilciala.pl>"
+```
+
+Jesli link resetu hasla zaczyna sie od `0.0.0.0:3000`, popraw `APP_URL`,
+zapisz `.env` i przebuduj kontenery:
+
+```bash
+docker compose up -d --build
+```
 
 ## 3. Start i migracje
 
