@@ -22,6 +22,32 @@ function redirectToReset() {
   });
 }
 
+function getPublicBaseUrl(request: Request) {
+  const configuredAppUrl = process.env.APP_URL?.trim();
+
+  if (configuredAppUrl) {
+    try {
+      return new URL(configuredAppUrl).origin;
+    } catch (error) {
+      console.error("APP_URL is invalid.", error);
+    }
+  }
+
+  const forwardedHost =
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const host = forwardedHost?.split(",")[0]?.trim();
+
+  if (host && host !== "0.0.0.0:3000") {
+    const forwardedProto =
+      request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
+      "https";
+
+    return `${forwardedProto}://${host}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 export async function POST(request: Request) {
   if (!isSameOriginFormRequest(request)) {
     return new Response("Forbidden", { status: 403 });
@@ -54,7 +80,7 @@ export async function POST(request: Request) {
   });
 
   if (token) {
-    const resetUrl = new URL("/reset-hasla/nowe", request.url);
+    const resetUrl = new URL("/reset-hasla/nowe", getPublicBaseUrl(request));
     resetUrl.searchParams.set("token", token);
     await sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() }).catch(
       (error) => {
