@@ -927,106 +927,92 @@ header nav a:hover::after {
   min-width: 11rem;
 }
 
-.access-premium-page {
-  padding: 5rem 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(247, 245, 239, 0.96)),
-    linear-gradient(90deg, rgba(194, 118, 79, 0.08), transparent 46%);
+.access-page {
+  min-height: calc(100vh - 92px);
+  padding: 4rem 0 5rem;
+  background: linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
 }
 
-.access-premium-hero {
+.access-activation-card {
   display: grid;
-  gap: 2rem;
-  align-items: stretch;
-}
-
-.access-premium-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  gap: 1.35rem;
+  max-width: 860px;
+  margin: 2rem auto 0;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #ffffff;
-  padding: clamp(2rem, 5vw, 4rem);
-  box-shadow: 0 18px 42px rgba(16, 35, 30, 0.06);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  box-shadow: 0 16px 36px rgba(16, 35, 30, 0.05);
 }
 
-.access-premium-copy h1 {
-  max-width: 860px;
+.access-activation-card h1 {
+  max-width: 680px;
   margin: 0;
-  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-size: clamp(2rem, 4vw, 3.4rem);
   font-weight: 900;
-  line-height: 1.02;
+  line-height: 1.08;
   letter-spacing: 0;
 }
 
-.access-premium-copy p {
-  max-width: 720px;
-  margin-top: 1.4rem;
+.access-activation-card > p {
+  max-width: 620px;
   color: var(--muted);
-  font-size: 1.12rem;
-  line-height: 1.8;
+  font-size: 1.06rem;
+  line-height: 1.75;
 }
 
-.access-dashboard {
+.access-actions,
+.access-state {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 420px;
-  border-radius: 8px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent),
-    var(--deep);
-  color: #ffffff;
-  padding: 2rem;
-  box-shadow: 0 24px 54px rgba(16, 35, 30, 0.18);
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
 }
 
-.access-dashboard__top {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
+.access-form {
+  display: grid;
   gap: 1rem;
-}
-
-.access-dashboard__top h2 {
+  max-width: 520px;
   margin-top: 0.35rem;
-  font-size: 2rem;
+}
+
+.access-form label {
+  display: grid;
+  gap: 0.5rem;
   font-weight: 900;
 }
 
-.access-dashboard__top span {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  padding: 0.4rem 0.65rem;
-  color: rgba(255, 255, 255, 0.74);
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.access-dashboard__label {
-  color: rgba(255, 255, 255, 0.56);
-  font-size: 0.78rem;
-  font-weight: 900;
+.access-form input {
+  width: 100%;
+  border: 2px solid #c7cec2;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.95rem 1rem;
+  color: var(--foreground);
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.access-dashboard__progress {
-  display: grid;
-  gap: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  padding: 1rem;
+.access-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(47, 93, 80, 0.12);
+  outline: none;
 }
 
-.access-dashboard__progress p {
-  font-weight: 900;
+.access-form .button-primary,
+.access-actions .button-primary,
+.access-actions .button-secondary,
+.access-state .button-primary {
+  width: fit-content;
+  min-width: 11rem;
 }
 
-.access-dashboard__progress span {
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 0.9rem;
+.access-hint {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
 
 .access-progress-bar {
@@ -1053,98 +1039,6 @@ header nav a:hover::after {
 .access-progress-bar::-moz-progress-bar {
   border-radius: inherit;
   background: var(--warm);
-}
-
-.access-dashboard__list {
-  display: grid;
-  gap: 0.85rem;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.access-premium-grid {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.access-value-card,
-.access-roadmap,
-.access-course-strip article {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 14px 34px rgba(16, 35, 30, 0.05);
-}
-
-.access-value-card {
-  padding: 1.5rem;
-}
-
-.access-value-card h2 {
-  font-size: 1.35rem;
-  font-weight: 900;
-}
-
-.access-value-card p {
-  margin-top: 0.75rem;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.access-roadmap {
-  display: grid;
-  gap: 2rem;
-  margin-top: 1.5rem;
-  padding: 2rem;
-}
-
-.access-roadmap h2 {
-  max-width: 560px;
-  font-size: clamp(1.8rem, 3vw, 3rem);
-  font-weight: 900;
-  line-height: 1.08;
-}
-
-.access-roadmap__steps {
-  display: grid;
-  gap: 1rem;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.access-roadmap__steps strong {
-  color: var(--accent);
-}
-
-.access-course-strip {
-  display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.access-course-strip article {
-  padding: 1.25rem;
-}
-
-.access-course-strip p {
-  color: var(--accent);
-  font-size: 0.82rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.access-course-strip h3 {
-  margin-top: 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 900;
-}
-
-.access-course-strip span {
-  display: block;
-  margin-top: 0.75rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 800;
 }
 
 .auth-page,
@@ -2825,20 +2719,6 @@ header nav a:hover::after {
     grid-template-columns: minmax(0, 0.95fr) minmax(340px, 0.65fr);
   }
 
-  .access-premium-hero {
-    grid-template-columns: 1.1fr 0.9fr;
-  }
-
-  .access-premium-grid,
-  .access-course-strip {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .access-roadmap {
-    grid-template-columns: 0.9fr 1.1fr;
-    align-items: center;
-  }
-
   .auth-shell,
   .checkout-shell {
     grid-template-columns: 1.1fr 0.9fr;
@@ -2953,6 +2833,28 @@ select:focus {
 
   .appointment-contact-list .button-primary,
   .appointment-contact-list .button-secondary {
+    width: 100%;
+  }
+
+  .access-page {
+    padding: 3rem 0 4rem;
+  }
+
+  .access-activation-card {
+    margin-top: 1.5rem;
+  }
+
+  .access-actions,
+  .access-state {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .access-form,
+  .access-form .button-primary,
+  .access-actions .button-primary,
+  .access-actions .button-secondary,
+  .access-state .button-primary {
     width: 100%;
   }
 

@@ -3,11 +3,10 @@ import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAccessibleCourses } from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
-import { accessFeatures, premiumAccessBlocks } from "@/content/courses";
 
 export const metadata: Metadata = {
   title: "Kod dostępu | Świadomy Profil Ciała",
-  description: "Wpisz kod i odblokuj materiały wideo oraz instrukcje.",
+  description: "Aktywuj dostęp do materiałów.",
 };
 
 const codeMessages: Record<string, string> = {
@@ -36,82 +35,47 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
   const codeMessage = codeMessages[codeResult];
 
   return (
-    <section className="access-premium-page">
+    <section className="access-page">
       <div className="container-main">
         <BackHomeLink />
-        <div className="access-premium-hero">
-          <div className="access-premium-copy">
-            <span className="eyebrow">Kod dostępu</span>
-            <h1>Odblokuj filmy, instrukcje i materiały od administratora.</h1>
-            <p>
-              Załóż konto albo zaloguj się, wpisz otrzymany kod i korzystaj z
-              materiałów opublikowanych w bibliotece.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              {session ? (
-                hasAccess ? null : (
-                  <Link href="/panel" className="button-secondary">
-                    Otwórz panel
-                  </Link>
-                )
-              ) : (
-                <>
-                  <Link href="/logowanie?next=/dostep" className="button-primary">
-                    Zaloguj się
-                  </Link>
-                  <Link href="/rejestracja?next=/dostep" className="button-secondary">
-                    Utwórz konto
-                  </Link>
-                </>
-              )}
-              {hasAccess ? (
-                <Link href="/panel" className="button-primary">
-                  Przejdź do materiałów
+
+        <div className="access-activation-card">
+          {!session ? (
+            <>
+              <span className="eyebrow">Dostęp</span>
+              <h1>Aktywuj dostęp do materiałów</h1>
+              <p>
+                Zaloguj się lub utwórz konto, aby aktywować otrzymany kod
+                dostępu.
+              </p>
+              <div className="access-actions">
+                <Link href="/logowanie?next=/dostep" className="button-primary">
+                  Zaloguj się
                 </Link>
-              ) : null}
-            </div>
-          </div>
-
-          <aside className="access-dashboard">
-            <div className="access-dashboard__top">
-              <div>
-                <p className="access-dashboard__label">Aktywacja</p>
-                <h2>Wpisz kod</h2>
+                <Link href="/rejestracja?next=/dostep" className="button-secondary">
+                  Utwórz konto
+                </Link>
               </div>
-              <span>{session ? "Konto" : "Login"}</span>
-            </div>
-
-            {session && hasAccess ? (
-              <div className="admin-grant-form">
+            </>
+          ) : hasAccess ? (
+            <>
+              <span className="eyebrow">Dostęp</span>
+              <h1>Masz aktywny dostęp do materiałów.</h1>
+              <div className="access-state">
                 {codeMessage ? (
                   <p className="auth-notice">{codeMessage}</p>
                 ) : null}
-                <p className="auth-notice">
-                  Masz już aktywny dostęp na tym koncie. Materiały są dostępne w
-                  panelu użytkownika.
-                </p>
-                <div className="grid gap-3">
-                  {accessibleCourses.slice(0, 3).map((course) => (
-                    <Link
-                      key={course.slug}
-                      href={`/panel/kursy/${course.slug}`}
-                      className="button-primary"
-                    >
-                      Przejdź do kursu: {course.title}
-                    </Link>
-                  ))}
-                  {session.hasLibraryAccess ? (
-                    <Link href="/biblioteka" className="button-secondary">
-                      Otwórz bibliotekę
-                    </Link>
-                  ) : null}
-                  <Link href="/panel" className="button-secondary">
-                    Otwórz panel
-                  </Link>
-                </div>
+                <Link href="/panel" className="button-primary">
+                  Przejdź do materiałów
+                </Link>
               </div>
-            ) : session ? (
-              <form action="/api/access-codes/redeem" method="post" className="admin-grant-form">
+            </>
+          ) : (
+            <>
+              <span className="eyebrow">Dostęp</span>
+              <h1>Wpisz kod dostępu</h1>
+              <p>Wpisz otrzymany kod, aby dodać materiały do swojego konta.</p>
+              <form action="/api/access-codes/redeem" method="post" className="access-form">
                 {codeMessage ? (
                   <p className={codeResult === "success" || codeResult === "already_has_access" ? "auth-notice" : "auth-error"}>
                     {codeMessage}
@@ -124,41 +88,12 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
                 <button type="submit" className="button-primary">
                   Aktywuj dostęp
                 </button>
+                <p className="access-hint">
+                  Po aktywacji materiały pojawią się na Twoim koncie.
+                </p>
               </form>
-            ) : (
-              <p className="auth-notice">
-                Najpierw zaloguj się lub utwórz konto, żeby przypisać kod do
-                konkretnego użytkownika.
-              </p>
-            )}
-
-            <div className="access-dashboard__list">
-              {accessFeatures.map((feature) => (
-                <p key={feature} className="check-row">{feature}</p>
-              ))}
-            </div>
-          </aside>
-        </div>
-
-        <div className="access-premium-grid">
-          {premiumAccessBlocks.map((block) => (
-            <article key={block.title} className="access-value-card">
-              <h2>{block.title}</h2>
-              <p>{block.description}</p>
-            </article>
-          ))}
-        </div>
-
-        <div className="access-roadmap">
-          <div>
-            <span className="eyebrow">Jak działa teraz</span>
-            <h2>Kod łączy konto i materiały w jednym miejscu.</h2>
-          </div>
-          <div className="access-roadmap__steps">
-            <p><strong>1.</strong> Użytkownik tworzy konto albo loguje się do istniejącego.</p>
-            <p><strong>2.</strong> Wpisuje kod otrzymany od administratora.</p>
-            <p><strong>3.</strong> Biblioteka i materiały pojawiają się w panelu konta.</p>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </section>
