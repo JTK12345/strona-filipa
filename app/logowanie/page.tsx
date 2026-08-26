@@ -13,6 +13,10 @@ const errorMessages: Record<string, string> = {
   server: "Nie udało się zalogować. Spróbuj ponownie.",
 };
 
+const resetMessages: Record<string, string> = {
+  changed: "Hasło zostało zmienione. Możesz się zalogować.",
+};
+
 export default async function LoginPage(props: PageProps<"/logowanie">) {
   const searchParams = await props.searchParams;
   const requestedNext =
@@ -27,6 +31,8 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
     searchParams.next === "/dostep";
   const errorMessage =
     typeof searchParams.error === "string" ? errorMessages[searchParams.error] : null;
+  const resetMessage =
+    typeof searchParams.reset === "string" ? resetMessages[searchParams.reset] : null;
 
   return (
     <section className="auth-page">
@@ -52,6 +58,7 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
             </div>
 
             {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
+            {resetMessage ? <p className="auth-notice">{resetMessage}</p> : null}
 
             {requiresLogin && !errorMessage ? (
               <p className="auth-notice">
@@ -80,6 +87,10 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
             <button type="submit" className="button-primary">
               Zaloguj się
             </button>
+
+            <Link href="/reset-hasla" className="auth-small-link">
+              Nie pamiętasz hasła?
+            </Link>
           </form>
         </div>
       </div>

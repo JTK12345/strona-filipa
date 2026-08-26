@@ -36,6 +36,9 @@ export async function Services() {
                   <li key={bullet} className="check-row">{bullet}</li>
                 ))}
               </ul>
+              <Link href="/umow-konsultacje" className="button-primary mt-6">
+                Umów konsultację
+              </Link>
             </article>
           ))}
         </div>

@@ -43,7 +43,7 @@ export default async function CoursesPage() {
           {courses.map((course) => (
             <article key={course.slug} className="course-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="price-pill">{getCourseStatusLabel(course)}</span>
+                <span className="topic-chip">{getCourseStatusLabel(course)}</span>
                 <div className="text-right">
                   <p className="text-sm font-bold text-[var(--muted)]">
                     {course.duration}

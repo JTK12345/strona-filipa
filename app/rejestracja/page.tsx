@@ -82,6 +82,13 @@ export default async function RegisterPage(props: PageProps<"/rejestracja">) {
               />
             </label>
 
+            <p className="auth-legal-note">
+              Tworząc konto, akceptujesz{" "}
+              <Link href="/regulamin">Regulamin serwisu</Link> i potwierdzasz
+              zapoznanie się z{" "}
+              <Link href="/polityka-prywatnosci">Polityką prywatności</Link>.
+            </p>
+
             <button type="submit" className="button-primary">
               Utwórz konto
             </button>

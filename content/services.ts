@@ -33,8 +33,8 @@ export const services = [
     ],
   },
   {
-    title: "Pakiety współpracy",
-    price: "od 600 zł",
+    title: "Pakiety 3 lub 5 spotkań",
+    price: "Cena ustalana indywidualnie",
     description:
       "Regularna praca dla osób, które chcą połączyć konsultacje, trening zdrowia, edukację i monitorowanie postępów.",
     bullets: [

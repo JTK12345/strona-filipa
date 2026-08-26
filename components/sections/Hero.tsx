@@ -3,9 +3,9 @@ import Link from "next/link";
 import { siteConfig } from "@/content/site";
 
 const stats = [
-  { value: "1:1", label: "konsultacje online i w Gdyni" },
-  { value: "Kod", label: "materiały edukacyjne po dostępie" },
-  { value: "Gdynia", label: "gabinet i praca online" },
+  { value: "1:1", label: "Indywidualne podejście" },
+  { value: "Online", label: "Konsultacje z dowolnego miejsca" },
+  { value: "Gdynia", label: "Konsultacje stacjonarne" },
 ];
 
 export function Hero() {

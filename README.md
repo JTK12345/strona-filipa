@@ -1,7 +1,7 @@
 # Swiadomy Profil Ciala
 
 Platforma gabinetu, konsultacji, treningu zdrowia i prywatnej biblioteki
-materialow edukacyjnych. Aktualny model nie uzywa platnosci: administrator
+materialow edukacyjnych. Projekt nie obsluguje platnosci: administrator
 tworzy konto admina, generuje kody dostepu oraz dodaje filmy, instrukcje i
 pliki z panelu. Uzytkownik zaklada konto, wpisuje otrzymany kod i po
 zalogowaniu widzi udostepnione materialy.
@@ -26,9 +26,8 @@ Gotowe w kodzie:
 - reczne nadawanie dostepu do konkretnego kursu,
 - Docker Compose z PostgreSQL i siecia Nginx Proxy Manager.
 
-Stare moduly Przelewy24 pozostaja w repozytorium jako nieuzywany zapas, ale
-widoczna sciezka uzytkownika prowadzi przez kody dostepu. `/kup` przekierowuje
-na `/dostep`.
+Sciezka uzytkownika prowadzi wylacznie przez kody dostepu. Dawne moduly
+platnosci zostaly usuniete z kodu aplikacji.
 
 ## Najwazniejsze adresy
 
@@ -125,6 +124,4 @@ montowane z `./data/videos`.
 - [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md) - pierwsze wdrozenie, aktualizacja,
   backup, storage, Nginx i panel admina,
 - [instrukcja.txt](./instrukcja.txt) - skrocona aktualizacja VPS,
-- [SECURITY_HARDENING.md](./SECURITY_HARDENING.md) - zabezpieczenia i checklisty,
-- [docs/platnosci-przelewy24.md](./docs/platnosci-przelewy24.md) - status
-  starego modulu platnosci jako nieaktywnego zapasu.
+- [SECURITY_HARDENING.md](./SECURITY_HARDENING.md) - zabezpieczenia i checklisty.

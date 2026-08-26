@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { formatLegalOwnerLine, formatLegalUpdatedAt } from "@/content/legal";
 
 export const metadata: Metadata = {
   title: "Regulamin | Świadomy Profil Ciała",
 };
 
-// TODO: przed produkcją uzupełnić dane działalności.
 export default function TermsPage() {
   return (
     <section className="legal-page">
       <div className="container-main legal-document">
         <BackHomeLink />
-        <span className="legal-draft">Ostatnia aktualizacja: [DATA WEJŚCIA W ŻYCIE]</span>
+        <span className="legal-draft">{formatLegalUpdatedAt()}</span>
         <h1>Regulamin serwisu Świadomy Profil Ciała</h1>
         <p>
           Regulamin określa zasady korzystania ze strony, konta użytkownika,
@@ -21,9 +21,7 @@ export default function TermsPage() {
 
         <h2>Usługodawca</h2>
         <p>
-          Usługodawcą jest Filip Proniewicz, działający pod nazwą:
-          [PEŁNA NAZWA DZIAŁALNOŚCI FILIPA PRONIEWICZA], NIP: [NIP], adres:
-          [ADRES DZIAŁALNOŚCI].
+          {formatLegalOwnerLine("Usługodawcą")}
         </p>
 
         <h2>Zakres usług</h2>

@@ -61,7 +61,7 @@ export default async function PanelPage() {
             <section id="moje-kursy">
               <div className="panel-section-heading">
                 <div>
-                  <p className="checkout-plan__name">Dostępne materiały</p>
+                  <p className="meta-label">Dostępne materiały</p>
                   <h2>Moje kursy i materiały</h2>
                 </div>
                 <Link href="/kursy" className="button-secondary">
@@ -74,7 +74,7 @@ export default async function PanelPage() {
                   {courses.map((course) => (
                     <article key={course.slug} className="panel-course-card">
                       <div>
-                        <p className="checkout-plan__name">
+                        <p className="meta-label">
                           {getCourseStatusLabel(course)}
                         </p>
                         <h2>{course.title}</h2>

@@ -6,6 +6,10 @@ import { listAccessCodes } from "@/app/lib/access-codes";
 import { getAdminCourseEditor } from "@/app/lib/admin-course-editor";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAdminLibraryItems } from "@/app/lib/library";
+import {
+  ConfirmSubmitButton,
+  CopyGeneratedCode,
+} from "@/components/admin/AdminActionControls";
 import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
@@ -107,6 +111,29 @@ function formatAccessScope(code: {
   return "Cała platforma";
 }
 
+function searchParam(
+  searchParams: Record<string, string | string[] | undefined>,
+  key: string,
+) {
+  return typeof searchParams[key] === "string" ? searchParams[key].trim() : "";
+}
+
+function includesNormalized(haystack: string, needle: string) {
+  return haystack.toLowerCase().includes(needle.toLowerCase());
+}
+
+function formatMaterialType(type: "video" | "note" | "file") {
+  if (type === "video") {
+    return "Film";
+  }
+
+  if (type === "file") {
+    return "Plik";
+  }
+
+  return "Instrukcja";
+}
+
 export type AdminSection =
   | "kody"
   | "kursy"
@@ -167,6 +194,42 @@ export async function AdminPanelPage({
       : "";
   const selectedMaterial =
     libraryItems.find((item) => item.id === selectedMaterialId) ?? null;
+  const codeSearch = searchParam(resolvedSearchParams, "codeSearch");
+  const codeStatus = searchParam(resolvedSearchParams, "codeStatus");
+  const codeScope = searchParam(resolvedSearchParams, "codeScope");
+  const materialSearch = searchParam(resolvedSearchParams, "materialSearch");
+  const materialStatus = searchParam(resolvedSearchParams, "materialStatus");
+  const materialType = searchParam(resolvedSearchParams, "materialType");
+  const userSearch = searchParam(resolvedSearchParams, "userSearch");
+  const userRole = searchParam(resolvedSearchParams, "userRole");
+  const filteredAccessCodes = accessCodes.filter((code) => {
+    const status = code.revoked_at ? "revoked" : "active";
+    const matchesSearch =
+      !codeSearch ||
+      includesNormalized(`${code.label} ${formatAccessScope(code)}`, codeSearch);
+    const matchesStatus = !codeStatus || codeStatus === status;
+    const matchesScope = !codeScope || codeScope === code.scope;
+
+    return matchesSearch && matchesStatus && matchesScope;
+  });
+  const filteredLibraryItems = libraryItems.filter((item) => {
+    const matchesSearch =
+      !materialSearch ||
+      includesNormalized(
+        `${item.title} ${item.summary} ${item.contentMarkdown}`,
+        materialSearch,
+      );
+    const matchesStatus = !materialStatus || item.status === materialStatus;
+    const matchesType = !materialType || item.itemType === materialType;
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
+  const filteredUsers = dashboard.users.filter((user) => {
+    const matchesSearch = !userSearch || includesNormalized(user.email, userSearch);
+    const matchesRole = !userRole || user.role === userRole;
+
+    return matchesSearch && matchesRole;
+  });
 
   return (
     <section className="admin-page">
@@ -201,7 +264,7 @@ export async function AdminPanelPage({
           hidden={section !== "kody"}
         >
           <div>
-            <p className="checkout-plan__name">Dostęp bez płatności</p>
+            <p className="meta-label">Dostęp bez płatności</p>
             <h2>Utwórz kod dostępu</h2>
             <p>
               Kod może nadać dostęp do całej platformy albo do wybranego kursu.
@@ -216,9 +279,12 @@ export async function AdminPanelPage({
               </p>
             ) : null}
             {generatedCode ? (
-              <p className="auth-notice">
-                Nowy kod: <strong>{generatedCode}</strong>
-              </p>
+              <div className="admin-generated-code auth-notice">
+                <span>
+                  Nowy kod: <strong>{generatedCode}</strong>
+                </span>
+                <CopyGeneratedCode value={generatedCode} />
+              </div>
             ) : null}
             <label>
               <span>Opis</span>
@@ -259,10 +325,38 @@ export async function AdminPanelPage({
         <section className="admin-section" hidden={section !== "kody"}>
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Ostatnie 100</p>
+              <p className="meta-label">Ostatnie 100</p>
               <h2>Aktywne i historyczne kody</h2>
             </div>
+            <span>{filteredAccessCodes.length} / {accessCodes.length}</span>
           </div>
+          <form className="admin-filter-bar" action="/panel/admin/kody">
+            <label>
+              <span>Szukaj</span>
+              <input name="codeSearch" defaultValue={codeSearch} placeholder="Opis albo zakres" />
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="codeStatus" defaultValue={codeStatus}>
+                <option value="">Wszystkie</option>
+                <option value="active">Aktywne</option>
+                <option value="revoked">Wyłączone</option>
+              </select>
+            </label>
+            <label>
+              <span>Dostęp</span>
+              <select name="codeScope" defaultValue={codeScope}>
+                <option value="">Wszystkie</option>
+                <option value="all_access">Cała platforma</option>
+                <option value="library">Biblioteka</option>
+                <option value="course">Kurs</option>
+              </select>
+            </label>
+            <div className="admin-filter-bar__actions">
+              <button type="submit" className="button-primary">Filtruj</button>
+              <Link href="/panel/admin/kody" className="button-secondary">Wyczyść</Link>
+            </div>
+          </form>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -276,7 +370,7 @@ export async function AdminPanelPage({
                 </tr>
               </thead>
               <tbody>
-                {accessCodes.map((code) => (
+                {filteredAccessCodes.map((code) => (
                   <tr key={code.id}>
                     <td>{code.label || "Bez opisu"}</td>
                     <td>{formatAccessScope(code)}</td>
@@ -288,9 +382,12 @@ export async function AdminPanelPage({
                         <form action="/api/admin/access-codes" method="post">
                           <input type="hidden" name="action" value="revoke" />
                           <input type="hidden" name="codeId" value={code.id} />
-                          <button type="submit" className="button-secondary">
+                          <ConfirmSubmitButton
+                            className="button-secondary"
+                            confirmMessage="Wyłączyć ten kod dostępu?"
+                          >
                             Wyłącz
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       ) : "—"}
                     </td>
@@ -298,8 +395,10 @@ export async function AdminPanelPage({
                 ))}
               </tbody>
             </table>
-            {accessCodes.length === 0 ? (
-              <p className="admin-empty-row">Brak kodów.</p>
+            {filteredAccessCodes.length === 0 ? (
+              <p className="admin-empty-row">
+                {accessCodes.length === 0 ? "Brak kodów." : "Brak kodów dla wybranych filtrów."}
+              </p>
             ) : null}
           </div>
         </section>
@@ -311,7 +410,7 @@ export async function AdminPanelPage({
         >
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Zawartość kursów</p>
+              <p className="meta-label">Zawartość kursów</p>
               <h2>Kursy, moduły i lekcje</h2>
             </div>
             <span>{courseEditor.length} kursów</span>
@@ -368,7 +467,7 @@ export async function AdminPanelPage({
           <div className="admin-course-picker">
             <div className="admin-section__heading">
               <div>
-                <p className="checkout-plan__name">Wybór edycji</p>
+                <p className="meta-label">Wybór edycji</p>
                 <h3>Wybierz kurs do edytowania</h3>
               </div>
             </div>
@@ -429,9 +528,12 @@ export async function AdminPanelPage({
                   <form action="/api/admin/courses" method="post">
                     <input type="hidden" name="action" value="archive-course" />
                     <input type="hidden" name="courseId" value={course.id} />
-                    <button type="submit" className="button-secondary">
+                    <ConfirmSubmitButton
+                      className="button-secondary"
+                      confirmMessage={`Usunąć kurs "${course.title}" ze strony?`}
+                    >
                       Usuń kurs
-                    </button>
+                    </ConfirmSubmitButton>
                   </form>
                 </div>
 
@@ -497,9 +599,12 @@ export async function AdminPanelPage({
                           <input type="hidden" name="action" value="delete-module" />
                           <input type="hidden" name="editCourse" value={course.id} />
                           <input type="hidden" name="moduleId" value={courseModule.id} />
-                          <button type="submit" className="button-secondary">
+                          <ConfirmSubmitButton
+                            className="button-secondary"
+                            confirmMessage={`Usunąć moduł "${courseModule.title}" razem z lekcjami?`}
+                          >
                             Usuń moduł
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       </div>
 
@@ -613,14 +718,14 @@ export async function AdminPanelPage({
                               <button type="submit" className="button-primary">
                                 Zapisz lekcję
                               </button>
-                              <button
-                                type="submit"
+                              <ConfirmSubmitButton
                                 name="action"
                                 value="delete-lesson"
                                 className="button-secondary"
+                                confirmMessage={`Usunąć lekcję "${lesson.title}"?`}
                               >
                                 Usuń lekcję
-                              </button>
+                              </ConfirmSubmitButton>
                             </div>
                           </form>
                         ))}
@@ -639,7 +744,7 @@ export async function AdminPanelPage({
           hidden={section !== "materialy"}
         >
           <div>
-            <p className="checkout-plan__name">Biblioteka użytkownika</p>
+            <p className="meta-label">Biblioteka użytkownika</p>
             <h2>Dodaj film, instrukcję albo notatkę</h2>
             <p>
               Pliki są zapisywane na serwerze. Dozwolone: MP4, WebM, PDF, DOCX,
@@ -693,11 +798,42 @@ export async function AdminPanelPage({
         <section className="admin-section" hidden={section !== "materialy"}>
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Biblioteka</p>
+              <p className="meta-label">Biblioteka</p>
               <h2>Materiały na stronie</h2>
             </div>
-            <span>{libraryItems.length} rekordów</span>
+            <span>{filteredLibraryItems.length} / {libraryItems.length} rekordów</span>
           </div>
+          <form className="admin-filter-bar" action="/panel/admin/materialy">
+            <label>
+              <span>Szukaj</span>
+              <input
+                name="materialSearch"
+                defaultValue={materialSearch}
+                placeholder="Tytuł, opis albo treść"
+              />
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="materialStatus" defaultValue={materialStatus}>
+                <option value="">Wszystkie</option>
+                <option value="published">Opublikowane</option>
+                <option value="draft">Szkice</option>
+              </select>
+            </label>
+            <label>
+              <span>Typ</span>
+              <select name="materialType" defaultValue={materialType}>
+                <option value="">Wszystkie</option>
+                <option value="video">Filmy</option>
+                <option value="file">Pliki</option>
+                <option value="note">Instrukcje</option>
+              </select>
+            </label>
+            <div className="admin-filter-bar__actions">
+              <button type="submit" className="button-primary">Filtruj</button>
+              <Link href="/panel/admin/materialy" className="button-secondary">Wyczyść</Link>
+            </div>
+          </form>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -710,13 +846,13 @@ export async function AdminPanelPage({
                 </tr>
               </thead>
               <tbody>
-                {libraryItems.map((item) => (
+                {filteredLibraryItems.map((item) => (
                   <tr key={item.id}>
                     <td>
                       <strong>{item.title}</strong>
                       <small>{item.summary}</small>
                     </td>
-                    <td>{item.itemType}</td>
+                    <td>{formatMaterialType(item.itemType)}</td>
                     <td>
                       <span>
                         Film: {item.videoFileName ?? formatFileSize(item.videoFileSizeBytes)}
@@ -737,9 +873,12 @@ export async function AdminPanelPage({
                         <form action="/api/admin/library-items" method="post">
                           <input type="hidden" name="action" value="archive" />
                           <input type="hidden" name="itemId" value={item.id} />
-                          <button type="submit" className="button-secondary">
+                          <ConfirmSubmitButton
+                            className="button-secondary"
+                            confirmMessage={`Usunąć materiał "${item.title}" z biblioteki?`}
+                          >
                             Usuń
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       </div>
                     </td>
@@ -747,8 +886,10 @@ export async function AdminPanelPage({
                 ))}
               </tbody>
             </table>
-            {libraryItems.length === 0 ? (
-              <p className="admin-empty-row">Brak materiałów.</p>
+            {filteredLibraryItems.length === 0 ? (
+              <p className="admin-empty-row">
+                {libraryItems.length === 0 ? "Brak materiałów." : "Brak materiałów dla wybranych filtrów."}
+              </p>
             ) : null}
           </div>
         </section>
@@ -756,7 +897,7 @@ export async function AdminPanelPage({
         <section className="admin-section" hidden={section !== "materialy"}>
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Edycja</p>
+              <p className="meta-label">Edycja</p>
               <h2>Edytuj wybrany materiał</h2>
             </div>
           </div>
@@ -821,7 +962,7 @@ export async function AdminPanelPage({
           hidden={section !== "dostepy"}
         >
           <div>
-            <p className="checkout-plan__name">Operacja administracyjna</p>
+            <p className="meta-label">Operacja administracyjna</p>
             <h2>Nadaj dostęp użytkownikowi</h2>
             <p>
               Wybierz, czy użytkownik ma dostać całą platformę, czy tylko
@@ -880,11 +1021,11 @@ export async function AdminPanelPage({
         >
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Role i uprawnienia</p>
+              <p className="meta-label">Role i uprawnienia</p>
               <h2>Użytkownicy platformy</h2>
             </div>
             <span>
-              {dashboard.adminCount} admin / {dashboard.userCount} użytkowników
+              {filteredUsers.length} widocznych · {dashboard.adminCount} admin / {dashboard.userCount} użytkowników
             </span>
           </div>
           {roleMessage ? (
@@ -899,6 +1040,24 @@ export async function AdminPanelPage({
               {roleMessage}
             </p>
           ) : null}
+          <form className="admin-filter-bar" action="/panel/admin/uzytkownicy">
+            <label>
+              <span>Szukaj</span>
+              <input name="userSearch" type="search" defaultValue={userSearch} placeholder="Adres e-mail" />
+            </label>
+            <label>
+              <span>Rola</span>
+              <select name="userRole" defaultValue={userRole}>
+                <option value="">Wszystkie</option>
+                <option value="user">Użytkownicy</option>
+                <option value="admin">Administratorzy</option>
+              </select>
+            </label>
+            <div className="admin-filter-bar__actions">
+              <button type="submit" className="button-primary">Filtruj</button>
+              <Link href="/panel/admin/uzytkownicy" className="button-secondary">Wyczyść</Link>
+            </div>
+          </form>
           <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
@@ -909,7 +1068,7 @@ export async function AdminPanelPage({
                 </tr>
               </thead>
               <tbody>
-                {dashboard.users.map((user) => (
+                {filteredUsers.map((user) => (
                   <tr key={user.id}>
                     <td>{user.email}</td>
                     <td>
@@ -930,18 +1089,28 @@ export async function AdminPanelPage({
                             }
                           />
                           <input type="hidden" name="userId" value={user.id} />
-                          <button type="submit" className="button-secondary">
+                          <ConfirmSubmitButton
+                            className="button-secondary"
+                            confirmMessage={
+                              user.role === "admin"
+                                ? `Odebrać uprawnienia administratora dla ${user.email}?`
+                                : `Nadać uprawnienia administratora dla ${user.email}?`
+                            }
+                          >
                             {user.role === "admin"
                               ? "Odbierz admina"
                               : "Nadaj admina"}
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                         <form action="/api/admin/users/role" method="post">
                           <input type="hidden" name="action" value="delete-user" />
                           <input type="hidden" name="userId" value={user.id} />
-                          <button type="submit" className="button-secondary button-danger">
+                          <ConfirmSubmitButton
+                            className="button-secondary button-danger"
+                            confirmMessage={`Usunąć konto ${user.email}? Tej operacji nie cofniesz z panelu.`}
+                          >
                             Usuń konto
-                          </button>
+                          </ConfirmSubmitButton>
                         </form>
                       </div>
                     </td>
@@ -949,8 +1118,10 @@ export async function AdminPanelPage({
                 ))}
               </tbody>
             </table>
-            {dashboard.users.length === 0 ? (
-              <p className="admin-empty-row">Brak aktywnych użytkowników.</p>
+            {filteredUsers.length === 0 ? (
+              <p className="admin-empty-row">
+                {dashboard.users.length === 0 ? "Brak aktywnych użytkowników." : "Brak użytkowników dla wybranych filtrów."}
+              </p>
             ) : null}
           </div>
         </section>
@@ -958,7 +1129,7 @@ export async function AdminPanelPage({
         <section id="audyt" className="admin-section" hidden={section !== "audyt"}>
           <div className="admin-section__heading">
             <div>
-              <p className="checkout-plan__name">Dziennik zmian</p>
+              <p className="meta-label">Dziennik zmian</p>
               <h2>Operacje administratorów</h2>
             </div>
           </div>

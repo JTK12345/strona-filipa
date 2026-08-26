@@ -3,7 +3,7 @@
 Instrukcja dotyczy repozytorium:
 `https://github.com/JTK12345/strona-filipa.git`.
 
-Aktualny model dostepu nie uzywa platnosci. Administrator generuje kody i
+Model dostepu nie uzywa platnosci. Administrator generuje kody i
 dodaje materialy w panelu, a uzytkownik wpisuje kod na stronie.
 
 ## 1. Wymagania
@@ -69,16 +69,6 @@ VIDEO_STORAGE_PATH=/data/videos
 VIDEO_STORAGE_HOST_PATH=./data/videos
 LIBRARY_STORAGE_PATH=
 
-P24_ENABLED=false
-P24_ENV=sandbox
-P24_MERCHANT_ID=
-P24_POS_ID=
-P24_API_KEY=
-P24_CRC=
-P24_HTTP_TIMEOUT_MS=8000
-TEST_PAYMENTS_ENABLED=false
-TEST_PAYMENT_EMAILS=
-
 ALLOWED_ORIGINS=https://profil-ciala.jtk.ovh
 TRUSTED_PROXY_SECRET=tu_wpisz_drugi_losowy_sekret
 LOG_SALT=tu_wpisz_trzeci_losowy_sekret
@@ -98,14 +88,9 @@ docker compose up -d --build
 docker compose ps
 ```
 
-Kontener aplikacji automatycznie wykonuje migracje SQL, w tym:
-
-- `001_initial_platform.sql`,
-- `002_payment_foundation.sql`,
-- `003_course_catalog.sql`,
-- `004_course_lessons.sql`,
-- `005_admin_audit_log.sql`,
-- `006_access_codes_and_library_admin.sql`.
+Kontener aplikacji automatycznie wykonuje migracje SQL z katalogu
+`database/migrations`, w tym migracje kursow, kodow dostepu, biblioteki i
+usuniecia dawnego modulu platnosci.
 
 Sprawdz:
 

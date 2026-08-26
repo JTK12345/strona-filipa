@@ -2,27 +2,6 @@ import "server-only";
 
 import { withDatabaseTransaction, queryDatabase } from "@/app/lib/db";
 
-type AdminPurchaseRow = {
-  public_order_number: string;
-  buyer_email: string;
-  course_title: string;
-  provider: string;
-  status: "pending" | "paid" | "failed" | "cancelled" | "refunded";
-  amount_cents: number;
-  currency: string;
-  provider_order_id: string | null;
-  created_at: Date;
-  paid_at: Date | null;
-};
-
-type AdminPaymentEventRow = {
-  id: string;
-  event_type: string;
-  processed_at: Date | null;
-  error_message: string | null;
-  created_at: Date;
-};
-
 type AdminUserRow = {
   id: string;
   email: string;
@@ -46,31 +25,7 @@ type AdminAuditRow = {
 };
 
 export async function getAdminDashboard() {
-  const [purchases, events, users, courses, auditEvents] = await Promise.all([
-    queryDatabase<AdminPurchaseRow>(
-      `SELECT
-         purchases.public_order_number,
-         purchases.buyer_email,
-         purchase_items.title AS course_title,
-         purchases.provider,
-         purchases.status,
-         purchases.amount_cents,
-         purchases.currency,
-         purchases.provider_order_id,
-         purchases.created_at,
-         purchases.paid_at
-       FROM purchases
-       JOIN purchase_items
-         ON purchase_items.purchase_id = purchases.id
-       ORDER BY purchases.created_at DESC
-       LIMIT 100`,
-    ),
-    queryDatabase<AdminPaymentEventRow>(
-      `SELECT id, event_type, processed_at, error_message, created_at
-       FROM payment_events
-       ORDER BY created_at DESC
-       LIMIT 100`,
-    ),
+  const [users, courses, auditEvents] = await Promise.all([
     queryDatabase<AdminUserRow>(
       `SELECT id, email, role
        FROM users
@@ -103,8 +58,6 @@ export async function getAdminDashboard() {
   ]);
 
   return {
-    purchases: purchases.rows,
-    events: events.rows,
     users: users.rows,
     courses: courses.rows,
     auditEvents: auditEvents.rows,

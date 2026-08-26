@@ -3,9 +3,12 @@ import { getCurrentAccessSession } from "@/app/lib/access";
 import { siteConfig } from "@/content/site";
 
 const publicLinks = [
+  { href: "/", label: "Start" },
   { href: "/#uslugi", label: "Usługi" },
   { href: "/kursy", label: "Materiały" },
-  { href: "/dostep", label: "Kod dostępu" },
+  { href: "/#o-mnie", label: "O mnie" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/#kontakt", label: "Kontakt" },
 ];
 
 export async function Navbar() {
@@ -15,9 +18,6 @@ export async function Navbar() {
     ...(session ? [{ href: "/panel", label: "Panel" }] : []),
     ...(session?.role === "admin"
       ? [{ href: "/panel/admin", label: "Administracja" }]
-      : []),
-    ...(session?.hasLibraryAccess
-      ? [{ href: "/biblioteka", label: "Biblioteka" }]
       : []),
   ];
 

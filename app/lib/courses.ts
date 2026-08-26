@@ -1,7 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
-import { queryDatabase } from "@/app/lib/db";
+import { isDatabaseConfigured, queryDatabase } from "@/app/lib/db";
 
 export type CourseCatalogItem = {
   id: string;
@@ -11,9 +11,6 @@ export type CourseCatalogItem = {
   status: "draft" | "published";
   level: string;
   duration: string;
-  priceCents: number | null;
-  currency: string;
-  salesEnabled: boolean;
   modules: string[];
 };
 
@@ -25,9 +22,6 @@ type CourseCatalogRow = {
   status: "draft" | "published";
   level_label: string;
   duration_label: string;
-  price_cents: number | null;
-  currency: string;
-  sales_enabled: boolean;
   module_titles: string[];
 };
 
@@ -40,9 +34,6 @@ const catalogSelect = `
     courses.status,
     courses.level_label,
     courses.duration_label,
-    courses.price_cents,
-    courses.currency,
-    courses.sales_enabled,
     COALESCE(
       array_agg(course_modules.title ORDER BY course_modules.position)
         FILTER (WHERE course_modules.id IS NOT NULL),
@@ -62,9 +53,6 @@ const previewCourses: CourseCatalogItem[] = [
     status: "published",
     level: "Start",
     duration: "4 moduły",
-    priceCents: null,
-    currency: "PLN",
-    salesEnabled: false,
     modules: [
       "Ocena napięcia i punkt wyjścia",
       "Mobilność odcinka piersiowego",
@@ -81,9 +69,6 @@ const previewCourses: CourseCatalogItem[] = [
     status: "published",
     level: "Podstawowy",
     duration: "5 modułów",
-    priceCents: null,
-    currency: "PLN",
-    salesEnabled: false,
     modules: [
       "Ergonomia bez dogmatów",
       "Ruch łopatek",
@@ -94,10 +79,6 @@ const previewCourses: CourseCatalogItem[] = [
   },
 ];
 
-function canUseDatabase() {
-  return Boolean(process.env.DATABASE_URL);
-}
-
 function mapCourse(row: CourseCatalogRow): CourseCatalogItem {
   return {
     id: row.id,
@@ -107,24 +88,8 @@ function mapCourse(row: CourseCatalogRow): CourseCatalogItem {
     status: row.status,
     level: row.level_label,
     duration: row.duration_label,
-    priceCents: row.price_cents,
-    currency: row.currency.trim(),
-    salesEnabled: row.sales_enabled,
     modules: row.module_titles,
   };
-}
-
-export function formatCoursePrice(course: CourseCatalogItem) {
-  if (course.priceCents === null) {
-    return "Cena w przygotowaniu";
-  }
-
-  return new Intl.NumberFormat("pl-PL", {
-    style: "currency",
-    currency: course.currency,
-    minimumFractionDigits: course.priceCents % 100 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(course.priceCents / 100);
 }
 
 export function getCourseStatusLabel(course: CourseCatalogItem) {
@@ -132,11 +97,11 @@ export function getCourseStatusLabel(course: CourseCatalogItem) {
     return "Szkic";
   }
 
-  return course.salesEnabled ? "Dostępny" : "W przygotowaniu";
+  return "Po kodzie";
 }
 
 export const getPublishedCourses = cache(async () => {
-  if (!canUseDatabase()) {
+  if (!isDatabaseConfigured()) {
     return previewCourses;
   }
 
@@ -152,7 +117,7 @@ export const getPublishedCourses = cache(async () => {
 
 export const getAccessibleCourses = cache(
   async (userId: string, isAdmin: boolean) => {
-    if (!canUseDatabase()) {
+    if (!isDatabaseConfigured()) {
       return isAdmin ? previewCourses : [];
     }
 

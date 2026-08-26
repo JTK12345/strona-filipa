@@ -192,16 +192,12 @@ export async function createAdminCourse(input: {
        title,
        description,
        status,
-       access_type,
-       price_cents,
-       currency,
        position,
        published_at,
        level_label,
-       duration_label,
-       sales_enabled
+       duration_label
      )
-     VALUES ($1, $2, $3, $4, 'paid', NULL, 'PLN', $5, CASE WHEN $4 = 'published' THEN now() ELSE NULL END, $6, $7, false)`,
+     VALUES ($1, $2, $3, $4, $5, CASE WHEN $4 = 'published' THEN now() ELSE NULL END, $6, $7)`,
     [
       `${slugifyLibraryTitle(input.title)}-${Date.now().toString(36)}`,
       input.title,
@@ -263,7 +259,7 @@ export async function archiveAdminCourse(courseId: string) {
 
   await queryDatabase(
     `UPDATE courses
-     SET status = 'archived', sales_enabled = false
+     SET status = 'archived'
      WHERE id = $1`,
     [courseId],
   );

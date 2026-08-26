@@ -20,24 +20,29 @@ export async function Footer() {
         <div>
           <p className="font-semibold">Strona</p>
           <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
+            <Link className="block hover:text-[var(--foreground)]" href="/">
+              Start
+            </Link>
+            <Link className="block hover:text-[var(--foreground)]" href="/#uslugi">
+              Usługi
+            </Link>
             <Link className="block hover:text-[var(--foreground)]" href="/kursy">
-              Materiały online
+              Materiały
+            </Link>
+            <Link className="block hover:text-[var(--foreground)]" href="/#o-mnie">
+              O mnie
+            </Link>
+            <Link className="block hover:text-[var(--foreground)]" href="/#faq">
+              FAQ
+            </Link>
+            <Link className="block hover:text-[var(--foreground)]" href="/#kontakt">
+              Kontakt
             </Link>
             {session ? (
-              <>
-                <Link className="block hover:text-[var(--foreground)]" href="/panel">
-                  Panel
-                </Link>
-                {session.hasLibraryAccess ? (
-                  <Link className="block hover:text-[var(--foreground)]" href="/biblioteka">
-                    Biblioteka
-                  </Link>
-                ) : null}
-              </>
+              <Link className="block hover:text-[var(--foreground)]" href="/panel">
+                Panel
+              </Link>
             ) : null}
-            <Link className="block hover:text-[var(--foreground)]" href="/dostep">
-              Dostęp
-            </Link>
             <Link className="block hover:text-[var(--foreground)]" href="/regulamin">
               Regulamin
             </Link>

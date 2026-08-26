@@ -12,8 +12,7 @@
     "db:status": "node scripts/db-status.mjs",
     "db:ensure-default-admin": "node scripts/ensure-default-admin.mjs",
     "db:create-admin": "node scripts/create-admin.mjs",
-    "db:set-video": "node scripts/set-lesson-video.mjs",
-    "db:set-sales": "node scripts/set-course-sales.mjs"
+    "db:set-video": "node scripts/set-lesson-video.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

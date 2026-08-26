@@ -729,6 +729,48 @@ header nav a:hover::after {
   border-top: 1px solid var(--border);
 }
 
+.library-filters {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(150px, 0.45fr) minmax(190px, 0.55fr) auto;
+  gap: 1rem;
+  align-items: end;
+  margin-top: 2rem;
+  border-block: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+
+.library-filters label,
+.admin-filter-bar label {
+  display: grid;
+  gap: 0.45rem;
+  font-weight: 900;
+}
+
+.library-filters input,
+.library-filters select,
+.admin-filter-bar input,
+.admin-filter-bar select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.82rem 0.9rem;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.library-filters__actions {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.library-result-count {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
 .library-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
@@ -1029,7 +1071,6 @@ header nav a:hover::after {
 }
 
 .auth-page,
-.checkout-page,
 .panel-page {
   min-height: calc(100vh - 92px);
   padding: 5rem 0;
@@ -1039,7 +1080,6 @@ header nav a:hover::after {
 }
 
 .auth-shell,
-.checkout-shell,
 .panel-layout {
   display: grid;
   gap: 1.5rem;
@@ -1048,10 +1088,6 @@ header nav a:hover::after {
 
 .auth-copy,
 .auth-card,
-.checkout-hero,
-.checkout-plan,
-.checkout-form,
-.checkout-summary,
 .panel-empty,
 .panel-topbar,
 .panel-sidebar,
@@ -1064,13 +1100,11 @@ header nav a:hover::after {
 }
 
 .auth-copy,
-.checkout-hero,
 .panel-empty {
   padding: clamp(2rem, 5vw, 4rem);
 }
 
 .auth-copy h1,
-.checkout-hero h1,
 .panel-empty h1,
 .panel-topbar h1 {
   max-width: 820px;
@@ -1081,7 +1115,6 @@ header nav a:hover::after {
 }
 
 .auth-copy p,
-.checkout-hero p,
 .panel-empty p,
 .panel-topbar p {
   max-width: 720px;
@@ -1091,38 +1124,33 @@ header nav a:hover::after {
   line-height: 1.8;
 }
 
-.auth-card,
-.checkout-form,
-.checkout-summary {
+.auth-card {
   display: grid;
   gap: 1.25rem;
   padding: 2rem;
 }
 
 .auth-card__label,
-.checkout-plan__name {
+.meta-label {
   color: var(--accent);
   font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
-.auth-card h2,
-.checkout-form h2 {
+.auth-card h2 {
   margin-top: 0.35rem;
   font-size: 2rem;
   font-weight: 900;
 }
 
-.auth-card label,
-.checkout-form label {
+.auth-card label {
   display: grid;
   gap: 0.5rem;
   font-weight: 800;
 }
 
-.auth-card input,
-.checkout-form input {
+.auth-card input {
   width: 100%;
   min-height: 3.25rem;
   border: 2px solid #c8cec4;
@@ -1154,83 +1182,39 @@ header nav a:hover::after {
   line-height: 1.5;
 }
 
-.checkout-grid,
+.auth-small-link,
+.auth-legal-note {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.auth-small-link {
+  width: fit-content;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-small-link:hover,
+.auth-legal-note a:hover {
+  color: var(--accent);
+}
+
+.auth-legal-note a {
+  color: var(--foreground);
+  font-weight: 900;
+}
+
 .panel-courses {
   display: grid;
   gap: 1rem;
   margin-top: 1.5rem;
 }
 
-.checkout-plan {
-  padding: 1.5rem;
-}
-
-.checkout-plan h2 {
-  margin-top: 0.75rem;
-  font-size: 2rem;
-  font-weight: 900;
-}
-
-.checkout-plan p:not(.checkout-plan__name),
 .panel-course-card p {
   margin-top: 0.75rem;
   color: var(--muted);
   line-height: 1.7;
-}
-
-.checkout-shell {
-  margin-top: 1.5rem;
-}
-
-.checkout-summary {
-  background: var(--deep);
-  color: #ffffff;
-}
-
-.checkout-summary .check-row,
-.checkout-summary .checkout-plan__name {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.checkout-summary h2 {
-  margin-top: 0.5rem;
-  color: #ffffff;
-  font-size: 1.75rem;
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.checkout-benefits {
-  display: grid;
-  gap: 0;
-}
-
-.checkout-summary .check-row {
-  display: grid;
-  gap: 0.3rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 1rem 0;
-}
-
-.checkout-summary .check-row strong {
-  color: #ffffff;
-}
-
-.checkout-summary .check-row span {
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.92rem;
-  line-height: 1.55;
-}
-
-.checkout-summary .button-secondary {
-  border-color: #ffffff;
-  background: #ffffff;
-  color: var(--deep);
-}
-
-.checkout-summary .button-secondary:hover {
-  border-color: var(--soft);
-  background: var(--soft);
 }
 
 .panel-topbar {
@@ -1359,49 +1343,6 @@ header nav a:hover::after {
   font-size: clamp(1.8rem, 4vw, 2.6rem);
 }
 
-.account-orders {
-  border-top: 1px solid var(--border);
-  padding-top: 2rem;
-}
-
-.account-order-list {
-  margin-top: 1rem;
-  border-block: 1px solid var(--border);
-}
-
-.account-order {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1rem 0;
-}
-
-.account-order + .account-order {
-  border-top: 1px solid var(--border);
-}
-
-.account-order > div {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.account-order span,
-.account-orders__empty {
-  color: var(--muted);
-  font-size: 0.86rem;
-}
-
-.account-order__amount {
-  justify-items: end;
-}
-
-.account-orders__empty {
-  margin-top: 1rem;
-  border-block: 1px solid var(--border);
-  padding: 1.25rem 0;
-}
-
 .status-badge {
   display: inline-flex;
   width: fit-content;
@@ -1409,28 +1350,6 @@ header nav a:hover::after {
   padding: 0.3rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 900;
-}
-
-.status-badge--paid {
-  background: rgba(47, 93, 80, 0.12);
-  color: #205044;
-}
-
-.status-badge--pending {
-  background: rgba(215, 154, 56, 0.16);
-  color: #77500f;
-}
-
-.status-badge--failed,
-.status-badge--cancelled,
-.status-badge--expired {
-  background: rgba(194, 118, 79, 0.14);
-  color: #7c3f24;
-}
-
-.status-badge--refunded {
-  background: #e7e9e6;
-  color: #4d574c;
 }
 
 .admin-page {
@@ -1628,8 +1547,7 @@ header nav a:hover::after {
 
 .admin-grant-form input::placeholder,
 .admin-grant-form textarea::placeholder,
-.auth-card input::placeholder,
-.checkout-form input::placeholder {
+.auth-card input::placeholder {
   color: #697366;
   opacity: 1;
 }
@@ -1788,6 +1706,28 @@ header nav a:hover::after {
   flex-wrap: wrap;
 }
 
+.admin-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, 0.45fr) minmax(170px, 0.5fr) auto;
+  gap: 1rem;
+  align-items: end;
+  border-block: 1px solid var(--border);
+  padding: 1rem 0;
+  margin-bottom: 1rem;
+}
+
+.admin-filter-bar__actions,
+.admin-generated-code {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.admin-generated-code {
+  justify-content: space-between;
+}
+
 .status-badge--admin,
 .status-badge--published {
   background: rgba(47, 93, 80, 0.12);
@@ -1800,55 +1740,28 @@ header nav a:hover::after {
   color: #4d574c;
 }
 
-.admin-p24-section {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2rem;
-  align-items: center;
-}
-
-.admin-p24-section h2 {
-  margin-top: 0.4rem;
-  font-size: 1.9rem;
-  font-weight: 900;
-}
-
-.admin-p24-section > div > p:last-child {
-  margin-top: 0.8rem;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.admin-p24-action {
-  display: grid;
-  min-width: 260px;
-  gap: 0.8rem;
-}
-
 @media (max-width: 800px) {
   .panel-topbar,
   .panel-section-heading,
   .admin-header,
-  .admin-section__heading,
-  .account-order {
+  .admin-section__heading {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .account-order__amount {
-    justify-items: start;
   }
 
   .admin-grant-section {
     grid-template-columns: 1fr;
   }
 
-  .admin-p24-section {
+  .admin-filter-bar,
+  .library-filters {
     grid-template-columns: 1fr;
   }
 
-  .admin-p24-action {
-    min-width: 0;
+  .admin-filter-bar__actions,
+  .library-filters__actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .topic-grid,
@@ -1889,282 +1802,6 @@ header nav a:hover::after {
   }
 }
 
-.purchase-header {
-  max-width: 860px;
-  padding: 1.5rem 0 2.5rem;
-}
-
-.purchase-header h1 {
-  margin-top: 1rem;
-  font-size: clamp(2.5rem, 5vw, 4.6rem);
-  font-weight: 900;
-  line-height: 1.02;
-}
-
-.purchase-header p {
-  max-width: 760px;
-  margin-top: 1.25rem;
-  color: var(--muted);
-  font-size: 1.08rem;
-  line-height: 1.8;
-}
-
-.purchase-account-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  border-block: 1px solid var(--border);
-  padding: 1.25rem 0;
-}
-
-.purchase-account-bar > div:first-child {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.purchase-account-bar strong {
-  font-size: 1.05rem;
-}
-
-.purchase-account-bar span {
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.purchase-account-bar--active {
-  border-color: rgba(47, 93, 80, 0.28);
-}
-
-.purchase-account-bar__actions,
-.payment-result__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.purchase-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.75fr);
-  gap: 2rem;
-  align-items: start;
-  margin-top: 2.5rem;
-}
-
-.course-selector {
-  min-width: 0;
-  margin: 0;
-  border: 0;
-  padding: 0;
-}
-
-.course-selector legend {
-  margin-bottom: 1rem;
-  font-size: 1.35rem;
-  font-weight: 900;
-}
-
-.course-selector__list {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.course-choice {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1.25rem minmax(0, 1fr);
-  gap: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #ffffff;
-  padding: 1.4rem;
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.course-choice:hover {
-  border-color: rgba(47, 93, 80, 0.45);
-}
-
-.course-choice--selected {
-  border-color: var(--accent);
-  background: rgba(237, 242, 232, 0.52);
-  box-shadow: 0 0 0 2px rgba(47, 93, 80, 0.1);
-}
-
-.course-choice > input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-.course-choice__marker {
-  position: relative;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-top: 0.15rem;
-  border: 2px solid #8b9489;
-  border-radius: 50%;
-  background: #ffffff;
-}
-
-.course-choice--selected .course-choice__marker {
-  border-color: var(--accent);
-}
-
-.course-choice--selected .course-choice__marker::after {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.course-choice:focus-within {
-  outline: 3px solid rgba(47, 93, 80, 0.2);
-  outline-offset: 2px;
-}
-
-.course-choice__content {
-  display: grid;
-  gap: 0.65rem;
-  min-width: 0;
-}
-
-.course-choice__topline {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.course-choice__topline strong {
-  font-size: 1.2rem;
-  line-height: 1.3;
-}
-
-.course-choice__topline b {
-  flex: 0 0 auto;
-  color: var(--accent);
-  font-size: 1.15rem;
-}
-
-.course-choice__description {
-  color: var(--muted);
-  line-height: 1.65;
-}
-
-.course-choice__meta {
-  color: #4d574c;
-  font-size: 0.88rem;
-  font-weight: 800;
-}
-
-.course-choice__owned {
-  width: fit-content;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #ffffff;
-  padding: 0.35rem 0.65rem;
-  font-size: 0.76rem;
-  font-weight: 900;
-}
-
-.order-summary {
-  position: sticky;
-  top: 7.5rem;
-  display: grid;
-  gap: 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--deep);
-  color: #ffffff;
-  padding: 1.6rem;
-  box-shadow: 0 20px 45px rgba(16, 35, 30, 0.12);
-}
-
-.order-summary__heading h2 {
-  margin-top: 0.5rem;
-  font-size: 1.55rem;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.order-summary .checkout-plan__name {
-  color: #b9cbb7;
-}
-
-.order-summary__price {
-  display: grid;
-  gap: 0.2rem;
-  border-block: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 1.1rem 0;
-}
-
-.order-summary__price span,
-.order-summary__price small,
-.order-summary__details {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.order-summary__price strong {
-  font-size: 2rem;
-}
-
-.order-summary__details {
-  display: grid;
-  gap: 0.7rem;
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.order-summary__details strong {
-  color: #ffffff;
-}
-
-.checkout-consents {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.checkout-consents label {
-  display: grid;
-  grid-template-columns: 1.15rem minmax(0, 1fr);
-  gap: 0.7rem;
-  align-items: start;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.82rem;
-  line-height: 1.5;
-  cursor: pointer;
-}
-
-.checkout-consents input {
-  width: 1.15rem;
-  height: 1.15rem;
-  margin: 0.15rem 0 0;
-  accent-color: var(--warm);
-}
-
-.checkout-consents a {
-  color: #ffffff;
-  font-weight: 800;
-}
-
-.order-summary .button-primary {
-  width: 100%;
-  background: #ffffff;
-  color: var(--deep);
-  box-shadow: none;
-}
-
-.order-summary .button-primary:hover {
-  background: var(--soft);
-}
-
 .button-primary:disabled,
 .button-primary:disabled:hover {
   cursor: not-allowed;
@@ -2173,189 +1810,10 @@ header nav a:hover::after {
   box-shadow: none;
 }
 
-.purchase-error {
-  border: 1px solid rgba(255, 174, 129, 0.5);
-  border-radius: 6px;
-  background: rgba(194, 118, 79, 0.18);
-  color: #ffe8dc;
-  padding: 0.85rem;
-  font-size: 0.88rem;
-  font-weight: 800;
-  line-height: 1.45;
-}
-
-.order-summary__provider {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.76rem;
-  text-align: center;
-}
-
-.order-summary__provider--test {
-  border: 1px solid #d7b978;
-  border-radius: 6px;
-  background: #fff8e8;
-  color: #624515;
-  padding: 0.75rem;
-  font-weight: 700;
-  line-height: 1.45;
-}
-
-.payment-result.payment-result--test {
-  border-color: #c8a269;
-}
-
-.payment-test-summary {
-  display: grid;
-  gap: 0;
-  width: 100%;
-  margin: 1.5rem 0;
-  border-block: 1px solid var(--line);
-}
-
-.payment-test-summary div {
-  display: grid;
-  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1.3fr);
-  gap: 1rem;
-  padding: 0.85rem 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.payment-test-summary div:last-child {
-  border-bottom: 0;
-}
-
-.payment-test-summary dt {
-  color: var(--muted);
-}
-
-.payment-test-summary dd {
-  margin: 0;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.payment-result__actions form {
-  flex: 1 1 12rem;
-}
-
-.payment-result__actions form button {
-  width: 100%;
-}
-
-.purchase-includes {
-  display: grid;
-  grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1.35fr);
-  gap: 2rem;
-  margin-top: 4rem;
-  border-top: 1px solid var(--border);
-  padding-top: 2rem;
-}
-
-.purchase-includes h2 {
-  margin-top: 0.5rem;
-  font-size: 1.8rem;
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.purchase-includes__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-}
-
-.purchase-includes__grid div {
-  display: grid;
-  align-content: start;
-  gap: 0.5rem;
-}
-
-.purchase-includes__grid span {
-  color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.6;
-}
-
-.purchase-empty {
-  margin-top: 2rem;
-}
-
-.payment-result-page,
 .legal-page {
   min-height: calc(100vh - 92px);
   padding: 4rem 0 5rem;
   background: #ffffff;
-}
-
-.payment-result {
-  position: relative;
-  max-width: 820px;
-  border: 1px solid var(--border);
-  border-left: 5px solid var(--accent);
-  border-radius: 8px;
-  background: #ffffff;
-  padding: clamp(2rem, 5vw, 4rem);
-  box-shadow: 0 22px 50px rgba(16, 35, 30, 0.08);
-}
-
-.payment-result--pending {
-  border-left-color: #d79a38;
-}
-
-.payment-result--error {
-  border-left-color: var(--warm);
-}
-
-.payment-result h1 {
-  max-width: 700px;
-  margin-top: 0.8rem;
-  font-size: clamp(2.25rem, 5vw, 4rem);
-  font-weight: 900;
-  line-height: 1.03;
-}
-
-.payment-result > p:not(.checkout-plan__name) {
-  max-width: 650px;
-  margin-top: 1.2rem;
-  color: var(--muted);
-  font-size: 1.05rem;
-  line-height: 1.75;
-}
-
-.payment-result small {
-  display: block;
-  margin-top: 1.5rem;
-  color: var(--muted);
-}
-
-.payment-result .button-primary {
-  margin-top: 1.5rem;
-}
-
-.payment-result__actions {
-  margin-top: 1.5rem;
-}
-
-.payment-result__actions .button-primary,
-.payment-result__actions .button-secondary {
-  margin-top: 0;
-}
-
-.payment-result__indicator {
-  display: block;
-  width: 2.25rem;
-  height: 2.25rem;
-  margin-bottom: 1.5rem;
-  border: 3px solid rgba(215, 154, 56, 0.24);
-  border-top-color: #d79a38;
-  border-radius: 50%;
-  animation: payment-status-spin 0.9s linear infinite;
-}
-
-@keyframes payment-status-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .legal-document {
@@ -2391,48 +1849,6 @@ header nav a:hover::after {
   color: var(--muted);
   font-size: 1.02rem;
   line-height: 1.8;
-}
-
-@media (max-width: 900px) {
-  .purchase-layout,
-  .purchase-includes {
-    grid-template-columns: 1fr;
-  }
-
-  .order-summary {
-    position: static;
-  }
-
-  .purchase-includes__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 620px) {
-  .purchase-account-bar,
-  .course-choice__topline {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .purchase-account-bar__actions,
-  .purchase-account-bar__actions .button-primary,
-  .purchase-account-bar__actions .button-secondary {
-    width: 100%;
-  }
-
-  .purchase-includes__grid {
-    grid-template-columns: 1fr;
-  }
-
-  .payment-test-summary div {
-    grid-template-columns: 1fr;
-    gap: 0.3rem;
-  }
-
-  .course-choice {
-    padding: 1.1rem;
-  }
 }
 
 .course-workspace,
@@ -2706,12 +2122,10 @@ header nav a:hover::after {
     grid-template-columns: minmax(0, 0.95fr) minmax(340px, 0.65fr);
   }
 
-  .auth-shell,
-  .checkout-shell {
+  .auth-shell {
     grid-template-columns: 1.1fr 0.9fr;
   }
 
-  .checkout-grid,
   .panel-courses {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

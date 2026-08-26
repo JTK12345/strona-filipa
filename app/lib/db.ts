@@ -21,6 +21,10 @@ function createPool() {
   });
 }
 
+export function isDatabaseConfigured() {
+  return Boolean(process.env.DATABASE_URL);
+}
+
 export function getDatabasePool() {
   if (!globalForDatabase.databasePool) {
     globalForDatabase.databasePool = createPool();

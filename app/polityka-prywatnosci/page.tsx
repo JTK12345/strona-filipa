@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { formatLegalOwnerLine, formatLegalUpdatedAt, legalConfig } from "@/content/legal";
 
 export const metadata: Metadata = {
   title: "Polityka prywatności | Świadomy Profil Ciała",
 };
 
-// TODO: przed produkcją uzupełnić dane działalności.
 // TODO: przed produkcją zweryfikować podstawę przetwarzania danych dotyczących zdrowia zgodnie z faktycznym sposobem świadczenia usług i prowadzenia dokumentacji.
 export default function PrivacyPage() {
   return (
     <section className="legal-page">
       <div className="container-main legal-document">
         <BackHomeLink />
-        <span className="legal-draft">Ostatnia aktualizacja: [DATA WEJŚCIA W ŻYCIE]</span>
+        <span className="legal-draft">{formatLegalUpdatedAt()}</span>
         <h1>Polityka prywatności</h1>
         <p>
           Polityka opisuje, jakie dane są przetwarzane w związku z Serwisem
@@ -22,10 +22,8 @@ export default function PrivacyPage() {
 
         <h2>Administrator danych</h2>
         <p>
-          Administratorem danych jest Filip Proniewicz, działający pod nazwą:
-          [PEŁNA NAZWA DZIAŁALNOŚCI FILIPA PRONIEWICZA], NIP: [NIP], adres:
-          [ADRES DZIAŁALNOŚCI]. Kontakt z Administratorem:
-          kontakt@swiadomyprofilciala.pl.
+          {formatLegalOwnerLine("Administratorem danych")} Kontakt z
+          Administratorem: {legalConfig.contactEmail}.
         </p>
         <p>
           Administrator techniczny serwera nie jest administratorem danych
