@@ -36,6 +36,19 @@ function redirectToAdmin(result: string) {
   });
 }
 
+function redirectToMaterialEditor(result: string, itemId: string) {
+  const searchParams = new URLSearchParams({ material: result });
+
+  if (itemId) {
+    searchParams.set("editMaterial", itemId);
+  }
+
+  return new NextResponse(null, {
+    status: 303,
+    headers: { Location: `/panel/admin/materialy?${searchParams.toString()}` },
+  });
+}
+
 function storageRoot() {
   return process.env.LIBRARY_STORAGE_PATH ?? process.env.VIDEO_STORAGE_PATH ?? "/data/videos";
 }
@@ -184,7 +197,8 @@ export async function POST(request: Request) {
     (videoUpload instanceof File && videoUpload.size > 0 && !video) ||
     (attachmentUpload instanceof File && attachmentUpload.size > 0 && !attachment)
   ) {
-    return redirectToAdmin("file");
+    const itemId = action === "update" ? String(formData.get("itemId") ?? "") : "";
+    return itemId ? redirectToMaterialEditor("file", itemId) : redirectToAdmin("file");
   }
 
   if (action === "update") {
@@ -202,7 +216,7 @@ export async function POST(request: Request) {
     );
 
     if (!existing.rows[0]) {
-      return redirectToAdmin("invalid");
+      return redirectToMaterialEditor("invalid", itemId);
     }
 
     if (
@@ -212,7 +226,7 @@ export async function POST(request: Request) {
       !existing.rows[0].attachment_storage_key &&
       !contentMarkdown
     ) {
-      return redirectToAdmin("invalid");
+      return redirectToMaterialEditor("invalid", itemId);
     }
 
     await queryDatabase(
@@ -266,7 +280,7 @@ export async function POST(request: Request) {
       await unlinkStorageKey(existing.rows[0].attachment_storage_key);
     }
 
-    return redirectToAdmin("updated");
+    return redirectToMaterialEditor("updated", itemId);
   }
 
   if (!contentMarkdown && !video && !attachment) {

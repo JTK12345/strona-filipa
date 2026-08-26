@@ -15,11 +15,11 @@ export async function Services() {
           <div>
             <span className="eyebrow">Oferta</span>
             <h2 className="section-title max-w-3xl">
-              Współpraca 1:1 i kursy wideo jako dwa produkty jednej marki.
+              Współpraca 1:1, trening zdrowia i materiały edukacyjne po kodzie.
             </h2>
           </div>
           <Link href="/kursy" className="button-secondary">
-            Wszystkie kursy
+            Materiały online
           </Link>
         </div>
 
@@ -42,9 +42,9 @@ export async function Services() {
 
         <div className="mt-12 premium-panel">
           <div>
-            <span className="eyebrow">Kursy po kodzie</span>
+            <span className="eyebrow">Materiały po kodzie</span>
             <h3 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">
-              Programy wideo do pracy między wizytami albo jako samodzielna ścieżka.
+              Filmy i instrukcje jako wsparcie pracy po konsultacji, treningu albo pakiecie.
             </h3>
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
@@ -56,7 +56,7 @@ export async function Services() {
                 <h4 className="mt-3 text-xl font-bold">{course.title}</h4>
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{course.description}</p>
                 <p className="mt-5 text-sm font-bold">
-                  {course.duration} · {course.level} · kod dostępu
+                  {course.duration} · {course.level} · dostęp po kodzie
                 </p>
               </article>
             ))}

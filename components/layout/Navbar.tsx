@@ -3,8 +3,8 @@ import { getCurrentAccessSession } from "@/app/lib/access";
 import { siteConfig } from "@/content/site";
 
 const publicLinks = [
-  { href: "/#uslugi", label: "Cennik" },
-  { href: "/kursy", label: "Kursy" },
+  { href: "/#uslugi", label: "Usługi" },
+  { href: "/kursy", label: "Materiały" },
   { href: "/dostep", label: "Kod dostępu" },
 ];
 
@@ -30,7 +30,7 @@ export async function Navbar() {
               {siteConfig.name}
             </span>
             <span className="mt-2 text-[0.67rem] font-bold uppercase tracking-[0.2em] text-[var(--muted)] sm:text-[0.74rem]">
-              Gabinet · ruch · kursy wideo
+              Konsultacje · ruch · edukacja
             </span>
           </div>
         </Link>

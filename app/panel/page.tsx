@@ -9,8 +9,8 @@ import {
 import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
-  title: "Panel kursów | Świadomy Profil Ciała",
-  description: "Panel dostępu do kursów i materiałów premium.",
+  title: "Panel materiałów | Świadomy Profil Ciała",
+  description: "Panel dostępu do kursów, filmów i materiałów edukacyjnych.",
 };
 
 export default async function PanelPage() {
@@ -31,7 +31,7 @@ export default async function PanelPage() {
         <BackHomeLink />
         <div className="panel-topbar">
           <div>
-            <span className="eyebrow">Panel kursów</span>
+            <span className="eyebrow">Panel materiałów</span>
             <h1>Twoje materiały</h1>
             <p>
               Zalogowano jako <strong>{session.email}</strong>.
@@ -47,7 +47,7 @@ export default async function PanelPage() {
 
         <div className="panel-layout">
           <aside className="panel-sidebar">
-            <a href="#moje-kursy">Moje kursy</a>
+            <a href="#moje-kursy">Moje materiały</a>
             <Link href="/dostep">Wpisz kod</Link>
             {session.hasLibraryAccess ? (
               <Link href="/biblioteka">Biblioteka</Link>
@@ -62,10 +62,10 @@ export default async function PanelPage() {
               <div className="panel-section-heading">
                 <div>
                   <p className="checkout-plan__name">Dostępne materiały</p>
-                  <h2>Moje kursy</h2>
+                  <h2>Moje kursy i materiały</h2>
                 </div>
                 <Link href="/kursy" className="button-secondary">
-                  Katalog kursów
+                  Katalog materiałów
                 </Link>
               </div>
 

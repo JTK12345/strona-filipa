@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { getAccessibleCourses } from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
 import { accessFeatures, premiumAccessBlocks } from "@/content/courses";
 
@@ -26,6 +27,10 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
     getCurrentAccessSession(),
     props.searchParams,
   ]);
+  const accessibleCourses = session
+    ? await getAccessibleCourses(session.userId, session.role === "admin")
+    : [];
+  const hasAccess = Boolean(session?.hasAnyAccess || accessibleCourses.length > 0);
   const codeResult =
     typeof searchParams.code === "string" ? searchParams.code : "";
   const codeMessage = codeMessages[codeResult];
@@ -44,9 +49,11 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               {session ? (
-                <Link href="/panel" className="button-secondary">
-                  Otwórz panel
-                </Link>
+                hasAccess ? null : (
+                  <Link href="/panel" className="button-secondary">
+                    Otwórz panel
+                  </Link>
+                )
               ) : (
                 <>
                   <Link href="/logowanie?next=/dostep" className="button-primary">
@@ -57,9 +64,11 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
                   </Link>
                 </>
               )}
-              <Link href="/biblioteka" className="button-secondary">
-                Biblioteka
-              </Link>
+              {hasAccess ? (
+                <Link href="/panel" className="button-primary">
+                  Przejdź do materiałów
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -72,7 +81,36 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
               <span>{session ? "Konto" : "Login"}</span>
             </div>
 
-            {session ? (
+            {session && hasAccess ? (
+              <div className="admin-grant-form">
+                {codeMessage ? (
+                  <p className="auth-notice">{codeMessage}</p>
+                ) : null}
+                <p className="auth-notice">
+                  Masz już aktywny dostęp na tym koncie. Materiały są dostępne w
+                  panelu użytkownika.
+                </p>
+                <div className="grid gap-3">
+                  {accessibleCourses.slice(0, 3).map((course) => (
+                    <Link
+                      key={course.slug}
+                      href={`/panel/kursy/${course.slug}`}
+                      className="button-primary"
+                    >
+                      Przejdź do kursu: {course.title}
+                    </Link>
+                  ))}
+                  {session.hasLibraryAccess ? (
+                    <Link href="/biblioteka" className="button-secondary">
+                      Otwórz bibliotekę
+                    </Link>
+                  ) : null}
+                  <Link href="/panel" className="button-secondary">
+                    Otwórz panel
+                  </Link>
+                </div>
+              </div>
+            ) : session ? (
               <form action="/api/access-codes/redeem" method="post" className="admin-grant-form">
                 {codeMessage ? (
                   <p className={codeResult === "success" || codeResult === "already_has_access" ? "auth-notice" : "auth-error"}>

@@ -3,8 +3,8 @@ import Link from "next/link";
 import { siteConfig } from "@/content/site";
 
 const stats = [
-  { value: "1:1", label: "konsultacje i trening zdrowia" },
-  { value: "VOD", label: "kursy wideo za dostępem" },
+  { value: "1:1", label: "konsultacje online i w Gdyni" },
+  { value: "Kod", label: "materiały edukacyjne po dostępie" },
   { value: "Gdynia", label: "gabinet i praca online" },
 ];
 
@@ -14,11 +14,11 @@ export function Hero() {
       <div className="container-main grid items-center gap-12 lg:grid-cols-[1.08fr_0.92fr]">
         <div className="relative z-10">
           <span className="eyebrow eyebrow-large">
-            Gabinet, edukacja i kursy wideo o ruchu
+            Konsultacje, trening zdrowia i edukacja ruchowa
           </span>
 
           <h1 className="max-w-4xl text-5xl font-bold leading-tight md:text-7xl">
-            Pracuj z ciałem świadomie, nie tylko wtedy, gdy boli.
+            Świadoma praca z bólem, napięciem i ruchem.
           </h1>
 
           <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
@@ -26,12 +26,12 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link href={siteConfig.coursesUrl} className="button-primary">
-              Zobacz kursy
+            <Link href={siteConfig.bookingUrl} className="button-primary">
+              Umów konsultację
             </Link>
 
-            <Link href={siteConfig.bookingUrl} className="button-secondary">
-              Umów konsultację
+            <Link href="/#uslugi" className="button-secondary">
+              Zobacz usługi
             </Link>
           </div>
 
@@ -60,19 +60,19 @@ export function Hero() {
 
           <div className="hero-badge hero-badge--top">
             <p className="text-xs font-bold uppercase text-[var(--accent)]">
-              Nowy model pracy
+              Praca 1:1
             </p>
             <p className="mt-3 text-lg font-semibold leading-7">
-              Indywidualna pomoc, kursy tematyczne i biblioteka wiedzy w jednym miejscu.
+              Najpierw rozpoznanie problemu, potem praktyczny plan działania.
             </p>
           </div>
 
           <div className="hero-badge hero-badge--bottom">
             <p className="text-xs font-bold uppercase text-[var(--accent)]">
-              Dostęp po kodzie
+              Materiały po kodzie
             </p>
             <p className="mt-3 text-lg font-semibold leading-7">
-              Lekcje wideo, moduły i zadania tylko dla osób z aktywnym dostępem.
+              Filmy i instrukcje wspierają konsultacje, treningi i pakiety.
             </p>
           </div>
         </div>

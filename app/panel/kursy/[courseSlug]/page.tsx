@@ -42,7 +42,7 @@ export default async function CoursePage(
         <BackHomeLink />
         <div className="course-workspace__header">
           <div>
-            <span className="eyebrow">Twój kurs</span>
+            <span className="eyebrow">Twoje materiały</span>
             <h1>{course.title}</h1>
             <p>{course.description}</p>
           </div>

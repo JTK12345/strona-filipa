@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import {
   AccessCodeError,
   redeemAccessCode,
@@ -52,6 +53,9 @@ export async function POST(request: Request) {
       userId: session.userId,
       code: String(formData.get("code") ?? ""),
     });
+    revalidatePath("/dostep");
+    revalidatePath("/panel");
+    revalidatePath("/kursy");
     return redirectToAccess("success");
   } catch (error) {
     if (error instanceof AccessCodeError) {

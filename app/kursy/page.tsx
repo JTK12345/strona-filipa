@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getCurrentAccessSession } from "@/app/lib/access";
 import {
+  getAccessibleCourses,
   getCourseStatusLabel,
   getPublishedCourses,
 } from "@/app/lib/courses";
@@ -12,20 +14,27 @@ export const metadata: Metadata = {
 };
 
 export default async function CoursesPage() {
-  const courses = await getPublishedCourses();
+  const session = await getCurrentAccessSession();
+  const [courses, accessibleCourses] = await Promise.all([
+    getPublishedCourses(),
+    session
+      ? getAccessibleCourses(session.userId, session.role === "admin")
+      : Promise.resolve([]),
+  ]);
+  const accessibleSlugs = new Set(accessibleCourses.map((course) => course.slug));
 
   return (
     <section className="section bg-white">
       <div className="container-main">
         <BackHomeLink />
         <div className="page-hero">
-          <span className="eyebrow">Kursy wideo</span>
+          <span className="eyebrow">Materiały online</span>
           <h1 className="section-title max-w-4xl">
-            Programy do samodzielnej pracy z ciałem, dostępne po wpisaniu kodu.
+            Materiały edukacyjne do pracy z ciałem, dostępne po wpisaniu kodu.
           </h1>
           <p className="section-lead">
-            Każdy kurs będzie ułożony w moduły: krótka edukacja, lekcje wideo,
-            praktyka i zadania do wdrożenia między treningami albo wizytami.
+            Materiały online są dodatkiem do konsultacji, treningów i pakietów
+            współpracy. Po aktywacji kodu pojawią się w Twoim panelu.
           </p>
         </div>
 
@@ -48,12 +57,25 @@ export default async function CoursesPage() {
                   <p key={module} className="check-row">{module}</p>
                 ))}
               </div>
-              <Link
-                href="/dostep"
-                className="button-primary mt-8 w-full"
-              >
-                Wpisz kod dostępu
-              </Link>
+              {accessibleSlugs.has(course.slug) ? (
+                <Link
+                  href={`/panel/kursy/${course.slug}`}
+                  className="button-primary mt-8 w-full"
+                >
+                  Przejdź do kursu
+                </Link>
+              ) : session ? (
+                <Link href="/dostep" className="button-primary mt-8 w-full">
+                  Aktywuj dostęp
+                </Link>
+              ) : (
+                <Link
+                  href="/logowanie?next=/kursy"
+                  className="button-primary mt-8 w-full"
+                >
+                  Zaloguj się, aby sprawdzić dostęp
+                </Link>
+              )}
             </article>
           ))}
         </div>

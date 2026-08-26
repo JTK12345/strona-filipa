@@ -12,16 +12,16 @@ export async function Footer() {
         <div>
           <p className="text-lg font-bold">{siteConfig.name}</p>
           <p className="mt-3 max-w-sm text-sm leading-7 text-[var(--muted)]">
-            Gabinet, konsultacje online i kursy wideo o zdrowiu, ruchu,
-            bólu, regeneracji i świadomej pracy z ciałem.
+            Konsultacje online i stacjonarne, trening zdrowia oraz materiały
+            edukacyjne wspierające świadomą pracę z ciałem.
           </p>
         </div>
 
         <div>
-          <p className="font-semibold">Platforma</p>
+          <p className="font-semibold">Strona</p>
           <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
             <Link className="block hover:text-[var(--foreground)]" href="/kursy">
-              Kursy
+              Materiały online
             </Link>
             {session ? (
               <>
@@ -59,6 +59,7 @@ export async function Footer() {
             <a className="block hover:text-[var(--foreground)]" href={`mailto:${contactData.email}`}>
               {contactData.email}
             </a>
+            <span className="block">{contactData.address}</span>
             <a className="block hover:text-[var(--foreground)]" href={contactData.instagramUrl}>
               Instagram
             </a>

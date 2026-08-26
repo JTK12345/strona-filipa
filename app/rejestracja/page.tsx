@@ -4,7 +4,7 @@ import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
   title: "Rejestracja | Świadomy Profil Ciała",
-  description: "Utwórz konto użytkownika platformy kursowej.",
+  description: "Utwórz konto użytkownika i aktywuj dostęp do materiałów.",
 };
 
 const errorMessages: Record<string, string> = {
@@ -33,7 +33,7 @@ export default async function RegisterPage(props: PageProps<"/rejestracja">) {
         <div className="auth-shell">
           <div className="auth-copy">
             <span className="eyebrow">Nowe konto</span>
-            <h1>Utwórz konto do kursów i biblioteki.</h1>
+            <h1>Utwórz konto do materiałów i biblioteki.</h1>
             <p>
               Konto pozwala bezpiecznie logować się do panelu. Dostęp do
               materiałów pojawi się po wpisaniu kodu albo nadaniu uprawnienia.

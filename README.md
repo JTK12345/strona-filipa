@@ -1,15 +1,17 @@
 # Swiadomy Profil Ciala
 
-Platforma gabinetu, kursow wideo i prywatnej biblioteki materialow. Aktualny
-model nie uzywa platnosci: administrator tworzy konto admina, generuje kody
-dostepu oraz dodaje filmy, instrukcje i pliki z panelu. Uzytkownik zaklada
-konto, wpisuje otrzymany kod i po zalogowaniu widzi udostepnione materialy.
+Platforma gabinetu, konsultacji, treningu zdrowia i prywatnej biblioteki
+materialow edukacyjnych. Aktualny model nie uzywa platnosci: administrator
+tworzy konto admina, generuje kody dostepu oraz dodaje filmy, instrukcje i
+pliki z panelu. Uzytkownik zaklada konto, wpisuje otrzymany kod i po
+zalogowaniu widzi udostepnione materialy.
 
 ## Stan projektu
 
 Gotowe w kodzie:
 
 - rejestracja, logowanie i sesje bazodanowe,
+- odswiezanie widoku sesji po powrocie do aktywnej karty,
 - role `admin` i `user`,
 - publiczny katalog kursow,
 - aktywacja dostepu kodem,
@@ -34,7 +36,8 @@ na `/dostep`.
 - `/panel/admin` - kody, materialy, upload i reczne granty,
 - `/biblioteka` - prywatna biblioteka po aktywacji kodu,
 - `/kursy` - publiczny katalog kursow,
-- `/regulamin` i `/polityka-prywatnosci` - projekty dokumentow prawnych.
+- `/regulamin` i `/polityka-prywatnosci` - dokumenty prawne z placeholderami
+  danych dzialalnosci do uzupelnienia przed produkcja.
 
 Panel i biblioteka nie sa pokazywane niezalogowanym osobom. Kazda trasa
 materialow, lekcji, notatek i plikow ponownie sprawdza sesje oraz aktywny grant

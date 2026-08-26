@@ -6,14 +6,15 @@ export function FAQ() {
       <div className="container-main">
         <span className="eyebrow">FAQ</span>
         <h2 className="section-title max-w-2xl">
-          Najczęstsze pytania o kursy, konsultacje i dostęp.
+          Najczęstsze pytania o konsultacje, materiały i dostęp.
         </h2>
 
-        <div className="mt-10 space-y-4">
+        <div className="faq-list mt-10">
           {faqItems.map((item) => (
-            <details key={item.question} className="card-surface p-6">
-              <summary className="cursor-pointer list-none text-lg font-semibold">
-                {item.question}
+            <details key={item.question} className="faq-item">
+              <summary>
+                <span>{item.question}</span>
+                <span className="faq-item__icon" aria-hidden="true" />
               </summary>
               <p className="mt-4 max-w-4xl leading-7 text-[var(--muted)]">{item.answer}</p>
             </details>

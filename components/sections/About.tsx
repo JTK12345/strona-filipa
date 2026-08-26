@@ -8,7 +8,7 @@ export function About() {
               Filip Proniewicz
             </p>
             <p className="mt-4 text-2xl font-semibold leading-snug">
-              Trener zdrowia, terapeuta manualny, trener personalny, student VI roku medycyny.
+              Trener zdrowia, terapeuta manualny, trener personalny, lekarz.
             </p>
           </div>
         </div>
@@ -16,18 +16,18 @@ export function About() {
         <div>
           <span className="eyebrow">O specjaliście</span>
           <h2 className="section-title">
-            Profesjonalna edukacja ma wspierać wizyty, nie udawać diagnozy.
+            Edukacja wspiera pracę indywidualną, ale jej nie zastępuje.
           </h2>
           <div className="space-y-5 text-[1.02rem] leading-8 text-[var(--muted)]">
             <p>
-              Świadomy Profil Ciała łączy pracę gabinetową, ruch, terapię manualną
-              i edukację. Nowa część kursowa ma uporządkować wiedzę tak, żeby pacjent
-              lub klient mógł wracać do materiałów również poza spotkaniem.
+              Świadomy Profil Ciała łączy pracę gabinetową, konsultacje online,
+              trening zdrowia i edukację. Materiały online pomagają wrócić do
+              zaleceń oraz utrzymać ciągłość pracy między spotkaniami.
             </p>
             <p>
-              Kursy nie zastępują indywidualnej konsultacji w sytuacjach wymagających
-              diagnostyki. Mają pomagać w profilaktyce, budowaniu świadomości ruchu
-              i utrzymaniu efektów pracy.
+              Materiały nie zastępują indywidualnej konsultacji w sytuacjach
+              wymagających diagnostyki. Mają pomagać w profilaktyce, budowaniu
+              świadomości ruchu i utrzymaniu efektów pracy.
             </p>
             <p>
               Celem pozostaje samodzielność: lepsze rozumienie ciała, spokojniejszy

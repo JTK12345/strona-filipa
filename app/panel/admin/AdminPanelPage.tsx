@@ -161,6 +161,12 @@ export async function AdminPanelPage({
     typeof resolvedSearchParams.editCourse === "string" ? resolvedSearchParams.editCourse : "";
   const selectedCourse =
     courseEditor.find((course) => course.id === selectedCourseId) ?? null;
+  const selectedMaterialId =
+    typeof resolvedSearchParams.editMaterial === "string"
+      ? resolvedSearchParams.editMaterial
+      : "";
+  const selectedMaterial =
+    libraryItems.find((item) => item.id === selectedMaterialId) ?? null;
 
   return (
     <section className="admin-page">
@@ -700,7 +706,7 @@ export async function AdminPanelPage({
                   <th>Typ</th>
                   <th>Plik</th>
                   <th>Status</th>
-                  <th>Akcja</th>
+                  <th>Akcje</th>
                 </tr>
               </thead>
               <tbody>
@@ -721,13 +727,21 @@ export async function AdminPanelPage({
                     </td>
                     <td>{item.status}</td>
                     <td>
-                      <form action="/api/admin/library-items" method="post">
-                        <input type="hidden" name="action" value="archive" />
-                        <input type="hidden" name="itemId" value={item.id} />
-                        <button type="submit" className="button-secondary">
-                          Usuń
-                        </button>
-                      </form>
+                      <div className="admin-table-actions">
+                        <Link
+                          href={`/panel/admin/materialy?editMaterial=${item.id}`}
+                          className="button-secondary"
+                        >
+                          Edytuj
+                        </Link>
+                        <form action="/api/admin/library-items" method="post">
+                          <input type="hidden" name="action" value="archive" />
+                          <input type="hidden" name="itemId" value={item.id} />
+                          <button type="submit" className="button-secondary">
+                            Usuń
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -743,11 +757,17 @@ export async function AdminPanelPage({
           <div className="admin-section__heading">
             <div>
               <p className="checkout-plan__name">Edycja</p>
-              <h2>Edytuj istniejący materiał</h2>
+              <h2>Edytuj wybrany materiał</h2>
             </div>
           </div>
+          {!selectedMaterial ? (
+            <p className="admin-empty-row">
+              Wybierz materiał z tabeli powyżej, żeby otworzyć edycję tylko
+              jednego wpisu.
+            </p>
+          ) : null}
           <div className="panel-courses">
-            {libraryItems.map((item) => (
+            {(selectedMaterial ? [selectedMaterial] : []).map((item) => (
               <form
                 key={item.id}
                 action="/api/admin/library-items"
