@@ -837,6 +837,33 @@ header nav a:hover::after {
   padding: clamp(1.25rem, 3vw, 2rem);
 }
 
+.appointment-contact-grid {
+  display: grid;
+  gap: 0;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.appointment-contact-grid a,
+.appointment-contact-grid div {
+  display: grid;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  padding: 1.1rem 0;
+  text-decoration: none;
+}
+
+.appointment-contact-grid span {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.appointment-contact-grid strong {
+  overflow-wrap: anywhere;
+  font-size: 1.1rem;
+}
+
 .appointment-form-heading {
   border-bottom: 1px solid var(--border);
   padding-bottom: 1.5rem;

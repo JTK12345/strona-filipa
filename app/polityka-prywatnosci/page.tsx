@@ -35,11 +35,11 @@ export default function PrivacyPage() {
         </p>
         <h2>Kontakt i konsultacje</h2>
         <p>
-          Przy kontakcie e-mail, telefonicznym lub przez formularz możemy
+          Przy kontakcie e-mail, telefonicznym lub przez Instagram możemy
           przetwarzać imię, nazwisko, dane kontaktowe oraz treść wiadomości. W
           sprawach konsultacji mogą pojawić się informacje dotyczące zdrowia,
           jeśli użytkownik sam je przekaże. Nie należy przesyłać pełnej
-          dokumentacji medycznej przez pierwszy formularz kontaktowy.
+          dokumentacji medycznej w pierwszej wiadomości kontaktowej.
         </p>
         <h2>Materiały i dane techniczne</h2>
         <p>

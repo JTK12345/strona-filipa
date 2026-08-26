@@ -12,6 +12,8 @@ Gotowe w kodzie:
 
 - rejestracja, logowanie i sesje bazodanowe,
 - odswiezanie widoku sesji po powrocie do aktywnej karty,
+- brak wysylki maili z formularzy; kontakt odbywa sie przez telefon, e-mail i
+  Instagram,
 - role `admin` i `user`,
 - publiczny katalog kursow,
 - aktywacja dostepu kodem,

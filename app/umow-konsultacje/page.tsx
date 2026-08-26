@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { AppointmentForm } from "@/components/AppointmentForm";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { contactData } from "@/content/contact";
 
 export const metadata: Metadata = {
   title: "Umów konsultację",
-  description: "Formularz do umówienia konsultacji lub rozmowy zwrotnej.",
+  description: "Dane kontaktowe do umówienia konsultacji lub rozmowy zwrotnej.",
 };
 
 export default function AppointmentPage() {
@@ -17,12 +17,21 @@ export default function AppointmentPage() {
           <div className="appointment-intro">
             <span className="eyebrow">Konsultacja</span>
             <h1>
-              Zostaw kontakt. Dobierzemy najlepszy kolejny krok.
+              Umów konsultację bez formularza.
             </h1>
             <p>
-              To może być konsultacja online, wizyta w gabinecie, trening zdrowia
-              albo wskazanie właściwego materiału edukacyjnego.
+              Napisz krótką wiadomość albo zadzwoń. Na start wystarczy cel
+              kontaktu i preferowana pora rozmowy, bez wysyłania dokumentacji
+              medycznej przez stronę.
             </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <a href={`tel:${contactData.phoneRaw}`} className="button-primary">
+                Zadzwoń
+              </a>
+              <a href={`mailto:${contactData.email}`} className="button-secondary">
+                Napisz e-mail
+              </a>
+            </div>
           </div>
 
           <aside className="appointment-summary">
@@ -32,8 +41,8 @@ export default function AppointmentPage() {
               <li>
                 <span>01</span>
                 <div>
-                  <strong>Wysyłasz zgłoszenie</strong>
-                  <p>Podajesz tylko cel kontaktu i dogodną porę rozmowy.</p>
+                  <strong>Dzwonisz albo piszesz</strong>
+                  <p>Podajesz cel kontaktu i dogodną porę rozmowy.</p>
                 </div>
               </li>
               <li>
@@ -54,15 +63,32 @@ export default function AppointmentPage() {
           </aside>
         </div>
 
-        <div className="appointment-form-card">
+        <div className="appointment-form-card appointment-contact-card">
           <div className="appointment-form-heading">
-            <h2>Dane do kontaktu</h2>
+            <h2>Kontakt</h2>
             <p>
-              Nie wpisuj szczegółowych informacji medycznych. Wystarczy cel kontaktu
-              i preferowana pora rozmowy.
+              Formularz wysyłania zgłoszeń jest wyłączony. Kontakt odbywa się
+              bezpośrednio przez telefon, e-mail albo Instagram.
             </p>
           </div>
-          <AppointmentForm />
+          <div className="appointment-contact-grid">
+            <a href={`tel:${contactData.phoneRaw}`}>
+              <span>Telefon</span>
+              <strong>{contactData.phone}</strong>
+            </a>
+            <a href={`mailto:${contactData.email}`}>
+              <span>E-mail</span>
+              <strong>{contactData.email}</strong>
+            </a>
+            <div>
+              <span>Adres</span>
+              <strong>{contactData.address}</strong>
+            </div>
+            <a href={contactData.instagramUrl}>
+              <span>Instagram</span>
+              <strong>świadomy_profil_ciała</strong>
+            </a>
+          </div>
         </div>
       </div>
     </section>
