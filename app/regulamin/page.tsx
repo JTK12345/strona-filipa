@@ -42,16 +42,17 @@ export default function TermsPage() {
         <h2>Konto i kod dostępu</h2>
         <p>
           Użytkownik może utworzyć konto, zalogować się i aktywować kod
-          otrzymany od administratora. Kod może dawać dostęp do całej platformy,
+          otrzymany od Usługodawcy. Kod może dawać dostęp do całej platformy,
           biblioteki materiałów albo konkretnego kursu, zgodnie z ustawieniami
-          nadanymi przez administratora.
+          nadanymi przez Usługodawcę.
         </p>
         <p>
           Dostęp może zostać ograniczony lub cofnięty w szczególności wtedy,
-          gdy użytkownik udostępnia konto osobom trzecim, publikuje lub
-          odsprzedaje kod dostępu, dochodzi do nadużycia lub próby obejścia
-          zabezpieczeń, wymagają tego względy techniczne, bezpieczeństwa albo
-          prawne lub materiał przestaje być utrzymywany w Serwisie.
+          gdy dochodzi do naruszenia Regulaminu, użytkownik udostępnia konto
+          osobom trzecim, publikuje lub odsprzedaje kod dostępu, podejmuje
+          próbę obejścia zabezpieczeń, dochodzi do nadużyć, wymagają tego
+          względy bezpieczeństwa, przyczyny techniczne albo prawne lub
+          Usługodawca zakończy utrzymywanie danego materiału w Serwisie.
         </p>
         <p>
           Wygaśnięcie sesji logowania nie oznacza utraty wcześniej przyznanego

@@ -97,8 +97,8 @@ export default async function PanelPage() {
                   <span className="eyebrow">Brak aktywnego dostępu</span>
                   <h2>Nie masz jeszcze aktywowanego kodu.</h2>
                   <p>
-                    Wpisz kod otrzymany od administratora. Po aktywacji
-                    materiały pojawią się tutaj automatycznie.
+                    Wpisz otrzymany kod dostępu. Po aktywacji materiały
+                    pojawią się tutaj automatycznie.
                   </p>
                   <Link href="/dostep" className="button-primary">
                     Wpisz kod

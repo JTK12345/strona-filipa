@@ -17,6 +17,6 @@ export const faqItems = [
   {
     question: "Jak będzie działał dostęp do materiałów?",
     answer:
-      "Użytkownik zakłada konto, wpisuje kod otrzymany od administratora i po zalogowaniu widzi przypisane kursy, filmy oraz materiały w bibliotece.",
+      "Użytkownik zakłada konto, wpisuje otrzymany kod dostępu i po zalogowaniu widzi swoje kursy, filmy oraz materiały w bibliotece.",
   },
 ];
