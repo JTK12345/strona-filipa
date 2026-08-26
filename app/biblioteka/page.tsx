@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getPublishedLibraryItems } from "@/app/lib/library";
 import { BackHomeLink } from "@/components/BackHomeLink";
-import { libraryTopics } from "@/content/courses";
 
 export const metadata: Metadata = {
   title: "Biblioteka | Świadomy Profil Ciała",
@@ -31,14 +30,6 @@ export default async function LibraryPage() {
         <div className="library-heading">
           <span className="eyebrow">Twoje materiały</span>
           <h1>Filmy, instrukcje i pliki do pracy własnej.</h1>
-        </div>
-
-        <div className="library-topics" aria-label="Tematy materiałów">
-          {libraryTopics.map((topic) => (
-            <span key={topic} className="topic-chip">
-              {topic}
-            </span>
-          ))}
         </div>
 
         {items.length > 0 ? (

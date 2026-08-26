@@ -722,19 +722,6 @@ header nav a:hover::after {
   line-height: 1.05;
 }
 
-.library-topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 1.5rem;
-}
-
-.library-topics .topic-chip {
-  border: 1px solid rgba(47, 93, 80, 0.12);
-  background: rgba(237, 242, 232, 0.72);
-  color: #2f5d50;
-}
-
 .library-list {
   display: grid;
   gap: 0;
