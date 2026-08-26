@@ -6,6 +6,7 @@ import { listAccessCodes } from "@/app/lib/access-codes";
 import { getAdminCourseEditor } from "@/app/lib/admin-course-editor";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAdminLibraryItems } from "@/app/lib/library";
+import { listContactSubmissions } from "@/app/lib/contact-submissions";
 import {
   ConfirmSubmitButton,
   CopyGeneratedCode,
@@ -19,11 +20,20 @@ export const metadata: Metadata = {
 
 const grantMessages: Record<string, string> = {
   success: "Dostęp został nadany i zapisany w dzienniku audytowym.",
+  revoked: "Dostęp został cofnięty.",
   invalid: "Sprawdź adres e-mail i wybrany zakres dostępu.",
   user_not_found: "Nie znaleziono aktywnego użytkownika z tym adresem e-mail.",
   course_not_found: "Wybrany kurs nie istnieje lub jest zarchiwizowany.",
   already_granted: "Ten użytkownik ma już taki dostęp.",
+  grant_not_found: "Nie znaleziono aktywnego dostępu do cofnięcia.",
   server: "Nie udało się nadać dostępu. Spróbuj ponownie.",
+  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
+};
+
+const submissionMessages: Record<string, string> = {
+  updated: "Zgłoszenie zostało zaktualizowane.",
+  invalid: "Nie udało się odczytać zgłoszenia.",
+  server: "Nie udało się zapisać zmiany zgłoszenia.",
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
 
@@ -140,7 +150,8 @@ export type AdminSection =
   | "materialy"
   | "uzytkownicy"
   | "dostepy"
-  | "audyt";
+  | "audyt"
+  | "zgloszenia";
 
 export async function AdminPanelPage({
   section,
@@ -160,11 +171,12 @@ export async function AdminPanelPage({
     redirect("/panel");
   }
 
-  const [dashboard, accessCodes, libraryItems, courseEditor] = await Promise.all([
+  const [dashboard, accessCodes, libraryItems, courseEditor, submissions] = await Promise.all([
     getAdminDashboard(),
     listAccessCodes(),
     getAdminLibraryItems(),
     getAdminCourseEditor(),
+    listContactSubmissions(),
   ]);
 
   const grantResult =
@@ -184,6 +196,9 @@ export async function AdminPanelPage({
   const courseResult =
     typeof resolvedSearchParams.course === "string" ? resolvedSearchParams.course : "";
   const courseMessage = courseMessages[courseResult];
+  const submissionResult =
+    typeof resolvedSearchParams.submission === "string" ? resolvedSearchParams.submission : "";
+  const submissionMessage = submissionMessages[submissionResult];
   const selectedCourseId =
     typeof resolvedSearchParams.editCourse === "string" ? resolvedSearchParams.editCourse : "";
   const selectedCourse =
@@ -202,6 +217,10 @@ export async function AdminPanelPage({
   const materialType = searchParam(resolvedSearchParams, "materialType");
   const userSearch = searchParam(resolvedSearchParams, "userSearch");
   const userRole = searchParam(resolvedSearchParams, "userRole");
+  const grantSearch = searchParam(resolvedSearchParams, "grantSearch");
+  const grantScope = searchParam(resolvedSearchParams, "grantScope");
+  const submissionSearch = searchParam(resolvedSearchParams, "submissionSearch");
+  const submissionStatus = searchParam(resolvedSearchParams, "submissionStatus");
   const filteredAccessCodes = accessCodes.filter((code) => {
     const status = code.revoked_at ? "revoked" : "active";
     const matchesSearch =
@@ -230,6 +249,28 @@ export async function AdminPanelPage({
 
     return matchesSearch && matchesRole;
   });
+  const filteredGrants = dashboard.accessGrants.filter((grant) => {
+    const matchesSearch =
+      !grantSearch ||
+      includesNormalized(
+        `${grant.user_email} ${grant.course_title ?? ""} ${grant.source}`,
+        grantSearch,
+      );
+    const matchesScope = !grantScope || grant.scope === grantScope;
+
+    return matchesSearch && matchesScope;
+  });
+  const filteredSubmissions = submissions.filter((submission) => {
+    const matchesSearch =
+      !submissionSearch ||
+      includesNormalized(
+        `${submission.name} ${submission.email} ${submission.phone} ${submission.topic} ${submission.message}`,
+        submissionSearch,
+      );
+    const matchesStatus = !submissionStatus || submission.status === submissionStatus;
+
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <section className="admin-page">
@@ -253,6 +294,7 @@ export async function AdminPanelPage({
           <Link href="/panel/admin/kody">Kody dostępu</Link>
           <Link href="/panel/admin/kursy">Kursy</Link>
           <Link href="/panel/admin/materialy">Materiały</Link>
+          <Link href="/panel/admin/zgloszenia">Zgłoszenia</Link>
           <Link href="/panel/admin/uzytkownicy">Użytkownicy</Link>
           <Link href="/panel/admin/dostepy">Nadaj dostęp</Link>
           <Link href="/panel/admin/audyt">Audyt</Link>
@@ -957,6 +999,110 @@ export async function AdminPanelPage({
         </section>
 
         <section
+          id="zgloszenia"
+          className="admin-section"
+          hidden={section !== "zgloszenia"}
+        >
+          <div className="admin-section__heading">
+            <div>
+              <p className="meta-label">Kontakt ze strony</p>
+              <h2>Zgłoszenia konsultacji</h2>
+            </div>
+            <span>{filteredSubmissions.length} / {submissions.length}</span>
+          </div>
+          {submissionMessage ? (
+            <p className={submissionResult === "updated" ? "auth-notice" : "auth-error"}>
+              {submissionMessage}
+            </p>
+          ) : null}
+          <form className="admin-filter-bar" action="/panel/admin/zgloszenia">
+            <label>
+              <span>Szukaj</span>
+              <input
+                name="submissionSearch"
+                type="search"
+                defaultValue={submissionSearch}
+                placeholder="Imię, e-mail, telefon albo temat"
+              />
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="submissionStatus" defaultValue={submissionStatus}>
+                <option value="">Wszystkie</option>
+                <option value="new">Nowe</option>
+                <option value="in_progress">W trakcie</option>
+                <option value="closed">Zamknięte</option>
+              </select>
+            </label>
+            <div className="admin-filter-bar__actions">
+              <button type="submit" className="button-primary">Filtruj</button>
+              <Link href="/panel/admin/zgloszenia" className="button-secondary">Wyczyść</Link>
+            </div>
+          </form>
+          <div className="admin-submission-list">
+            {filteredSubmissions.map((submission) => (
+              <article key={submission.id} className="admin-submission-card">
+                <div className="admin-submission-card__header">
+                  <div>
+                    <p className="meta-label">
+                      {submission.status === "new"
+                        ? "Nowe"
+                        : submission.status === "in_progress"
+                          ? "W trakcie"
+                          : "Zamknięte"} · {formatDate(submission.createdAt)}
+                    </p>
+                    <h3>{submission.name}</h3>
+                    <p>
+                      {submission.email}
+                      {submission.phone ? ` · ${submission.phone}` : ""}
+                    </p>
+                  </div>
+                  <a href={`mailto:${submission.email}`} className="button-secondary">
+                    Odpowiedz
+                  </a>
+                </div>
+                {submission.topic ? <strong>{submission.topic}</strong> : null}
+                <p>{submission.message}</p>
+                <form
+                  action="/api/admin/contact-submissions"
+                  method="post"
+                  className="admin-submission-card__form"
+                >
+                  <input type="hidden" name="submissionId" value={submission.id} />
+                  <label>
+                    <span>Status</span>
+                    <select name="status" defaultValue={submission.status}>
+                      <option value="new">Nowe</option>
+                      <option value="in_progress">W trakcie</option>
+                      <option value="closed">Zamknięte</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Notatka admina</span>
+                    <textarea
+                      name="adminNote"
+                      rows={3}
+                      maxLength={2000}
+                      defaultValue={submission.adminNote}
+                    />
+                  </label>
+                  <button type="submit" className="button-primary">
+                    Zapisz status
+                  </button>
+                </form>
+              </article>
+            ))}
+            {filteredSubmissions.length === 0 ? (
+              <p className="admin-empty-row">
+                {submissions.length === 0
+                  ? "Brak zgłoszeń."
+                  : "Brak zgłoszeń dla wybranych filtrów."}
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        <section
           id="dostepy"
           className="admin-section admin-grant-section"
           hidden={section !== "dostepy"}
@@ -970,8 +1116,9 @@ export async function AdminPanelPage({
             </p>
           </div>
           <form action="/api/admin/access-grants" method="post" className="admin-grant-form">
+            <input type="hidden" name="action" value="grant" />
             {grantMessage ? (
-              <p className={grantResult === "success" ? "auth-notice" : "auth-error"}>
+              <p className={grantResult === "success" || grantResult === "revoked" ? "auth-notice" : "auth-error"}>
                 {grantMessage}
               </p>
             ) : null}
@@ -1012,6 +1159,90 @@ export async function AdminPanelPage({
               Nadaj dostęp
             </button>
           </form>
+        </section>
+
+        <section className="admin-section" hidden={section !== "dostepy"}>
+          <div className="admin-section__heading">
+            <div>
+              <p className="meta-label">Aktywne dostępy</p>
+              <h2>Dostępy użytkowników</h2>
+            </div>
+            <span>{filteredGrants.length} / {dashboard.accessGrants.length}</span>
+          </div>
+          <form className="admin-filter-bar" action="/panel/admin/dostepy">
+            <label>
+              <span>Szukaj</span>
+              <input
+                name="grantSearch"
+                type="search"
+                defaultValue={grantSearch}
+                placeholder="E-mail, kurs albo źródło"
+              />
+            </label>
+            <label>
+              <span>Zakres</span>
+              <select name="grantScope" defaultValue={grantScope}>
+                <option value="">Wszystkie</option>
+                <option value="all_access">Cała platforma</option>
+                <option value="library">Biblioteka</option>
+                <option value="course">Kurs</option>
+              </select>
+            </label>
+            <div className="admin-filter-bar__actions">
+              <button type="submit" className="button-primary">Filtruj</button>
+              <Link href="/panel/admin/dostepy" className="button-secondary">Wyczyść</Link>
+            </div>
+          </form>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Użytkownik</th>
+                  <th>Dostęp</th>
+                  <th>Źródło</th>
+                  <th>Ważny do</th>
+                  <th>Akcja</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredGrants.map((grant) => (
+                  <tr key={grant.id}>
+                    <td>{grant.user_email}</td>
+                    <td>
+                      {grant.scope === "course"
+                        ? grant.course_title
+                          ? `Kurs: ${grant.course_title}`
+                          : "Kurs"
+                        : grant.scope === "library"
+                          ? "Biblioteka"
+                          : "Cała platforma"}
+                    </td>
+                    <td>{grant.source}</td>
+                    <td>{formatDate(grant.expires_at)}</td>
+                    <td>
+                      <form action="/api/admin/access-grants" method="post">
+                        <input type="hidden" name="action" value="revoke" />
+                        <input type="hidden" name="grantId" value={grant.id} />
+                        <ConfirmSubmitButton
+                          className="button-secondary button-danger"
+                          confirmMessage={`Cofnąć dostęp dla ${grant.user_email}?`}
+                        >
+                          Cofnij dostęp
+                        </ConfirmSubmitButton>
+                      </form>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredGrants.length === 0 ? (
+              <p className="admin-empty-row">
+                {dashboard.accessGrants.length === 0
+                  ? "Brak aktywnych dostępów."
+                  : "Brak dostępów dla wybranych filtrów."}
+              </p>
+            ) : null}
+          </div>
         </section>
 
         <section

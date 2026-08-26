@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function AdminIndexPage() {
-  redirect("/panel/admin/kody");
+  redirect("/panel/admin/zgloszenia");
 }

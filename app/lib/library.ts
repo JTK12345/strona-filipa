@@ -155,6 +155,20 @@ export async function getPublishedLibraryItems() {
   return result.rows.map(mapLibraryItem);
 }
 
+export async function getPublishedLibraryItemBySlug(slug: string) {
+  const result = await queryDatabase<LibraryItemRow>(
+    `${librarySelect}
+     WHERE slug = $1
+       AND status = 'published'
+     LIMIT 1`,
+    [slug],
+  );
+
+  const item = result.rows[0];
+
+  return item ? mapLibraryItem(item) : null;
+}
+
 export async function getAdminLibraryItems() {
   const result = await queryDatabase<LibraryItemRow>(
     `${librarySelect}

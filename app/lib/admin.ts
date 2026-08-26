@@ -24,8 +24,19 @@ type AdminAuditRow = {
   created_at: Date;
 };
 
+type AdminAccessGrantRow = {
+  id: string;
+  user_email: string;
+  scope: "library" | "all_access" | "course";
+  course_title: string | null;
+  source: string;
+  starts_at: Date;
+  expires_at: Date | null;
+  created_at: Date;
+};
+
 export async function getAdminDashboard() {
-  const [users, courses, auditEvents] = await Promise.all([
+  const [users, courses, auditEvents, accessGrants] = await Promise.all([
     queryDatabase<AdminUserRow>(
       `SELECT id, email, role
        FROM users
@@ -55,12 +66,35 @@ export async function getAdminDashboard() {
        ORDER BY audit.created_at DESC
        LIMIT 50`,
     ),
+    queryDatabase<AdminAccessGrantRow>(
+      `SELECT
+         grants.id,
+         users.email AS user_email,
+         grants.scope,
+         courses.title AS course_title,
+         grants.source,
+         grants.starts_at,
+         grants.expires_at,
+         grants.created_at
+       FROM access_grants grants
+       JOIN users ON users.id = grants.user_id
+       LEFT JOIN courses ON courses.id = grants.course_id
+       WHERE grants.revoked_at IS NULL
+         AND users.status = 'active'
+         AND (
+           grants.expires_at IS NULL
+           OR grants.expires_at > now()
+         )
+       ORDER BY grants.created_at DESC
+       LIMIT 300`,
+    ),
   ]);
 
   return {
     users: users.rows,
     courses: courses.rows,
     auditEvents: auditEvents.rows,
+    accessGrants: accessGrants.rows,
     adminCount: users.rows.filter((user) => user.role === "admin").length,
     userCount: users.rows.filter((user) => user.role === "user").length,
   };
@@ -280,6 +314,13 @@ export class AdminGrantError extends Error {
   }
 }
 
+export class AdminAccessRevokeError extends Error {
+  constructor(public readonly code: "invalid" | "grant_not_found") {
+    super(code);
+    this.name = "AdminAccessRevokeError";
+  }
+}
+
 export async function grantCourseAccessByAdmin(input: {
   adminUserId: string;
   targetEmail: string;
@@ -387,4 +428,62 @@ export async function grantCourseAccessByAdmin(input: {
 
     return { targetUserId: targetUser.id };
   });
+}
+
+export async function revokeAccessGrantByAdmin(input: {
+  adminUserId: string;
+  grantId: string;
+}) {
+  if (!isUuid(input.grantId)) {
+    throw new AdminAccessRevokeError("invalid");
+  }
+
+  const result = await withDatabaseTransaction(async (client) => {
+    const grantResult = await client.query<{
+      id: string;
+      user_id: string;
+      course_id: string | null;
+      scope: string;
+    }>(
+      `SELECT id, user_id, course_id, scope
+       FROM access_grants
+       WHERE id = $1
+         AND revoked_at IS NULL
+       FOR UPDATE`,
+      [input.grantId],
+    );
+    const grant = grantResult.rows[0];
+
+    if (!grant) {
+      throw new AdminAccessRevokeError("grant_not_found");
+    }
+
+    await client.query(
+      `UPDATE access_grants
+       SET revoked_at = now()
+       WHERE id = $1`,
+      [grant.id],
+    );
+    await client.query(
+      `INSERT INTO admin_audit_events (
+         admin_user_id,
+         action,
+         target_user_id,
+         course_id,
+         metadata
+       )
+       VALUES (
+         $1,
+         'access_grant_revoked',
+         $2,
+         $3,
+         jsonb_build_object('scope', $4::text)
+       )`,
+      [input.adminUserId, grant.user_id, grant.course_id, grant.scope],
+    );
+
+    return grant;
+  });
+
+  return { grantId: result.id };
 }

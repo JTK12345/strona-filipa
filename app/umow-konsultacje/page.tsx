@@ -7,7 +7,20 @@ export const metadata: Metadata = {
   description: "Dane kontaktowe do umówienia konsultacji lub rozmowy zwrotnej.",
 };
 
-export default function AppointmentPage() {
+const statusMessages: Record<string, string> = {
+  sent: "Zgłoszenie zostało zapisane. Odpowiem na podany kontakt.",
+  invalid: "Uzupełnij imię, poprawny e-mail i krótką wiadomość.",
+  rate: "Wysłano zbyt wiele zgłoszeń. Odczekaj kilka minut.",
+  server: "Nie udało się zapisać zgłoszenia. Spróbuj ponownie albo napisz bezpośrednio.",
+};
+
+export default async function AppointmentPage(
+  props: PageProps<"/umow-konsultacje">,
+) {
+  const searchParams = await props.searchParams;
+  const status = typeof searchParams.status === "string" ? searchParams.status : "";
+  const statusMessage = statusMessages[status];
+
   return (
     <section className="appointment-page">
       <div className="container-main">
@@ -18,13 +31,67 @@ export default function AppointmentPage() {
             <span className="eyebrow">Konsultacja</span>
             <h1>Umów konsultację</h1>
             <p>
-              Zadzwoń, napisz e-mail lub skontaktuj się przez Instagram. W
-              pierwszej wiadomości wystarczy krótko napisać, czego dotyczy
-              kontakt.
+              Wyślij krótkie zgłoszenie albo skorzystaj z bezpośredniego
+              kontaktu. Zgłoszenie trafi do panelu administratora.
             </p>
           </div>
 
           <div className="appointment-contact-list">
+            <form
+              action="/api/appointment"
+              method="post"
+              className="appointment-form"
+            >
+              <div>
+                <span className="eyebrow">Zgłoszenie</span>
+                <h2>Napisz, czego potrzebujesz</h2>
+              </div>
+              {statusMessage ? (
+                <p className={status === "sent" ? "auth-notice" : "auth-error"}>
+                  {statusMessage}
+                </p>
+              ) : null}
+              <label>
+                <span>Imię</span>
+                <input name="name" required maxLength={120} autoComplete="name" />
+              </label>
+              <label>
+                <span>E-mail</span>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={254}
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                <span>Telefon</span>
+                <input name="phone" maxLength={40} autoComplete="tel" />
+              </label>
+              <label>
+                <span>Temat</span>
+                <input
+                  name="topic"
+                  maxLength={160}
+                  placeholder="np. ból pleców, konsultacja online"
+                />
+              </label>
+              <label>
+                <span>Wiadomość</span>
+                <textarea
+                  name="message"
+                  rows={6}
+                  required
+                  maxLength={3000}
+                  placeholder="Napisz krótko, z czym chcesz pracować."
+                />
+              </label>
+              <button type="submit" className="button-primary">
+                Wyślij zgłoszenie
+              </button>
+            </form>
+
             <section>
               <span>Telefon</span>
               <strong>{contactData.phone}</strong>

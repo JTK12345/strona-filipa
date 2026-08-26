@@ -837,6 +837,73 @@ header nav a:hover::after {
   font-weight: 900;
 }
 
+.library-detail-page {
+  min-height: calc(100vh - 92px);
+  padding: 3rem 0 5rem;
+  background: linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
+}
+
+.library-detail {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 960px;
+  margin-top: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: clamp(1.35rem, 4vw, 2.5rem);
+  box-shadow: 0 16px 36px rgba(16, 35, 30, 0.05);
+}
+
+.library-detail__header h1 {
+  margin-top: 0.5rem;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.library-detail__header p {
+  max-width: 720px;
+  margin-top: 1rem;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.library-detail__video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: var(--deep);
+}
+
+.library-detail__content {
+  display: grid;
+  gap: 1rem;
+  max-width: 780px;
+  color: #30372f;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+.library-detail__content h2 {
+  margin-top: 0.75rem;
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.library-detail__content ul {
+  display: grid;
+  gap: 0.5rem;
+  padding-left: 1.2rem;
+}
+
+.library-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .library-empty {
   margin-top: 2rem;
   border-top: 1px solid var(--border);
@@ -919,6 +986,41 @@ header nav a:hover::after {
 .appointment-contact-list {
   display: grid;
   gap: 0;
+}
+
+.appointment-form {
+  display: grid;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.appointment-form h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.appointment-form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.appointment-form input,
+.appointment-form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.85rem 1rem;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.appointment-form textarea {
+  resize: vertical;
 }
 
 .appointment-contact-list section {
@@ -1728,6 +1830,72 @@ header nav a:hover::after {
   justify-content: space-between;
 }
 
+.admin-submission-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-submission-card {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: clamp(1rem, 2vw, 1.35rem);
+}
+
+.admin-submission-card__header {
+  display: flex;
+  gap: 1rem;
+  align-items: start;
+  justify-content: space-between;
+}
+
+.admin-submission-card__header h3 {
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.admin-submission-card__header p,
+.admin-submission-card > p {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.admin-submission-card > strong {
+  color: var(--foreground);
+}
+
+.admin-submission-card__form {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.35fr) minmax(260px, 1fr) auto;
+  gap: 0.85rem;
+  align-items: end;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.admin-submission-card__form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-submission-card__form select,
+.admin-submission-card__form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.75rem 0.9rem;
+  color: var(--foreground);
+  font: inherit;
+}
+
+.admin-submission-card__form textarea {
+  resize: vertical;
+}
+
 .status-badge--admin,
 .status-badge--published {
   background: rgba(47, 93, 80, 0.12);
@@ -1754,12 +1922,14 @@ header nav a:hover::after {
   }
 
   .admin-filter-bar,
-  .library-filters {
+  .library-filters,
+  .admin-submission-card__form {
     grid-template-columns: 1fr;
   }
 
   .admin-filter-bar__actions,
-  .library-filters__actions {
+  .library-filters__actions,
+  .admin-submission-card__header {
     align-items: stretch;
     flex-direction: column;
   }

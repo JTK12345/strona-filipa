@@ -126,7 +126,13 @@ export default async function LibraryPage(props: PageProps<"/biblioteka">) {
                   <p>{item.itemType === "video" ? "Film" : item.itemType === "file" ? "Plik" : "Instrukcja"}</p>
                   <h2>{item.title}</h2>
                   {item.summary ? <span>{item.summary}</span> : null}
-                  {item.contentMarkdown ? <small>{item.contentMarkdown}</small> : null}
+                  {item.contentMarkdown ? (
+                    <small>
+                      {item.contentMarkdown.length > 220
+                        ? `${item.contentMarkdown.slice(0, 220)}...`
+                        : item.contentMarkdown}
+                    </small>
+                  ) : null}
                 </div>
                 <div className="library-card__actions">
                   {item.videoStorageKey ? (
@@ -154,7 +160,20 @@ export default async function LibraryPage(props: PageProps<"/biblioteka">) {
                     </Link>
                   ) : null}
                   {!item.videoStorageKey && !item.attachmentStorageKey ? (
-                    <span className="library-note-label">Otwórz materiał</span>
+                    <Link
+                      href={`/biblioteka/${item.slug}`}
+                      className="button-primary"
+                    >
+                      Otwórz materiał
+                    </Link>
+                  ) : null}
+                  {(item.videoStorageKey || item.attachmentStorageKey) ? (
+                    <Link
+                      href={`/biblioteka/${item.slug}`}
+                      className="button-primary"
+                    >
+                      Szczegóły
+                    </Link>
                   ) : null}
                 </div>
               </article>

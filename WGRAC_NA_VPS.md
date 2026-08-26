@@ -141,7 +141,8 @@ docker compose ps
 
 Kontener aplikacji automatycznie wykonuje migracje SQL z katalogu
 `database/migrations`, w tym migracje kursow, kodow dostepu, biblioteki i
-usuniecia dawnego modulu platnosci.
+usuniecia dawnego modulu platnosci. Migracja `013_contact_submissions.sql`
+dodaje zgloszenia konsultacji widoczne w panelu admina.
 
 Sprawdz:
 
@@ -342,7 +343,11 @@ Nie uzywaj `git reset --hard`, jezeli nie sprawdziles lokalnych zmian.
 5. Dodaj testowy material tekstowy albo maly PDF.
 6. Utworz zwykle konto uzytkownika.
 7. Wpisz kod na `/dostep`.
-8. Otworz `/biblioteka` i sprawdz, czy material jest widoczny.
+8. Otworz `/biblioteka` i sprawdz, czy material jest widoczny oraz czy
+   szczegoly otwieraja sie na osobnej stronie materialu.
+9. Wyslij testowe zgloszenie z `/umow-konsultacje`.
+10. Otworz `/panel/admin/zgloszenia` i oznacz zgloszenie jako zamkniete.
+11. W `/panel/admin/dostepy` cofnij testowy dostep.
 
 ## 11. Diagnostyka
 

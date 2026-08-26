@@ -18,6 +18,8 @@ Gotowe w kodzie:
 - aktywacja dostepu kodem,
 - panel administratora do generowania i wylaczania kodow,
 - panel administratora do dodawania, edycji i usuwania materialow biblioteki,
+- panel administratora do obslugi zgloszen konsultacji,
+- cofanie aktywnych dostepow uzytkownikow przez panel administratora,
 - upload MP4, WebM, PDF, DOCX, JPG i PNG na serwer,
 - prywatne wydawanie plikow i filmow tylko dla kont z dostepem,
 - prywatne filmy lekcji z obsluga HTTP Range,
@@ -35,7 +37,9 @@ platnosci zostaly usuniete z kodu aplikacji.
 - `/reset-hasla` - reset hasla przez link wysylany e-mailem,
 - `/panel` - materialy uzytkownika i link do aktywacji kodu,
 - `/panel/admin` - kody, materialy, upload i reczne granty,
+- `/panel/admin/zgloszenia` - zgloszenia konsultacji z formularza,
 - `/biblioteka` - prywatna biblioteka po aktywacji kodu,
+- `/biblioteka/[slug]` - osobna strona materialu biblioteki,
 - `/kursy` - publiczny katalog kursow,
 - `/regulamin` i `/polityka-prywatnosci` - dokumenty prawne z placeholderami
   danych dzialalnosci do uzupelnienia przed produkcja.
@@ -118,6 +122,10 @@ Materialy biblioteki dodaje sie w `/panel/admin`. Pliki sa zapisywane na
 serwerze pod `LIBRARY_STORAGE_PATH`, a gdy ta zmienna jest pusta, pod
 `VIDEO_STORAGE_PATH`. W Docker Compose domyslnie jest to `/data/videos`
 montowane z `./data/videos`.
+
+Zgloszenia z formularza `/umow-konsultacje` sa zapisywane w bazie i widoczne w
+`/panel/admin/zgloszenia`. Jesli SMTP jest skonfigurowane, aplikacja dodatkowo
+wysyla pomocnicze powiadomienie na `MAIL_TO`.
 
 ## Dokumentacja
 

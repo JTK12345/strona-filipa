@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import {
+  AdminAccessRevokeError,
   AdminGrantError,
   grantCourseAccessByAdmin,
+  revokeAccessGrantByAdmin,
 } from "@/app/lib/admin";
 import {
   isSameOriginFormRequest,
@@ -50,6 +52,25 @@ export async function POST(request: Request) {
   }
 
   const targetEmail = normalizeEmail(formData.get("email"));
+  const action = String(formData.get("action") ?? "grant");
+
+  if (action === "revoke") {
+    try {
+      await revokeAccessGrantByAdmin({
+        adminUserId: session.userId,
+        grantId: String(formData.get("grantId") ?? ""),
+      });
+      return redirectToAdmin("revoked");
+    } catch (error) {
+      if (error instanceof AdminAccessRevokeError) {
+        return redirectToAdmin(error.code);
+      }
+
+      console.error("Admin access revoke failed with an unexpected error.");
+      return redirectToAdmin("server");
+    }
+  }
+
   const scope = String(formData.get("scope") ?? "") === "course" ? "course" : "all_access";
   const courseId = String(formData.get("courseId") ?? "");
 
