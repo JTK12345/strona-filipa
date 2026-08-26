@@ -52,6 +52,7 @@ export function Hero() {
               alt="Gabinet pracy z ciałem z planszą anatomiczną"
               fill
               priority
+              unoptimized
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 42vw"
             />

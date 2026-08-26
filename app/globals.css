@@ -599,13 +599,14 @@ header nav a:hover::after {
 
 .contact-hub--split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.55fr);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.46fr);
   gap: 3rem;
   align-items: start;
 }
 
 .contact-strip {
   display: grid;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
   border-left: 1px solid var(--border);
   border-top: 0;
@@ -2761,6 +2762,10 @@ header nav a:hover::after {
 
   .contact-strip {
     grid-template-columns: repeat(3, 1fr);
+  }
+
+  .contact-hub--split .contact-strip {
+    grid-template-columns: 1fr;
   }
 
   .access-layout {
