@@ -701,6 +701,129 @@ header nav a:hover::after {
   min-height: 220px;
 }
 
+.library-page {
+  min-height: calc(100vh - 92px);
+  padding: 3rem 0 5rem;
+  background: #ffffff;
+}
+
+.library-heading {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 760px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.library-heading h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.library-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.5rem;
+}
+
+.library-topics .topic-chip {
+  border: 1px solid rgba(47, 93, 80, 0.12);
+  background: rgba(237, 242, 232, 0.72);
+  color: #2f5d50;
+}
+
+.library-list {
+  display: grid;
+  gap: 0;
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.library-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+  gap: 2rem;
+  min-height: 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 1.6rem 0;
+}
+
+.library-card__copy {
+  min-width: 0;
+}
+
+.library-card__copy p {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.library-card__copy h2 {
+  margin-top: 0.5rem;
+  font-size: clamp(1.35rem, 2vw, 1.9rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.library-card__copy span {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.library-card__copy small {
+  display: block;
+  max-width: 760px;
+  margin-top: 1rem;
+  color: #3f483e;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.library-card__actions {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+.library-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  background: var(--deep);
+}
+
+.library-note-label {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.library-empty {
+  margin-top: 2rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+
+.library-empty h2 {
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+
+.library-empty p {
+  margin-top: 0.75rem;
+  color: var(--muted);
+}
+
 .access-layout {
   display: grid;
   gap: 2rem;
@@ -1930,6 +2053,11 @@ header nav a:hover::after {
   .process-timeline,
   .contact-hub--split {
     grid-template-columns: 1fr;
+  }
+
+  .library-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .process-timeline {

@@ -45,7 +45,7 @@ export function About() {
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Ćwiczenia i rutyny dobrane do realnego życia.</p>
             </div>
             <div className="card-surface p-5">
-              <p className="font-semibold">Edukacja premium</p>
+              <p className="font-semibold">Materiały do pracy własnej</p>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Materiały wideo jako przedłużenie procesu pracy.</p>
             </div>
           </div>

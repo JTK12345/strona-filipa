@@ -39,7 +39,9 @@ export default function TermsPage() {
           otrzymany od administratora. Kod może dawać dostęp do całej platformy,
           biblioteki albo konkretnego kursu. Dostęp nie jest bezterminową
           sprzedażą treści i może zostać ograniczony czasowo, cofnięty w razie
-          nadużyć albo zmieniony przez administratora.
+          nadużyć albo zmieniony przez administratora. Jeżeli nie wskazano
+          inaczej, materiały pozostają dostępne przez okres ich utrzymywania w
+          Serwisie.
         </p>
         <h2>Materiały edukacyjne</h2>
         <p>

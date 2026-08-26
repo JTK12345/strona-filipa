@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export function SessionRevalidator() {
   const router = useRouter();
+  const pathname = usePathname();
   const lastState = useRef<boolean | null>(null);
   const inFlight = useRef(false);
 
@@ -56,14 +57,20 @@ export function SessionRevalidator() {
 
     window.addEventListener("focus", handleFocus);
     window.addEventListener("pageshow", handleFocus);
+    window.addEventListener("spc-auth-invalid", handleFocus);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("pageshow", handleFocus);
+      window.removeEventListener("spc-auth-invalid", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [checkSession]);
+
+  useEffect(() => {
+    void checkSession();
+  }, [pathname, checkSession]);
 
   return null;
 }

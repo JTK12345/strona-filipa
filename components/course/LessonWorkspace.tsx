@@ -5,6 +5,12 @@ import type { AccessibleLesson } from "@/app/lib/course-content";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+function notifyAuthInvalid(response: Response | null) {
+  if (response?.status === 401 || response?.status === 403) {
+    window.dispatchEvent(new Event("spc-auth-invalid"));
+  }
+}
+
 function LessonContent({ markdown }: { markdown: string }) {
   return markdown.split(/\n{2,}/).map((block) => {
     if (block.startsWith("## ")) {
@@ -37,6 +43,7 @@ export function LessonWorkspace({ lesson }: { lesson: AccessibleLesson }) {
     }).catch(() => null);
 
     if (!response?.ok) {
+      notifyAuthInvalid(response);
       setProgressState("error");
       return;
     }
@@ -57,6 +64,7 @@ export function LessonWorkspace({ lesson }: { lesson: AccessibleLesson }) {
       body: JSON.stringify({ content: note }),
     }).catch(() => null);
 
+    notifyAuthInvalid(response);
     setNoteState(response?.ok ? "saved" : "error");
   }
 

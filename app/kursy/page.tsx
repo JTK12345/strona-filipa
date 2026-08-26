@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { getCourseAccessCta } from "@/app/lib/course-access-cta";
 import {
   getAccessibleCourses,
   getCourseStatusLabel,
@@ -57,25 +58,24 @@ export default async function CoursesPage() {
                   <p key={module} className="check-row">{module}</p>
                 ))}
               </div>
-              {accessibleSlugs.has(course.slug) ? (
-                <Link
-                  href={`/panel/kursy/${course.slug}`}
-                  className="button-primary mt-8 w-full"
-                >
-                  Przejdź do kursu
-                </Link>
-              ) : session ? (
-                <Link href="/dostep" className="button-primary mt-8 w-full">
-                  Aktywuj dostęp
-                </Link>
-              ) : (
-                <Link
-                  href="/logowanie?next=/kursy"
-                  className="button-primary mt-8 w-full"
-                >
-                  Zaloguj się, aby sprawdzić dostęp
-                </Link>
-              )}
+              <Link
+                href={
+                  getCourseAccessCta({
+                    slug: course.slug,
+                    isLoggedIn: Boolean(session),
+                    hasAccess: accessibleSlugs.has(course.slug),
+                  }).href
+                }
+                className="button-primary mt-8 w-full"
+              >
+                {
+                  getCourseAccessCta({
+                    slug: course.slug,
+                    isLoggedIn: Boolean(session),
+                    hasAccess: accessibleSlugs.has(course.slug),
+                  }).label
+                }
+              </Link>
             </article>
           ))}
         </div>

@@ -59,7 +59,11 @@ export default function PrivacyPage() {
         <p>
           Serwis używa technicznych plików cookies potrzebnych do logowania,
           utrzymania sesji, zabezpieczeń oraz działania konta. Bez nich dostęp
-          do panelu i materiałów po kodzie nie działałby prawidłowo.
+          do panelu i materiałów po kodzie nie działałby prawidłowo. Obecnie są
+          to w szczególności cookie sesyjne <strong>spc_session</strong> oraz
+          techniczne cookie CSRF używane przy zabezpieczaniu formularzy i żądań:
+          <strong> csrf-token</strong> w środowisku lokalnym albo
+          <strong> __Host-csrf-token</strong> w środowisku produkcyjnym.
         </p>
         <h2>Podstawy i okres przetwarzania</h2>
         <p>
