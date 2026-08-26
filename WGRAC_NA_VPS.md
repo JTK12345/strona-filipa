@@ -79,50 +79,158 @@ ekranu.
 
 ### Co wpisac w `.env`
 
-| Zmienna | Co wpisac | Skad wziac |
-| --- | --- | --- |
-| `SMTP_HOST` | adres serwera poczty, np. `smtp.twojadomena.pl` | panel poczty/hostingu domeny |
-| `SMTP_PORT` | zwykle `587` albo `465` | panel poczty; `587` dla STARTTLS, `465` dla SSL |
-| `SMTP_SECURE` | `false` dla portu `587`, `true` dla portu `465` | zalezy od portu SMTP |
-| `SMTP_USER` | login do skrzynki pocztowej | zwykle pelny adres e-mail, np. `kontakt@swiadomyprofilciala.pl` |
-| `SMTP_PASS` | haslo do SMTP | haslo skrzynki albo haslo aplikacji z panelu poczty |
-| `MAIL_TO` | adres odbiorcy wiadomosci kontaktowych | adres, na ktory maja przychodzic formularze |
-| `MAIL_FROM` | widoczny nadawca maili, np. `"Swiadomy Profil Ciala <kontakt@swiadomyprofilciala.pl>"` | najlepiej ten sam adres co `SMTP_USER` |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | publiczny klucz Cloudflare Turnstile | Cloudflare Turnstile, pole Site key |
-| `TURNSTILE_SECRET_KEY` | prywatny klucz Cloudflare Turnstile | Cloudflare Turnstile, pole Secret key |
-| `POSTGRES_DB` | nazwa bazy, np. `strona_db` | moze zostac wartosc z przykladu |
-| `POSTGRES_USER` | uzytkownik bazy, np. `strona_user` | moze zostac wartosc z przykladu |
-| `POSTGRES_PASSWORD` | mocne losowe haslo bazy | `openssl rand -hex 32` |
-| `DATABASE_URL` | pelny adres bazy | sklada sie z `POSTGRES_USER`, `POSTGRES_PASSWORD`, hosta `postgres`, portu `5432` i `POSTGRES_DB` |
-| `DATABASE_POOL_MAX` | maksymalna liczba polaczen aplikacji z baza | zwykle zostaw `10` |
-| `DEFAULT_ADMIN_EMAIL` | e-mail glownego admina | adres, ktory ma logowac sie do panelu admina |
-| `DEFAULT_ADMIN_PASSWORD` | haslo glownego admina | wymysl mocne haslo; nie uzywaj przykladu |
-| `APP_URL` | publiczny adres strony z `https://` | domena z Nginx Proxy Manager, np. `https://profil-ciala.jtk.ovh` |
-| `VIDEO_STORAGE_PATH` | sciezka w kontenerze na pliki | zostaw `/data/videos` |
-| `VIDEO_STORAGE_HOST_PATH` | sciezka na VPS montowana do kontenera | zwykle `./data/videos` |
-| `LIBRARY_STORAGE_PATH` | opcjonalna osobna sciezka w kontenerze dla biblioteki | zostaw puste, jesli biblioteka ma uzywac `VIDEO_STORAGE_PATH` |
-| `ALLOWED_ORIGINS` | publiczny adres strony | zwykle ta sama wartosc co `APP_URL` |
-| `TRUSTED_PROXY_SECRET` | sekret miedzy Nginx Proxy Manager i aplikacja | `openssl rand -hex 32`; te sama wartosc wpisz w naglowku `X-Trusted-Proxy-Secret` |
-| `LOG_SALT` | sekret do bezpieczniejszego hashowania danych w logach | `openssl rand -hex 32` |
+Plik `.env` ustawiasz tylko na VPS. Nie wrzucaj go do GitHuba i nie wysylaj
+nikomu calej tresci. Najlatwiej edytowac go tak:
 
-Najczesciej zmieniasz tylko: dane SMTP, klucze Turnstile, hasla, `APP_URL`,
-`ALLOWED_ORIGINS` i dane admina. Wartosc `DATABASE_URL` musi zawierac to samo
-haslo co `POSTGRES_PASSWORD`.
+```bash
+cd /home/ubuntu/strona-filipa
+nano .env
+```
 
-Przyklad dla resetu hasla:
+#### 1. Wygeneruj sekrety
+
+Wpisz trzy razy:
+
+```bash
+openssl rand -hex 32
+```
+
+Otrzymane wartosci wklej do:
+
+```env
+POSTGRES_PASSWORD=pierwszy_wygenerowany_sekret
+TRUSTED_PROXY_SECRET=drugi_wygenerowany_sekret
+LOG_SALT=trzeci_wygenerowany_sekret
+```
+
+Ten sam `POSTGRES_PASSWORD` musi byc tez w `DATABASE_URL`.
+
+#### 2. Baza danych
+
+Te wartosci moga zostac prawie jak w przykladzie. Zmien tylko haslo.
+
+```env
+POSTGRES_DB=strona_db
+POSTGRES_USER=strona_user
+POSTGRES_PASSWORD=pierwszy_wygenerowany_sekret
+DATABASE_URL=postgresql://strona_user:pierwszy_wygenerowany_sekret@postgres:5432/strona_db
+DATABASE_POOL_MAX=10
+```
+
+Nie zmieniaj hosta `postgres`, jesli uzywasz tego `docker-compose.yml`.
+To nazwa kontenera bazy w sieci Docker.
+
+#### 3. Domena strony
+
+Wpisz publiczny adres strony z `https://`:
 
 ```env
 APP_URL=https://profil-ciala.jtk.ovh
+ALLOWED_ORIGINS=https://profil-ciala.jtk.ovh
+```
+
+Jesli uzywasz innej domeny, wpisz ja w obu miejscach. Te dwie wartosci zwykle
+sa takie same.
+
+`APP_URL` jest uzywane miedzy innymi do linkow resetu hasla. Jesli mail z
+resetem ma link zaczynajacy sie od `0.0.0.0:3000`, to znaczy, ze `APP_URL` jest
+brakujace albo bledne.
+
+#### 4. Poczta SMTP
+
+To odpowiada za wysylke maili systemowych, na przyklad reset hasla i
+powiadomienie o nowym zgloszeniu.
+
+```env
 SMTP_HOST=smtp.twojadomena.pl
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=kontakt@swiadomyprofilciala.pl
 SMTP_PASS=haslo_smtp_albo_haslo_aplikacji
+MAIL_TO=kontakt@swiadomyprofilciala.pl
 MAIL_FROM="Swiadomy Profil Ciala <kontakt@swiadomyprofilciala.pl>"
 ```
 
-Jesli link resetu hasla zaczyna sie od `0.0.0.0:3000`, popraw `APP_URL`,
-zapisz `.env` i przebuduj kontenery:
+Typowe ustawienia:
+
+- port `587` -> `SMTP_SECURE=false`,
+- port `465` -> `SMTP_SECURE=true`.
+
+`SMTP_USER` to konto, przez ktore aplikacja wysyla maile. `MAIL_FROM` to nazwa
+i adres widoczne dla odbiorcy. Najbezpieczniej uzyc tego samego adresu w
+`SMTP_USER`, `MAIL_TO` i w nawiasie w `MAIL_FROM`.
+
+#### 5. Pliki, filmy i biblioteka
+
+Zostaw tak:
+
+```env
+VIDEO_STORAGE_PATH=/data/videos
+VIDEO_STORAGE_HOST_PATH=./data/videos
+LIBRARY_STORAGE_PATH=
+```
+
+`VIDEO_STORAGE_PATH` to sciezka widziana przez aplikacje w kontenerze.
+`VIDEO_STORAGE_HOST_PATH` to folder na VPS obok projektu. Pusta wartosc
+`LIBRARY_STORAGE_PATH` oznacza, ze biblioteka korzysta z tego samego miejsca co
+filmy.
+
+Przed startem utworz folder:
+
+```bash
+mkdir -p data/videos backups
+```
+
+#### 6. Konto administratora
+
+Te dane tworza albo aktualizuja glowne konto admina przy starcie kontenera:
+
+```env
+DEFAULT_ADMIN_EMAIL=admin@example.com
+DEFAULT_ADMIN_PASSWORD=tu_wpisz_mocne_haslo_admina
+```
+
+Zmien oba pola na prawdziwy e-mail i mocne haslo. Nie zostawiaj przykladowego
+hasla.
+
+#### 7. Cloudflare Turnstile
+
+To zabezpieczenie formularzy przed spamem.
+
+```env
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=tu_wpisz_site_key
+TURNSTILE_SECRET_KEY=tu_wpisz_secret_key
+```
+
+Klucze bierzesz z panelu Cloudflare Turnstile:
+
+- `Site key` wpisz jako `NEXT_PUBLIC_TURNSTILE_SITE_KEY`,
+- `Secret key` wpisz jako `TURNSTILE_SECRET_KEY`.
+
+#### 8. Sekret zaufanego proxy
+
+```env
+TRUSTED_PROXY_SECRET=drugi_wygenerowany_sekret
+```
+
+Te sama wartosc musisz wpisac w Nginx Proxy Manager w zakladce Advanced:
+
+```nginx
+proxy_set_header X-Trusted-Proxy-Secret "drugi_wygenerowany_sekret";
+```
+
+#### 9. Szybka checklista
+
+Przed uruchomieniem sprawdz:
+
+- `APP_URL` i `ALLOWED_ORIGINS` maja Twoja prawdziwa domene z `https://`,
+- `POSTGRES_PASSWORD` jest taki sam w `DATABASE_URL`,
+- `SMTP_USER`, `SMTP_PASS` i `MAIL_FROM` pasuja do tej samej skrzynki,
+- `DEFAULT_ADMIN_PASSWORD` nie jest wartoscia przykladowa,
+- `TRUSTED_PROXY_SECRET` jest taki sam w `.env` i w Nginx Proxy Manager,
+- istnieje folder `data/videos`.
+
+Po zapisaniu `.env` przebuduj kontenery:
 
 ```bash
 docker compose up -d --build
