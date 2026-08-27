@@ -61,26 +61,26 @@ type LibraryItemRow = {
 
 const librarySelect = `
   SELECT
-    id,
-    slug,
-    title,
-    summary,
-    item_type,
-    content_markdown,
-    storage_key,
-    file_name,
-    mime_type,
-    file_size_bytes,
-    video_storage_key,
-    video_file_name,
-    video_mime_type,
-    video_file_size_bytes,
-    attachment_storage_key,
-    attachment_file_name,
-    attachment_mime_type,
-    attachment_file_size_bytes,
-    status,
-    visibility,
+    library_items.id,
+    library_items.slug,
+    library_items.title,
+    library_items.summary,
+    library_items.item_type,
+    library_items.content_markdown,
+    library_items.storage_key,
+    library_items.file_name,
+    library_items.mime_type,
+    library_items.file_size_bytes,
+    library_items.video_storage_key,
+    library_items.video_file_name,
+    library_items.video_mime_type,
+    library_items.video_file_size_bytes,
+    library_items.attachment_storage_key,
+    library_items.attachment_file_name,
+    library_items.attachment_mime_type,
+    library_items.attachment_file_size_bytes,
+    library_items.status,
+    library_items.visibility,
     COALESCE(
       array_agg(library_item_user_grants.user_id::text ORDER BY users.email)
         FILTER (WHERE library_item_user_grants.user_id IS NOT NULL),
@@ -91,9 +91,9 @@ const librarySelect = `
         FILTER (WHERE users.email IS NOT NULL),
       ARRAY[]::text[]
     ) AS granted_user_emails,
-    position,
-    published_at,
-    created_at
+    library_items.position,
+    library_items.published_at,
+    library_items.created_at
   FROM library_items
   LEFT JOIN library_item_user_grants
     ON library_item_user_grants.library_item_id = library_items.id
