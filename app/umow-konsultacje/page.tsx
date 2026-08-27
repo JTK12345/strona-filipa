@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BackHomeLink } from "@/components/BackHomeLink";
 import { contactData } from "@/content/contact";
+import { services } from "@/content/services";
 
 export const metadata: Metadata = {
   title: "Umów konsultację",
@@ -18,6 +19,11 @@ const statusMessages: Record<string, string> = {
   server: "Nie udało się zapisać zgłoszenia. Spróbuj ponownie albo napisz bezpośrednio.",
 };
 
+const consultationOptions = services.slice(0, 2).map((service) => ({
+  ...service,
+  cta: service.title.includes("online") ? "Umów online" : "Umów wizytę",
+}));
+
 export default async function AppointmentPage(
   props: PageProps<"/umow-konsultacje">,
 ) {
@@ -32,25 +38,54 @@ export default async function AppointmentPage(
 
         <div className="appointment-hero">
           <div className="appointment-copy">
-            <span className="eyebrow">Konsultacja</span>
-            <h1>Umów konsultację</h1>
+            <span className="eyebrow">Wybór konsultacji</span>
+            <h1>Umów konsultację online albo w gabinecie.</h1>
             <p>
-              Wyślij krótkie zgłoszenie albo skorzystaj z bezpośredniego
-              kontaktu. Zgłoszenie trafi do panelu administratora.
+              Wybierz formę spotkania, która pasuje do Twojej sytuacji. Jeśli
+              nie wiesz, od czego zacząć, napisz krótko, z czym się zgłaszasz.
             </p>
           </div>
         </div>
 
+        <div className="appointment-options">
+          {consultationOptions.map((option) => (
+            <article key={option.title} className="appointment-option-card">
+              <div>
+                <span className="eyebrow">{option.title}</span>
+                <h2>{option.price}</h2>
+                <p>{option.description}</p>
+              </div>
+              <ul>
+                {option.bullets.map((bullet) => (
+                  <li key={bullet}>{bullet}</li>
+                ))}
+              </ul>
+              {option.title.includes("stacjonarna") ? (
+                <p className="appointment-option-address">
+                  {contactData.address}
+                </p>
+              ) : null}
+              <a href="#formularz" className="button-primary">
+                {option.cta}
+              </a>
+            </article>
+          ))}
+        </div>
+
         <div className="appointment-contact-panel">
-          <div className="appointment-form-panel">
+          <div className="appointment-form-panel" id="formularz">
             <form
               action="/api/appointment"
               method="post"
               className="appointment-form"
             >
               <div>
-                <span className="eyebrow">Zgłoszenie</span>
+                <span className="eyebrow">Krótka wiadomość</span>
                 <h2>Napisz, czego potrzebujesz</h2>
+                <p>
+                  Zostaw kontakt i opisz w kilku zdaniach problem albo cel.
+                  Odpowiedź pomoże dobrać właściwą formę spotkania.
+                </p>
               </div>
               {statusMessage ? (
                 <p className={status === "sent" ? "auth-notice" : "auth-error"}>
@@ -103,7 +138,7 @@ export default async function AppointmentPage(
             <section>
               <span>Telefon</span>
               <strong>{contactData.phone}</strong>
-              <a href={`tel:${contactData.phoneRaw}`} className="button-primary">
+              <a href={`tel:${contactData.phoneRaw}`} className="button-secondary">
                 Zadzwoń
               </a>
             </section>

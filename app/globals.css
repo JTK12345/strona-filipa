@@ -338,6 +338,14 @@ header nav a {
   padding: 1.25rem 0 1.5rem;
 }
 
+.hero-credentials {
+  margin: 1rem 0 1.2rem;
+  color: var(--accent);
+  font-size: clamp(1.02rem, 1.5vw, 1.2rem);
+  font-weight: 900;
+  line-height: 1.45;
+}
+
 .hero-stage__glow {
   position: absolute;
   inset: 10% 3% 16% 20%;
@@ -950,21 +958,20 @@ header nav a:hover::after {
 
 .appointment-page {
   min-height: calc(100vh - 92px);
-  padding: 3rem 0 5rem;
+  padding: 2.25rem 0 5rem;
   background: linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
 }
 
 .appointment-hero {
   display: grid;
   align-items: end;
-  min-height: 260px;
-  margin-top: 1.75rem;
+  margin-top: 1.25rem;
   border: 1px solid var(--border);
   border-radius: 8px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.6)),
     url("/files/att.oTsQHWak9WIIsGRGr23Pkmojcr5B92Ekr7vBzzD2pms.jpg") center/cover;
-  padding: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(1.35rem, 3vw, 2.25rem);
   box-shadow: 0 16px 36px rgba(16, 35, 30, 0.05);
 }
 
@@ -974,6 +981,75 @@ header nav a:hover::after {
   gap: clamp(1.25rem, 3vw, 2rem);
   align-items: start;
   margin-top: 1.25rem;
+}
+
+.appointment-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.4rem);
+  margin-top: 1.25rem;
+}
+
+.appointment-option-card {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: clamp(1.25rem, 2.6vw, 1.8rem);
+  box-shadow: 0 16px 36px rgba(16, 35, 30, 0.05);
+}
+
+.appointment-option-card h2 {
+  margin-top: 0.45rem;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.appointment-option-card p {
+  margin-top: 0.85rem;
+  color: #415049;
+  line-height: 1.7;
+}
+
+.appointment-option-card ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.appointment-option-card li {
+  position: relative;
+  padding-left: 1.4rem;
+  color: #3e463d;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.appointment-option-card li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.appointment-option-card .button-primary {
+  width: fit-content;
+  margin-top: 0.3rem;
+}
+
+.appointment-option-address {
+  border-top: 1px solid var(--border);
+  padding-top: 0.9rem;
+  font-weight: 900;
 }
 
 .appointment-copy h1 {
@@ -1013,6 +1089,12 @@ header nav a:hover::after {
   font-size: clamp(1.45rem, 2vw, 2rem);
   font-weight: 900;
   line-height: 1.15;
+}
+
+.appointment-form h2 + p {
+  margin-top: 0.65rem;
+  color: #415049;
+  line-height: 1.65;
 }
 
 .appointment-form label {
@@ -2475,6 +2557,25 @@ select:focus {
   .appointment-contact-panel {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+  }
+
+  .appointment-options {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-copy h1 {
+    font-size: 2.15rem;
+    line-height: 1.08;
+  }
+
+  .appointment-copy p {
+    margin-top: 1rem;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .appointment-option-card .button-primary {
+    width: 100%;
   }
 
   .appointment-contact-list .button-primary,

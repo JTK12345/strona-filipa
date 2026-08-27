@@ -3,7 +3,7 @@ import Link from "next/link";
 import { siteConfig } from "@/content/site";
 
 const stats = [
-  { value: "1:1", label: "Indywidualne podejście" },
+  { value: "Lekarz", label: "Podejście medyczne i praktyczne" },
   { value: "Online", label: "Konsultacje z dowolnego miejsca" },
   { value: "Gdynia", label: "Konsultacje stacjonarne" },
 ];
@@ -14,8 +14,12 @@ export function Hero() {
       <div className="container-main grid items-center gap-12 lg:grid-cols-[1.08fr_0.92fr]">
         <div className="relative z-10">
           <span className="eyebrow eyebrow-large">
-            Konsultacje, trening zdrowia i edukacja ruchowa
+            Filip Proniewicz
           </span>
+
+          <p className="hero-credentials">
+            Lekarz · terapeuta manualny · trener zdrowia · trener personalny
+          </p>
 
           <h1 className="max-w-4xl text-5xl font-bold leading-tight md:text-7xl">
             Świadoma praca z bólem, napięciem i ruchem.
