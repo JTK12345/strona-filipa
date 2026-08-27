@@ -25,7 +25,10 @@ export async function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(250,248,242,0.92)] backdrop-blur">
       <div className="container-main flex min-h-[92px] flex-wrap items-center justify-between gap-x-4 gap-y-4 py-4 xl:flex-nowrap xl:py-0">
-        <Link href="/" className="min-w-0 shrink no-underline xl:shrink-0">
+        <HashScrollLink
+          href="/"
+          className="min-w-0 shrink no-underline xl:shrink-0"
+        >
           <div className="flex flex-col">
             <span className="text-[1.35rem] font-black leading-none text-[var(--foreground)] sm:text-[1.75rem]">
               {siteConfig.name}
@@ -34,7 +37,7 @@ export async function Navbar() {
               Konsultacje · ruch · edukacja
             </span>
           </div>
-        </Link>
+        </HashScrollLink>
 
         <nav className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-3 xl:order-none xl:w-auto xl:flex-nowrap xl:gap-5">
           {links.map((link) => (
