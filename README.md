@@ -130,6 +130,7 @@ wysyla pomocnicze powiadomienie na `MAIL_TO`.
 ## Dokumentacja
 
 - [WGRAC_NA_VPS.md](./WGRAC_NA_VPS.md) - pierwsze wdrozenie, aktualizacja,
-  backup, storage, Nginx i panel admina,
+  reset danych pod produkcje, backup, przywracanie backupu, zmiana hasla bazy,
+  storage, Nginx i panel admina,
 - [instrukcja.txt](./instrukcja.txt) - skrocona aktualizacja VPS,
 - [SECURITY_HARDENING.md](./SECURITY_HARDENING.md) - zabezpieczenia i checklisty.

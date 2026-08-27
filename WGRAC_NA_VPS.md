@@ -419,7 +419,223 @@ ls -lh backups
 Skopiuj pliki `.dump` i `.tar.gz` poza VPS. Backup na tym samym dysku nie
 chroni przed awaria serwera.
 
-## 9. Aktualizacja z GitHuba
+### Przywrocenie backupu bazy
+
+Przywracanie nadpisuje aktualna baze. Najpierw zatrzymaj aplikacje, zostawiajac
+baze wlaczona:
+
+```bash
+cd /home/ubuntu/strona-filipa
+docker compose stop strona
+```
+
+Przywroc wybrany plik `.dump`:
+
+```bash
+docker compose exec -T postgres sh -c \
+  'pg_restore --clean --if-exists -U "$POSTGRES_USER" -d "$POSTGRES_DB"' \
+  < backups/strona-TU_WPISZ_DATE.dump
+```
+
+Uruchom aplikacje ponownie:
+
+```bash
+docker compose up -d --build
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+```
+
+### Przywrocenie plikow storage
+
+Pliki wideo, PDF, DOCX i obrazy sa w `data/videos`. Przywracaj je tylko z
+backupu pasujacego do tej samej bazy:
+
+```bash
+cd /home/ubuntu/strona-filipa
+docker compose stop strona
+rm -rf data/videos
+tar -xzf backups/storage-TU_WPISZ_DATE.tar.gz
+docker compose up -d --build
+```
+
+## 9. Reset danych pod produkcje
+
+Uzyj tego, gdy chcesz wyczyscic testowe konta, kursy, materialy, kody,
+zgloszenia i postepy przed prawdziwym startem produkcji.
+
+Najpierw zrob backup, nawet jesli myslisz, ze danych testowych nie potrzebujesz:
+
+```bash
+cd /home/ubuntu/strona-filipa
+mkdir -p backups
+docker compose exec -T postgres sh -c \
+  'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' \
+  > "backups/przed-resetem-$(date +%Y%m%d-%H%M%S).dump"
+tar -czf "backups/storage-przed-resetem-$(date +%Y%m%d-%H%M%S).tar.gz" data/videos
+ls -lh backups
+```
+
+### Opcja A: wyczysc dane, zostaw strukture bazy
+
+To jest zalecana opcja. Nie rusza migracji ani schematu, usuwa tylko dane
+aplikacji:
+
+```bash
+cd /home/ubuntu/strona-filipa
+docker compose stop strona
+docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+TRUNCATE TABLE
+  access_code_redemptions,
+  access_codes,
+  library_item_user_grants,
+  access_grants,
+  lesson_progress,
+  user_notes,
+  user_sessions,
+  password_reset_tokens,
+  contact_submissions,
+  admin_audit_events,
+  lessons,
+  course_modules,
+  courses,
+  library_items,
+  users
+RESTART IDENTITY CASCADE;
+SQL
+docker compose up -d --build
+docker compose exec strona node scripts/ensure-default-admin.mjs
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+```
+
+Po tym:
+
+- baza ma aktualny schemat,
+- lista kursow i materialow jest pusta,
+- kody dostepu sa usuniete,
+- zgloszenia konsultacji sa usuniete,
+- konta uzytkownikow sa usuniete,
+- konto admina wraca z `DEFAULT_ADMIN_EMAIL` i `DEFAULT_ADMIN_PASSWORD` w
+  `.env`.
+
+### Opcja B: pelny reset wolumenu bazy
+
+To usuwa cala baze razem ze schematem i historia migracji. Po starcie aplikacja
+utworzy wszystko od nowa z migracji. Uzywaj tylko, jesli na pewno chcesz
+zaczac od pustego wolumenu PostgreSQL.
+
+```bash
+cd /home/ubuntu/strona-filipa
+docker compose down -v
+docker compose up -d --build
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+```
+
+`docker compose down -v` usuwa wolumen bazy dla tego projektu. Nie usuwa
+folderu `data/videos`, bo to zwykly folder na dysku hosta.
+
+### Wyczyszczenie przeslanych plikow
+
+Jesli chcesz usunac rowniez testowe filmy, PDF, DOCX i obrazy z uploadu:
+
+```bash
+cd /home/ubuntu/strona-filipa
+docker compose stop strona
+rm -rf data/videos/*
+docker compose up -d
+```
+
+Nie rob tego, jesli w bazie zostaja materialy wskazujace na te pliki. Najlepiej
+czyscic storage razem z resetem bazy.
+
+### Checklista po resecie
+
+1. Zaloguj sie na konto admina z `.env`.
+2. Otworz `/panel/admin`.
+3. Dodaj pierwsze produkcyjne kursy i materialy.
+4. Wygeneruj nowy kod testowy.
+5. Utworz zwykle konto uzytkownika.
+6. Aktywuj kod na `/dostep`.
+7. Sprawdz `/panel` i `/biblioteka`.
+8. Wyslij testowe zgloszenie z `/umow-konsultacje`.
+9. Sprawdz, czy zgloszenie widac w `/panel/admin/zgloszenia`.
+10. Usun albo zamknij testowe dane, jesli nie maja zostac.
+
+## 10. Zmiana hasla bazy PostgreSQL
+
+Haslo bazy wystepuje w dwoch miejscach w `.env`:
+
+```env
+POSTGRES_PASSWORD=nowe_haslo
+DATABASE_URL=postgresql://strona_user:nowe_haslo@postgres:5432/strona_db
+```
+
+Te dwie wartosci musza byc zgodne.
+
+### Najprosciej przed produkcja: nowa pusta baza
+
+Jesli i tak resetujesz dane przed startem, najlatwiej:
+
+```bash
+cd /home/ubuntu/strona-filipa
+nano .env
+```
+
+Zmien `POSTGRES_PASSWORD` i haslo w `DATABASE_URL`, zapisz plik, a potem:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+```
+
+To tworzy nowy wolumen bazy z nowym haslem, odpala migracje i odtwarza admina z
+`.env`.
+
+### Zmiana hasla bez kasowania danych
+
+Jesli chcesz zachowac dane, zmien haslo uzytkownika w dzialajacej bazie:
+
+```bash
+cd /home/ubuntu/strona-filipa
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+W konsoli `psql` wpisz, podstawiajac nowe mocne haslo:
+
+```sql
+ALTER USER strona_user WITH PASSWORD 'tu_wpisz_nowe_mocne_haslo';
+\q
+```
+
+Potem edytuj `.env`:
+
+```bash
+nano .env
+```
+
+Wpisz to samo nowe haslo w:
+
+```env
+POSTGRES_PASSWORD=...
+DATABASE_URL=postgresql://strona_user:...@postgres:5432/strona_db
+```
+
+Na koniec przebuduj aplikacje:
+
+```bash
+docker compose up -d --build
+docker compose exec strona node scripts/db-status.mjs
+curl http://127.0.0.1:3010/api/health
+```
+
+Jesli po zmianie hasla aplikacja nie laczy sie z baza, prawie zawsze oznacza
+to, ze `POSTGRES_PASSWORD` i haslo w `DATABASE_URL` roznia sie od siebie albo
+haslo w samej bazie zostalo ustawione na inna wartosc.
+
+## 11. Aktualizacja z GitHuba
 
 ```bash
 cd /home/ubuntu/strona-filipa
@@ -442,7 +658,7 @@ docker compose up -d --build
 
 Nie uzywaj `git reset --hard`, jezeli nie sprawdziles lokalnych zmian.
 
-## 10. Szybki test po wdrozeniu
+## 12. Szybki test po wdrozeniu
 
 1. Otworz strone publiczna i `/kursy`.
 2. Zaloguj sie jako administrator.
@@ -457,7 +673,7 @@ Nie uzywaj `git reset --hard`, jezeli nie sprawdziles lokalnych zmian.
 10. Otworz `/panel/admin/zgloszenia` i oznacz zgloszenie jako zamkniete.
 11. W `/panel/admin/dostepy` cofnij testowy dostep.
 
-## 11. Diagnostyka
+## 13. Diagnostyka
 
 ```bash
 docker compose ps
