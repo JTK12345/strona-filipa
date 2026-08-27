@@ -20,15 +20,21 @@ async function serveLibraryMedia(
 ) {
   const session = await getCurrentUserSession();
 
-  if (!session?.hasLibraryAccess) {
-    return new NextResponse(null, { status: session ? 403 : 401 });
+  if (!session) {
+    return new NextResponse(null, { status: 401 });
   }
 
   const { itemId } = await context.params;
   const url = new URL(request.url);
   const kind =
     url.searchParams.get("kind") === "attachment" ? "attachment" : "video";
-  const media = await getLibraryItemMedia(itemId, kind);
+  const media = await getLibraryItemMedia(
+    itemId,
+    kind,
+    session.userId,
+    session.role === "admin",
+    session.hasLibraryAccess,
+  );
   const filePath = media ? resolveLibraryStoragePath(storageRoot(), media.storage_key) : null;
 
   if (!media || !filePath) {

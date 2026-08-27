@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
-import { getPublishedLibraryItemBySlug } from "@/app/lib/library";
+import { getAccessibleLibraryItemBySlug } from "@/app/lib/library";
 
 export const metadata: Metadata = {
   title: "Materiał biblioteki | Świadomy Profil Ciała",
@@ -38,12 +38,13 @@ export default async function LibraryItemPage(
     redirect("/logowanie?next=/biblioteka");
   }
 
-  if (!session.hasLibraryAccess) {
-    redirect("/dostep?required=1");
-  }
-
   const { slug } = await props.params;
-  const item = await getPublishedLibraryItemBySlug(slug);
+  const item = await getAccessibleLibraryItemBySlug(
+    slug,
+    session.userId,
+    session.role === "admin",
+    session.hasLibraryAccess,
+  );
 
   if (!item) {
     notFound();

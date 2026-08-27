@@ -2,7 +2,7 @@ import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname, extname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { queryDatabase } from "@/app/lib/db";
+import { queryDatabase, withDatabaseTransaction } from "@/app/lib/db";
 import {
   resolveLibraryStoragePath,
   slugifyLibraryTitle,
@@ -28,6 +28,8 @@ type StoredUpload = {
   mimeType: string;
   fileSizeBytes: number;
 };
+
+type MaterialVisibility = "all_access" | "selected_users";
 
 function redirectToAdmin(result: string) {
   return new NextResponse(null, {
@@ -123,6 +125,46 @@ function itemTypeFor(input: {
   return "note";
 }
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
+function readVisibility(formData: FormData): MaterialVisibility {
+  return formData.get("visibility") === "selected_users"
+    ? "selected_users"
+    : "all_access";
+}
+
+function readGrantedUserIds(formData: FormData) {
+  return Array.from(
+    new Set(
+      formData
+        .getAll("grantedUserIds")
+        .map((value) => String(value))
+        .filter(isUuid),
+    ),
+  ).slice(0, 100);
+}
+
+async function selectValidUserIds(userIds: string[]) {
+  if (userIds.length === 0) {
+    return [];
+  }
+
+  const result = await queryDatabase<{ id: string }>(
+    `SELECT id::text AS id
+     FROM users
+     WHERE id = ANY($1::uuid[])
+       AND status = 'active'
+       AND role = 'user'`,
+    [userIds],
+  );
+
+  return result.rows.map((row) => row.id);
+}
+
 export async function POST(request: Request) {
   if (!isSameOriginFormRequest(request)) {
     return new NextResponse(null, { status: 403 });
@@ -183,11 +225,21 @@ export async function POST(request: Request) {
   const summary = String(formData.get("summary") ?? "").trim();
   const contentMarkdown = String(formData.get("contentMarkdown") ?? "").trim();
   const status = String(formData.get("status") ?? "") === "draft" ? "draft" : "published";
+  const visibility = readVisibility(formData);
+  const grantedUserIds =
+    visibility === "selected_users"
+      ? await selectValidUserIds(readGrantedUserIds(formData))
+      : [];
   const videoUpload = formData.get("video");
   const attachmentUpload = formData.get("attachment");
 
   if (title.length < 3 || title.length > 160) {
     return redirectToAdmin("invalid");
+  }
+
+  if (visibility === "selected_users" && grantedUserIds.length === 0) {
+    const itemId = action === "update" ? String(formData.get("itemId") ?? "") : "";
+    return itemId ? redirectToMaterialEditor("invalid", itemId) : redirectToAdmin("invalid");
   }
 
   const video = await saveUpload(videoUpload, "video");
@@ -229,48 +281,64 @@ export async function POST(request: Request) {
       return redirectToMaterialEditor("invalid", itemId);
     }
 
-    await queryDatabase(
-      `UPDATE library_items
-       SET
-         title = $2,
-         summary = $3,
-         content_markdown = $4,
-         status = $5,
-         item_type = CASE
-           WHEN COALESCE($6, video_storage_key) IS NOT NULL THEN 'video'
-           WHEN COALESCE($10, attachment_storage_key) IS NOT NULL THEN 'file'
-           ELSE 'note'
-         END,
-         video_storage_key = COALESCE($6, video_storage_key),
-         video_file_name = COALESCE($7, video_file_name),
-         video_mime_type = COALESCE($8, video_mime_type),
-         video_file_size_bytes = COALESCE($9, video_file_size_bytes),
-         attachment_storage_key = COALESCE($10, attachment_storage_key),
-         attachment_file_name = COALESCE($11, attachment_file_name),
-         attachment_mime_type = COALESCE($12, attachment_mime_type),
-         attachment_file_size_bytes = COALESCE($13, attachment_file_size_bytes),
-         published_at = CASE
-           WHEN $5 = 'published' AND published_at IS NULL THEN now()
-           WHEN $5 = 'draft' THEN NULL
-           ELSE published_at
-         END
-       WHERE id = $1`,
-      [
-        itemId,
-        title,
-        summary.slice(0, 400),
-        contentMarkdown.slice(0, 20_000),
-        status,
-        video?.storageKey,
-        video?.fileName,
-        video?.mimeType,
-        video?.fileSizeBytes,
-        attachment?.storageKey,
-        attachment?.fileName,
-        attachment?.mimeType,
-        attachment?.fileSizeBytes,
-      ],
-    );
+    await withDatabaseTransaction(async (client) => {
+      await client.query(
+        `UPDATE library_items
+         SET
+           title = $2,
+           summary = $3,
+           content_markdown = $4,
+           status = $5,
+           visibility = $14,
+           item_type = CASE
+             WHEN COALESCE($6, video_storage_key) IS NOT NULL THEN 'video'
+             WHEN COALESCE($10, attachment_storage_key) IS NOT NULL THEN 'file'
+             ELSE 'note'
+           END,
+           video_storage_key = COALESCE($6, video_storage_key),
+           video_file_name = COALESCE($7, video_file_name),
+           video_mime_type = COALESCE($8, video_mime_type),
+           video_file_size_bytes = COALESCE($9, video_file_size_bytes),
+           attachment_storage_key = COALESCE($10, attachment_storage_key),
+           attachment_file_name = COALESCE($11, attachment_file_name),
+           attachment_mime_type = COALESCE($12, attachment_mime_type),
+           attachment_file_size_bytes = COALESCE($13, attachment_file_size_bytes),
+           published_at = CASE
+             WHEN $5 = 'published' AND published_at IS NULL THEN now()
+             WHEN $5 = 'draft' THEN NULL
+             ELSE published_at
+           END
+         WHERE id = $1`,
+        [
+          itemId,
+          title,
+          summary.slice(0, 400),
+          contentMarkdown.slice(0, 20_000),
+          status,
+          video?.storageKey,
+          video?.fileName,
+          video?.mimeType,
+          video?.fileSizeBytes,
+          attachment?.storageKey,
+          attachment?.fileName,
+          attachment?.mimeType,
+          attachment?.fileSizeBytes,
+          visibility,
+        ],
+      );
+      await client.query(
+        "DELETE FROM library_item_user_grants WHERE library_item_id = $1",
+        [itemId],
+      );
+
+      if (visibility === "selected_users") {
+        await client.query(
+          `INSERT INTO library_item_user_grants (library_item_id, user_id)
+           SELECT $1::uuid, unnest($2::uuid[])`,
+          [itemId, grantedUserIds],
+        );
+      }
+    });
 
     if (video) {
       await unlinkStorageKey(existing.rows[0].video_storage_key);
@@ -287,48 +355,62 @@ export async function POST(request: Request) {
     return redirectToAdmin("invalid");
   }
 
-  await queryDatabase(
-    `INSERT INTO library_items (
-       slug,
-       title,
-       summary,
-       item_type,
-       content_markdown,
-       video_storage_key,
-       video_file_name,
-       video_mime_type,
-       video_file_size_bytes,
-       attachment_storage_key,
-       attachment_file_name,
-       attachment_mime_type,
-       attachment_file_size_bytes,
-       status,
-       published_at
-     )
-     VALUES (
-       $1, $2, $3, $4, $5,
-       $6, $7, $8, $9,
-       $10, $11, $12, $13,
-       $14,
-       CASE WHEN $14 = 'published' THEN now() ELSE NULL END
-     )`,
-    [
-      `${slugifyLibraryTitle(title)}-${randomUUID().slice(0, 8)}`,
-      title,
-      summary.slice(0, 400),
-      itemTypeFor({ contentMarkdown, video, attachment }),
-      contentMarkdown.slice(0, 20_000),
-      video?.storageKey ?? null,
-      video?.fileName ?? null,
-      video?.mimeType ?? null,
-      video?.fileSizeBytes ?? null,
-      attachment?.storageKey ?? null,
-      attachment?.fileName ?? null,
-      attachment?.mimeType ?? null,
-      attachment?.fileSizeBytes ?? null,
-      status,
-    ],
-  );
+  await withDatabaseTransaction(async (client) => {
+    const inserted = await client.query<{ id: string }>(
+      `INSERT INTO library_items (
+         slug,
+         title,
+         summary,
+         item_type,
+         content_markdown,
+         video_storage_key,
+         video_file_name,
+         video_mime_type,
+         video_file_size_bytes,
+         attachment_storage_key,
+         attachment_file_name,
+         attachment_mime_type,
+         attachment_file_size_bytes,
+         status,
+         visibility,
+         published_at
+       )
+       VALUES (
+         $1, $2, $3, $4, $5,
+         $6, $7, $8, $9,
+         $10, $11, $12, $13,
+         $14, $15,
+         CASE WHEN $14 = 'published' THEN now() ELSE NULL END
+       )
+       RETURNING id`,
+      [
+        `${slugifyLibraryTitle(title)}-${randomUUID().slice(0, 8)}`,
+        title,
+        summary.slice(0, 400),
+        itemTypeFor({ contentMarkdown, video, attachment }),
+        contentMarkdown.slice(0, 20_000),
+        video?.storageKey ?? null,
+        video?.fileName ?? null,
+        video?.mimeType ?? null,
+        video?.fileSizeBytes ?? null,
+        attachment?.storageKey ?? null,
+        attachment?.fileName ?? null,
+        attachment?.mimeType ?? null,
+        attachment?.fileSizeBytes ?? null,
+        status,
+        visibility,
+      ],
+    );
+    const itemId = inserted.rows[0]?.id;
+
+    if (itemId && visibility === "selected_users") {
+      await client.query(
+        `INSERT INTO library_item_user_grants (library_item_id, user_id)
+         SELECT $1::uuid, unnest($2::uuid[])`,
+        [itemId, grantedUserIds],
+      );
+    }
+  });
 
   return redirectToAdmin("created");
 }

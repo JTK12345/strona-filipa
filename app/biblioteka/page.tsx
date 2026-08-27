@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
-import { getPublishedLibraryItems } from "@/app/lib/library";
+import { getAccessibleLibraryItems } from "@/app/lib/library";
 import { BackHomeLink } from "@/components/BackHomeLink";
 import { libraryTopics } from "@/content/courses";
 
@@ -23,7 +23,7 @@ function normalizeFilter(value: string | string[] | undefined) {
 }
 
 function itemMatchesTopic(
-  item: Awaited<ReturnType<typeof getPublishedLibraryItems>>[number],
+  item: Awaited<ReturnType<typeof getAccessibleLibraryItems>>[number],
   topic: string,
 ) {
   if (!topic) {
@@ -44,11 +44,11 @@ export default async function LibraryPage(props: PageProps<"/biblioteka">) {
     redirect("/logowanie?next=/biblioteka");
   }
 
-  if (!session.hasLibraryAccess) {
-    redirect("/dostep?required=1");
-  }
-
-  const items = await getPublishedLibraryItems();
+  const items = await getAccessibleLibraryItems(
+    session.userId,
+    session.role === "admin",
+    session.hasLibraryAccess,
+  );
   const query = normalizeFilter(searchParams.q).toLowerCase();
   const selectedType = normalizeFilter(searchParams.typ);
   const selectedTopic = normalizeFilter(searchParams.temat);

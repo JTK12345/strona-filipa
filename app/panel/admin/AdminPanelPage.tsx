@@ -144,6 +144,23 @@ function formatMaterialType(type: "video" | "note" | "file") {
   return "Instrukcja";
 }
 
+function formatMaterialVisibility(item: {
+  visibility: "all_access" | "selected_users";
+  grantedUserEmails: string[];
+}) {
+  if (item.visibility === "all_access") {
+    return "Wszyscy z dostępem";
+  }
+
+  if (item.grantedUserEmails.length === 0) {
+    return "Wybrane osoby";
+  }
+
+  return item.grantedUserEmails.length <= 2
+    ? item.grantedUserEmails.join(", ")
+    : `${item.grantedUserEmails.slice(0, 2).join(", ")} +${item.grantedUserEmails.length - 2}`;
+}
+
 export type AdminSection =
   | "kody"
   | "kursy"
@@ -209,6 +226,7 @@ export async function AdminPanelPage({
       : "";
   const selectedMaterial =
     libraryItems.find((item) => item.id === selectedMaterialId) ?? null;
+  const materialUsers = dashboard.users.filter((user) => user.role === "user");
   const codeSearch = searchParam(resolvedSearchParams, "codeSearch");
   const codeStatus = searchParam(resolvedSearchParams, "codeStatus");
   const codeScope = searchParam(resolvedSearchParams, "codeScope");
@@ -831,6 +849,39 @@ export async function AdminPanelPage({
                 <option value="draft">Szkic</option>
               </select>
             </label>
+            <fieldset className="admin-choice-group">
+              <legend>Widoczność</legend>
+              <label>
+                <input
+                  name="visibility"
+                  type="radio"
+                  value="all_access"
+                  defaultChecked
+                />
+                <span>Wszyscy z dostępem do biblioteki</span>
+              </label>
+              <label>
+                <input name="visibility" type="radio" value="selected_users" />
+                <span>Tylko wybrani użytkownicy</span>
+              </label>
+            </fieldset>
+            <fieldset className="admin-user-picker">
+              <legend>Wybrane osoby</legend>
+              {materialUsers.length > 0 ? (
+                materialUsers.map((user) => (
+                  <label key={user.id}>
+                    <input
+                      name="grantedUserIds"
+                      type="checkbox"
+                      value={user.id}
+                    />
+                    <span>{user.email}</span>
+                  </label>
+                ))
+              ) : (
+                <p>Brak kont użytkowników do wyboru.</p>
+              )}
+            </fieldset>
             <button type="submit" className="button-primary">
               Dodaj materiał
             </button>
@@ -883,6 +934,7 @@ export async function AdminPanelPage({
                   <th>Tytuł</th>
                   <th>Typ</th>
                   <th>Plik</th>
+                  <th>Widoczność</th>
                   <th>Status</th>
                   <th>Akcje</th>
                 </tr>
@@ -903,6 +955,7 @@ export async function AdminPanelPage({
                         Plik: {item.attachmentFileName ?? formatFileSize(item.attachmentFileSizeBytes)}
                       </small>
                     </td>
+                    <td>{formatMaterialVisibility(item)}</td>
                     <td>{item.status}</td>
                     <td>
                       <div className="admin-table-actions">
@@ -987,6 +1040,45 @@ export async function AdminPanelPage({
                     <option value="draft">Szkic</option>
                   </select>
                 </label>
+                <fieldset className="admin-choice-group">
+                  <legend>Widoczność</legend>
+                  <label>
+                    <input
+                      name="visibility"
+                      type="radio"
+                      value="all_access"
+                      defaultChecked={item.visibility === "all_access"}
+                    />
+                    <span>Wszyscy z dostępem do biblioteki</span>
+                  </label>
+                  <label>
+                    <input
+                      name="visibility"
+                      type="radio"
+                      value="selected_users"
+                      defaultChecked={item.visibility === "selected_users"}
+                    />
+                    <span>Tylko wybrani użytkownicy</span>
+                  </label>
+                </fieldset>
+                <fieldset className="admin-user-picker">
+                  <legend>Wybrane osoby</legend>
+                  {materialUsers.length > 0 ? (
+                    materialUsers.map((user) => (
+                      <label key={user.id}>
+                        <input
+                          name="grantedUserIds"
+                          type="checkbox"
+                          value={user.id}
+                          defaultChecked={item.grantedUserIds.includes(user.id)}
+                        />
+                        <span>{user.email}</span>
+                      </label>
+                    ))
+                  ) : (
+                    <p>Brak kont użytkowników do wyboru.</p>
+                  )}
+                </fieldset>
                 <button type="submit" className="button-primary">
                   Zapisz zmiany
                 </button>

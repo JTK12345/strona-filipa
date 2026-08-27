@@ -1685,6 +1685,63 @@ header nav a:hover::after {
   font-weight: 900;
 }
 
+.admin-choice-group,
+.admin-user-picker {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.admin-choice-group legend,
+.admin-user-picker legend {
+  padding: 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.admin-choice-group label,
+.admin-user-picker label {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 800;
+}
+
+.admin-choice-group input[type="radio"],
+.admin-user-picker input[type="checkbox"] {
+  width: 1.05rem;
+  min-height: 1.05rem;
+  accent-color: var(--accent);
+  box-shadow: none;
+}
+
+.admin-choice-group span,
+.admin-user-picker span {
+  color: var(--foreground);
+  font-size: 0.95rem;
+}
+
+.admin-choice-group:has(input[value="all_access"]:checked)
+  + .admin-user-picker {
+  display: none;
+}
+
+.admin-user-picker {
+  max-height: 15rem;
+  overflow: auto;
+  background: #fbfaf6;
+}
+
+.admin-user-picker p {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .admin-course-create {
   margin-top: 1.5rem;
 }

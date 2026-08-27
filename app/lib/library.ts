@@ -23,6 +23,9 @@ export type LibraryItem = {
   attachmentMimeType: string | null;
   attachmentFileSizeBytes: number | null;
   status: "draft" | "published" | "archived";
+  visibility: "all_access" | "selected_users";
+  grantedUserIds: string[];
+  grantedUserEmails: string[];
   position: number;
   publishedAt: Date | null;
   createdAt: Date;
@@ -48,6 +51,9 @@ type LibraryItemRow = {
   attachment_mime_type: string | null;
   attachment_file_size_bytes: string | number | null;
   status: "draft" | "published" | "archived";
+  visibility: "all_access" | "selected_users";
+  granted_user_ids: string[];
+  granted_user_emails: string[];
   position: number;
   published_at: Date | null;
   created_at: Date;
@@ -74,10 +80,52 @@ const librarySelect = `
     attachment_mime_type,
     attachment_file_size_bytes,
     status,
+    visibility,
+    COALESCE(
+      array_agg(library_item_user_grants.user_id::text ORDER BY users.email)
+        FILTER (WHERE library_item_user_grants.user_id IS NOT NULL),
+      ARRAY[]::text[]
+    ) AS granted_user_ids,
+    COALESCE(
+      array_agg(users.email ORDER BY users.email)
+        FILTER (WHERE users.email IS NOT NULL),
+      ARRAY[]::text[]
+    ) AS granted_user_emails,
     position,
     published_at,
     created_at
   FROM library_items
+  LEFT JOIN library_item_user_grants
+    ON library_item_user_grants.library_item_id = library_items.id
+  LEFT JOIN users
+    ON users.id = library_item_user_grants.user_id
+`;
+
+const libraryGroupBy = `
+  GROUP BY
+    library_items.id,
+    library_items.slug,
+    library_items.title,
+    library_items.summary,
+    library_items.item_type,
+    library_items.content_markdown,
+    library_items.storage_key,
+    library_items.file_name,
+    library_items.mime_type,
+    library_items.file_size_bytes,
+    library_items.video_storage_key,
+    library_items.video_file_name,
+    library_items.video_mime_type,
+    library_items.video_file_size_bytes,
+    library_items.attachment_storage_key,
+    library_items.attachment_file_name,
+    library_items.attachment_mime_type,
+    library_items.attachment_file_size_bytes,
+    library_items.status,
+    library_items.visibility,
+    library_items.position,
+    library_items.published_at,
+    library_items.created_at
 `;
 
 function mapLibraryItem(row: LibraryItemRow): LibraryItem {
@@ -108,6 +156,9 @@ function mapLibraryItem(row: LibraryItemRow): LibraryItem {
         ? null
         : Number(row.attachment_file_size_bytes),
     status: row.status,
+    visibility: row.visibility,
+    grantedUserIds: row.granted_user_ids,
+    grantedUserEmails: row.granted_user_emails,
     position: row.position,
     publishedAt: row.published_at,
     createdAt: row.created_at,
@@ -148,8 +199,35 @@ export function resolveLibraryStoragePath(
 export async function getPublishedLibraryItems() {
   const result = await queryDatabase<LibraryItemRow>(
     `${librarySelect}
-     WHERE status = 'published'
-     ORDER BY position, created_at DESC`,
+     WHERE library_items.status = 'published'
+     ${libraryGroupBy}
+     ORDER BY library_items.position, library_items.created_at DESC`,
+  );
+
+  return result.rows.map(mapLibraryItem);
+}
+
+export async function getAccessibleLibraryItems(
+  userId: string,
+  isAdmin: boolean,
+  hasLibraryAccess: boolean,
+) {
+  const result = await queryDatabase<LibraryItemRow>(
+    `${librarySelect}
+     WHERE library_items.status = 'published'
+       AND (
+         $2::boolean
+         OR ($3::boolean AND library_items.visibility = 'all_access')
+         OR EXISTS (
+           SELECT 1
+           FROM library_item_user_grants grants
+           WHERE grants.library_item_id = library_items.id
+             AND grants.user_id = $1
+         )
+       )
+     ${libraryGroupBy}
+     ORDER BY library_items.position, library_items.created_at DESC`,
+    [userId, isAdmin, hasLibraryAccess],
   );
 
   return result.rows.map(mapLibraryItem);
@@ -158,10 +236,41 @@ export async function getPublishedLibraryItems() {
 export async function getPublishedLibraryItemBySlug(slug: string) {
   const result = await queryDatabase<LibraryItemRow>(
     `${librarySelect}
-     WHERE slug = $1
-       AND status = 'published'
+     WHERE library_items.slug = $1
+       AND library_items.status = 'published'
+     ${libraryGroupBy}
      LIMIT 1`,
     [slug],
+  );
+
+  const item = result.rows[0];
+
+  return item ? mapLibraryItem(item) : null;
+}
+
+export async function getAccessibleLibraryItemBySlug(
+  slug: string,
+  userId: string,
+  isAdmin: boolean,
+  hasLibraryAccess: boolean,
+) {
+  const result = await queryDatabase<LibraryItemRow>(
+    `${librarySelect}
+     WHERE library_items.slug = $1
+       AND library_items.status = 'published'
+       AND (
+         $3::boolean
+         OR ($4::boolean AND library_items.visibility = 'all_access')
+         OR EXISTS (
+           SELECT 1
+           FROM library_item_user_grants grants
+           WHERE grants.library_item_id = library_items.id
+             AND grants.user_id = $2
+         )
+       )
+     ${libraryGroupBy}
+     LIMIT 1`,
+    [slug, userId, isAdmin, hasLibraryAccess],
   );
 
   const item = result.rows[0];
@@ -172,8 +281,9 @@ export async function getPublishedLibraryItemBySlug(slug: string) {
 export async function getAdminLibraryItems() {
   const result = await queryDatabase<LibraryItemRow>(
     `${librarySelect}
-     WHERE status <> 'archived'
-     ORDER BY position, created_at DESC
+     WHERE library_items.status <> 'archived'
+     ${libraryGroupBy}
+     ORDER BY library_items.position, library_items.created_at DESC
      LIMIT 200`,
   );
 
@@ -183,6 +293,9 @@ export async function getAdminLibraryItems() {
 export async function getLibraryItemMedia(
   itemId: string,
   kind: "video" | "attachment",
+  userId: string,
+  isAdmin: boolean,
+  hasLibraryAccess: boolean,
 ) {
   const result = await queryDatabase<{
     storage_key: string;
@@ -197,11 +310,21 @@ export async function getLibraryItemMedia(
      WHERE id = $1
        AND status = 'published'
        AND (
+         $3::boolean
+         OR ($5::boolean AND visibility = 'all_access')
+         OR EXISTS (
+           SELECT 1
+           FROM library_item_user_grants grants
+           WHERE grants.library_item_id = library_items.id
+             AND grants.user_id = $4
+         )
+       )
+       AND (
          ($2 = 'video' AND video_storage_key IS NOT NULL)
          OR ($2 = 'attachment' AND attachment_storage_key IS NOT NULL)
        )
      LIMIT 1`,
-    [itemId, kind],
+    [itemId, kind, isAdmin, userId, hasLibraryAccess],
   );
 
   return result.rows[0] ?? null;
