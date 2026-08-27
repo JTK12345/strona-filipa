@@ -549,7 +549,7 @@ header nav a:hover::after {
 
 .process-photo-card__image {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
 }
 
@@ -606,15 +606,6 @@ header nav a:hover::after {
   background: var(--warm);
 }
 
-.offer-card__image {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  margin: -0.2rem -0.2rem 1rem;
-  border-radius: 8px;
-  background: var(--soft);
-}
-
 .premium-panel,
 .contact-hub,
 .page-hero,
@@ -628,6 +619,42 @@ header nav a:hover::after {
   padding: 2rem;
   background: var(--deep);
   color: #ffffff;
+}
+
+.stationary-consultation-highlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1.25rem, 3vw, 2rem);
+  align-items: center;
+  margin-top: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: clamp(1.2rem, 2.6vw, 2rem);
+  box-shadow: 0 14px 34px rgba(16, 35, 30, 0.06);
+}
+
+.stationary-consultation-highlight h3 {
+  margin-top: 0.6rem;
+  font-size: clamp(1.55rem, 2.5vw, 2.35rem);
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.stationary-consultation-highlight p {
+  max-width: 660px;
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.stationary-consultation-highlight__image {
+  position: relative;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--soft);
 }
 
 .premium-panel .eyebrow,
@@ -2615,6 +2642,10 @@ header nav a:hover::after {
     grid-template-columns: minmax(0, 0.95fr) minmax(340px, 0.65fr);
   }
 
+  .stationary-consultation-highlight {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 0.7fr);
+  }
+
   .auth-shell {
     grid-template-columns: 1.1fr 0.9fr;
   }
@@ -2723,6 +2754,14 @@ select:focus {
 
   .process-photo-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stationary-consultation-highlight {
+    grid-template-columns: 1fr;
+  }
+
+  .stationary-consultation-highlight__image {
+    min-height: 300px;
   }
 
   .appointment-contact-panel {

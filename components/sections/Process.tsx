@@ -35,6 +35,7 @@ const processPhotos = [
     src: "/files/filip-functional-assessment.jpg",
     alt: "Ocena funkcjonalna sylwetki i postawy w gabinecie",
     label: "Ocena funkcjonalna",
+    imageClassName: "object-cover object-top",
     description:
       "Sprawdzenie postawy, ruchu i obciążeń zamiast patrzenia tylko na miejsce bólu.",
   },
@@ -66,7 +67,7 @@ export function Process() {
                   alt={photo.alt}
                   fill
                   unoptimized
-                  className="object-cover"
+                  className={photo.imageClassName ?? "object-cover"}
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
               </div>
