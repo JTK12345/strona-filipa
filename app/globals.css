@@ -954,20 +954,30 @@ header nav a:hover::after {
   background: linear-gradient(180deg, #ffffff 0%, var(--background) 100%);
 }
 
-.appointment-contact-panel {
+.appointment-hero {
   display: grid;
-  gap: clamp(2rem, 5vw, 4rem);
-  align-items: start;
+  align-items: end;
+  min-height: 260px;
   margin-top: 1.75rem;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #ffffff;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.6)),
+    url("/files/att.oTsQHWak9WIIsGRGr23Pkmojcr5B92Ekr7vBzzD2pms.jpg") center/cover;
   padding: clamp(1.5rem, 4vw, 3rem);
   box-shadow: 0 16px 36px rgba(16, 35, 30, 0.05);
 }
 
+.appointment-contact-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: clamp(1.25rem, 3vw, 2rem);
+  align-items: start;
+  margin-top: 1.25rem;
+}
+
 .appointment-copy h1 {
-  max-width: 620px;
+  max-width: 720px;
   margin: 0;
   font-size: clamp(2.4rem, 5vw, 4.6rem);
   font-weight: 900;
@@ -976,24 +986,26 @@ header nav a:hover::after {
 }
 
 .appointment-copy p {
-  max-width: 620px;
+  max-width: 680px;
   margin-top: 1.4rem;
-  color: var(--muted);
+  color: #415049;
   font-size: 1.08rem;
   line-height: 1.8;
 }
 
+.appointment-form-panel,
 .appointment-contact-list {
   display: grid;
-  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(16, 35, 30, 0.05);
 }
 
 .appointment-form {
   display: grid;
   gap: 1rem;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 1.5rem;
-  margin-bottom: 0.25rem;
+  padding: clamp(1.35rem, 3vw, 2rem);
 }
 
 .appointment-form h2 {
@@ -1006,6 +1018,10 @@ header nav a:hover::after {
 .appointment-form label {
   display: grid;
   gap: 0.45rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
 }
 
 .appointment-form input,
@@ -1020,6 +1036,7 @@ header nav a:hover::after {
 }
 
 .appointment-form textarea {
+  min-height: 9rem;
   resize: vertical;
 }
 
@@ -1027,7 +1044,7 @@ header nav a:hover::after {
   display: grid;
   gap: 0.75rem;
   border-top: 1px solid var(--border);
-  padding: 1.25rem 0;
+  padding: 1.2rem 1.25rem;
 }
 
 .appointment-contact-list section:first-child {
@@ -1036,7 +1053,7 @@ header nav a:hover::after {
 }
 
 .appointment-contact-list section:last-child {
-  padding-bottom: 0;
+  padding-bottom: 1.2rem;
 }
 
 .appointment-contact-list span {
@@ -2399,6 +2416,7 @@ select:focus {
   }
 
   .appointment-contact-panel {
+    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
 

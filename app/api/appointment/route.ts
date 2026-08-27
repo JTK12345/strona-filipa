@@ -79,7 +79,23 @@ export async function POST(request: Request) {
   const topic = normalizeText(formData.get("topic"), 160);
   const message = normalizeMessage(formData.get("message"));
 
-  if (name.length < 2 || !isValidEmail(email) || message.length < 10) {
+  if (name.length < 2) {
+    return redirectToAppointment("name");
+  }
+
+  if (!isValidEmail(email)) {
+    return redirectToAppointment("email");
+  }
+
+  if (message.length < 3) {
+    return redirectToAppointment("message");
+  }
+
+  if (phone && !/^[+]?[0-9()\s-]{6,20}$/.test(phone)) {
+    return redirectToAppointment("phone");
+  }
+
+  if (topic.length > 160) {
     return redirectToAppointment("invalid");
   }
 

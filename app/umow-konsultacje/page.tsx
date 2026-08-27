@@ -9,7 +9,11 @@ export const metadata: Metadata = {
 
 const statusMessages: Record<string, string> = {
   sent: "Zgłoszenie zostało zapisane. Odpowiem na podany kontakt.",
-  invalid: "Uzupełnij imię, poprawny e-mail i krótką wiadomość.",
+  invalid: "Sprawdź formularz i spróbuj ponownie.",
+  name: "Wpisz imię lub krótką nazwę kontaktu.",
+  email: "Wpisz poprawny adres e-mail.",
+  phone: "Wpisz poprawny numer telefonu albo zostaw to pole puste.",
+  message: "Wiadomość musi mieć minimum 3 znaki.",
   rate: "Wysłano zbyt wiele zgłoszeń. Odczekaj kilka minut.",
   server: "Nie udało się zapisać zgłoszenia. Spróbuj ponownie albo napisz bezpośrednio.",
 };
@@ -26,7 +30,7 @@ export default async function AppointmentPage(
       <div className="container-main">
         <BackHomeLink />
 
-        <div className="appointment-contact-panel">
+        <div className="appointment-hero">
           <div className="appointment-copy">
             <span className="eyebrow">Konsultacja</span>
             <h1>Umów konsultację</h1>
@@ -35,8 +39,10 @@ export default async function AppointmentPage(
               kontaktu. Zgłoszenie trafi do panelu administratora.
             </p>
           </div>
+        </div>
 
-          <div className="appointment-contact-list">
+        <div className="appointment-contact-panel">
+          <div className="appointment-form-panel">
             <form
               action="/api/appointment"
               method="post"
@@ -91,7 +97,9 @@ export default async function AppointmentPage(
                 Wyślij zgłoszenie
               </button>
             </form>
+          </div>
 
+          <div className="appointment-contact-list">
             <section>
               <span>Telefon</span>
               <strong>{contactData.phone}</strong>
