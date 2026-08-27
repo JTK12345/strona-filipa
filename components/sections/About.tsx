@@ -28,26 +28,26 @@ export function About() {
           </h2>
           <div className="space-y-5 text-[1.02rem] leading-8 text-[var(--muted)]">
             <p>
-              Filip łączy wiedzę lekarską, terapię manualną, ocenę
-              funkcjonalną i trening zdrowia. Dzięki temu patrzy na problem
-              szerzej: przez objawy, ruch, obciążenia, styl życia i możliwości
-              pacjenta.
+              Filip pracuje na styku wiedzy lekarskiej, terapii manualnej i
+              treningu. Dzięki temu nie ogranicza się do miejsca bólu, tylko
+              sprawdza, co może stać za problemem: objawy, ruch, obciążenia,
+              styl życia i aktualne możliwości pacjenta.
             </p>
             <p>
-              W praktyce oznacza to spokojny wywiad, ocenę ruchu, pracę
-              manualną tam, gdzie ma sens, oraz jasny plan ćwiczeń lub zmian do
-              wdrożenia po spotkaniu.
+              W praktyce oznacza to konkretny wywiad, ocenę funkcjonalną,
+              pracę manualną tam, gdzie ma sens, oraz plan ćwiczeń lub zmian,
+              który można realnie wdrożyć po spotkaniu.
             </p>
             <p>
-              Ważną częścią współpracy jest edukacja pacjenta: zrozumienie, co
-              może podtrzymywać dolegliwości i jak wracać do aktywności bez
-              przypadkowych, oderwanych od siebie zaleceń.
+              Ważna jest też edukacja pacjenta: zrozumienie mechanizmu
+              dolegliwości, sygnałów ostrzegawczych i sposobu powrotu do
+              aktywności bez przypadkowych, oderwanych od siebie zaleceń.
             </p>
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             <div className="card-surface p-5">
-              <p className="font-semibold">Medyczne myślenie</p>
+              <p className="font-semibold">Medyczne podejście</p>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Bez obietnic na skróty i bez ignorowania czerwonych flag.</p>
             </div>
             <div className="card-surface p-5">
