@@ -1,37 +1,47 @@
+import Image from "next/image";
+
 export function About() {
   return (
     <section id="o-mnie" className="section">
       <div className="container-main grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="about-panel">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--accent)]">
-              Filip Proniewicz
-            </p>
-            <p className="mt-4 text-2xl font-semibold leading-snug">
-              Trener zdrowia, terapeuta manualny, trener personalny, lekarz.
-            </p>
+          <Image
+            src="/files/filip-portrait.png"
+            alt="Filip Proniewicz, lekarz i terapeuta manualny"
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 38vw"
+          />
+          <div className="about-panel__caption">
+            <p>Filip Proniewicz</p>
+            <span>
+              Lekarz · terapeuta manualny · trener zdrowia · trener personalny
+            </span>
           </div>
         </div>
 
         <div>
           <span className="eyebrow">O specjaliście</span>
           <h2 className="section-title">
-            Edukacja wspiera pracę indywidualną, ale jej nie zastępuje.
+            Szeroka analiza problemu, nie tylko miejsca bólu.
           </h2>
           <div className="space-y-5 text-[1.02rem] leading-8 text-[var(--muted)]">
             <p>
-              Świadomy Profil Ciała łączy pracę gabinetową, konsultacje online,
-              trening zdrowia i edukację. Materiały online pomagają wrócić do
-              zaleceń oraz utrzymać ciągłość pracy między spotkaniami.
+              Filip łączy wiedzę lekarską, terapię manualną, ocenę
+              funkcjonalną i trening zdrowia. Dzięki temu patrzy na problem
+              szerzej: przez objawy, ruch, obciążenia, styl życia i możliwości
+              pacjenta.
             </p>
             <p>
-              Materiały nie zastępują indywidualnej konsultacji w sytuacjach
-              wymagających diagnostyki. Mają pomagać w profilaktyce, budowaniu
-              świadomości ruchu i utrzymaniu efektów pracy.
+              W praktyce oznacza to spokojny wywiad, ocenę ruchu, pracę
+              manualną tam, gdzie ma sens, oraz jasny plan ćwiczeń lub zmian do
+              wdrożenia po spotkaniu.
             </p>
             <p>
-              Celem pozostaje samodzielność: lepsze rozumienie ciała, spokojniejszy
-              powrót do aktywności i mniej przypadkowe podejście do ćwiczeń.
+              Ważną częścią współpracy jest edukacja pacjenta: zrozumienie, co
+              może podtrzymywać dolegliwości i jak wracać do aktywności bez
+              przypadkowych, oderwanych od siebie zaleceń.
             </p>
           </div>
 

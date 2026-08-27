@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   getCourseStatusLabel,
@@ -26,6 +27,18 @@ export async function Services() {
         <div className="mt-10 grid gap-5 lg:grid-cols-2">
           {services.map((service) => (
             <article key={service.title} className="offer-card">
+              {service.title === "Konsultacja stacjonarna" ? (
+                <div className="offer-card__image">
+                  <Image
+                    src="/files/filip-manual-therapy.jpg"
+                    alt="Terapia manualna podczas konsultacji stacjonarnej"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                </div>
+              ) : null}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <h3 className="text-2xl font-semibold">{service.title}</h3>
                 <span className="price-pill">{service.price}</span>

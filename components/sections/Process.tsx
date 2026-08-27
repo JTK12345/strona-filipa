@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const steps = [
   {
     title: "Ocena problemu",
@@ -21,6 +23,23 @@ const steps = [
   },
 ];
 
+const processPhotos = [
+  {
+    src: "/files/filip-consultation-interview.jpg",
+    alt: "Wywiad i analiza problemu podczas konsultacji",
+    label: "Wywiad i analiza",
+    description:
+      "Rozmowa, zebranie kontekstu i ustalenie, co najbardziej wpływa na problem.",
+  },
+  {
+    src: "/files/filip-functional-assessment.jpg",
+    alt: "Ocena funkcjonalna sylwetki i postawy w gabinecie",
+    label: "Ocena funkcjonalna",
+    description:
+      "Sprawdzenie postawy, ruchu i obciążeń zamiast patrzenia tylko na miejsce bólu.",
+  },
+];
+
 export function Process() {
   return (
     <section className="section">
@@ -36,6 +55,26 @@ export function Process() {
               <h3 className="mt-4 text-xl font-bold leading-snug">{step.title}</h3>
               <p className="mt-3 leading-7 text-[var(--muted)]">{step.description}</p>
             </article>
+          ))}
+        </div>
+        <div className="process-photo-grid">
+          {processPhotos.map((photo) => (
+            <figure key={photo.src} className="process-photo-card">
+              <div className="process-photo-card__image">
+                <Image
+                  src={photo.src}
+                  alt={photo.alt}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+              </div>
+              <figcaption>
+                <strong>{photo.label}</strong>
+                <span>{photo.description}</span>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>

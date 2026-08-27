@@ -531,6 +531,46 @@ header nav a:hover::after {
   background: var(--accent);
 }
 
+.process-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.process-photo-card {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(16, 35, 30, 0.06);
+}
+
+.process-photo-card__image {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+.process-photo-card figcaption {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+}
+
+.process-photo-card strong {
+  color: var(--foreground);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.process-photo-card span {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
 .section-heading-row {
   display: flex;
   align-items: end;
@@ -564,6 +604,15 @@ header nav a:hover::after {
   height: 0.5rem;
   border-radius: 2px;
   background: var(--warm);
+}
+
+.offer-card__image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  margin: -0.2rem -0.2rem 1rem;
+  border-radius: 8px;
+  background: var(--soft);
 }
 
 .premium-panel,
@@ -945,16 +994,45 @@ header nav a:hover::after {
 }
 
 .about-panel {
+  position: relative;
   display: flex;
   min-height: 420px;
   align-items: end;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background:
-    linear-gradient(180deg, rgba(47, 93, 80, 0.08), rgba(255, 255, 255, 0.72)),
-    url("/files/att.oTsQHWak9WIIsGRGr23Pkmojcr5B92Ekr7vBzzD2pms.jpg") center/cover;
-  padding: 2rem;
+  background: var(--soft);
   box-shadow: 0 18px 42px rgba(16, 35, 30, 0.08);
+}
+
+.about-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 46%, rgba(16, 35, 30, 0.66));
+}
+
+.about-panel__caption {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 2rem;
+  color: #ffffff;
+}
+
+.about-panel__caption p {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.about-panel__caption span {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .appointment-page {
@@ -2641,6 +2719,10 @@ select:focus {
 
   .topic-grid .check-row {
     padding-right: 0;
+  }
+
+  .process-photo-grid {
+    grid-template-columns: 1fr;
   }
 
   .appointment-contact-panel {
