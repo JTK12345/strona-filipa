@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { ScrollProgress } from "@/components/ScrollProgress";
 import { TurnstileScript } from "@/components/TurnstileScript";
 import { SessionRevalidator } from "@/components/auth/SessionRevalidator";
+import { HashScroller } from "@/components/HashScroller";
 import { siteConfig } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default async function RootLayout({
         <div className="site-shell">
           <Navbar />
           <SessionRevalidator />
+          <HashScroller />
           <main>{children}</main>
           <Footer />
         </div>

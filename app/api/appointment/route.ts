@@ -19,7 +19,7 @@ const maxAppointmentBodyBytes = 12 * 1024;
 function redirectToAppointment(result: string) {
   return new NextResponse(null, {
     status: 303,
-    headers: { Location: `/umow-konsultacje?status=${result}` },
+    headers: { Location: `/umow-konsultacje?status=${result}#formularz` },
   });
 }
 

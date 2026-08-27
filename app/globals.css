@@ -19,6 +19,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 110px;
 }
 
 body {
@@ -1097,6 +1098,30 @@ header nav a:hover::after {
   line-height: 1.65;
 }
 
+.appointment-success {
+  display: grid;
+  gap: 0.25rem;
+  border: 1px solid rgba(47, 93, 80, 0.26);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(47, 93, 80, 0.12), rgba(168, 184, 153, 0.12)),
+    #ffffff;
+  color: var(--accent);
+  padding: 1rem;
+}
+
+.appointment-success strong {
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.appointment-success p {
+  margin: 0;
+  color: #415049;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
 .appointment-form label {
   display: grid;
   gap: 0.45rem;
@@ -1155,6 +1180,11 @@ header nav a:hover::after {
 .appointment-contact-list .button-secondary {
   width: fit-content;
   min-width: 11rem;
+}
+
+#formularz,
+#kontakt {
+  scroll-margin-top: 120px;
 }
 
 .access-page {
@@ -1430,6 +1460,50 @@ header nav a:hover::after {
   margin-top: 1rem;
 }
 
+.panel-admin-notice,
+.admin-notice-bubble {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+  border: 1px solid rgba(47, 93, 80, 0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(47, 93, 80, 0.12), rgba(168, 184, 153, 0.12)),
+    #ffffff;
+  color: var(--foreground);
+  padding: 1rem 1.1rem;
+  text-decoration: none;
+  box-shadow: 0 16px 36px rgba(16, 35, 30, 0.06);
+}
+
+.panel-admin-notice span,
+.admin-notice-bubble span {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.panel-admin-notice strong,
+.admin-notice-bubble strong {
+  display: inline-grid;
+  min-width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.panel-admin-notice small,
+.admin-notice-bubble small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .panel-layout {
   margin-top: 1.5rem;
 }
@@ -1595,6 +1669,9 @@ header nav a:hover::after {
 }
 
 .admin-tabs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   flex: 0 0 auto;
   color: var(--muted);
   font-size: 0.88rem;
@@ -1604,6 +1681,18 @@ header nav a:hover::after {
 
 .admin-tabs a:hover {
   color: var(--accent);
+}
+
+.admin-tab-badge {
+  display: inline-grid;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .admin-section {

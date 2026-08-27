@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { HashScrollLink } from "@/components/HashScrollLink";
 import { siteConfig } from "@/content/site";
 
 const publicLinks = [
@@ -37,13 +38,13 @@ export async function Navbar() {
 
         <nav className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-3 xl:order-none xl:w-auto xl:flex-nowrap xl:gap-5">
           {links.map((link) => (
-            <Link
+            <HashScrollLink
               key={link.href}
-              href={link.href}
+              href={link.href as `/${string}#${string}`}
               className="whitespace-nowrap text-[0.92rem] font-semibold text-[var(--foreground)] transition-opacity hover:opacity-70"
             >
               {link.label}
-            </Link>
+            </HashScrollLink>
           ))}
         </nav>
 

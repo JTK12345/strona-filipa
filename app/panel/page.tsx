@@ -6,6 +6,7 @@ import {
   getAccessibleCourses,
   getCourseStatusLabel,
 } from "@/app/lib/courses";
+import { listContactSubmissions } from "@/app/lib/contact-submissions";
 import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
@@ -20,10 +21,13 @@ export default async function PanelPage() {
     redirect("/logowanie?next=/panel");
   }
 
-  const courses = await getAccessibleCourses(
-    session.userId,
-    session.role === "admin",
-  );
+  const [courses, submissions] = await Promise.all([
+    getAccessibleCourses(session.userId, session.role === "admin"),
+    session.role === "admin" ? listContactSubmissions() : Promise.resolve([]),
+  ]);
+  const newSubmissionCount = submissions.filter(
+    (submission) => submission.status === "new",
+  ).length;
 
   return (
     <section className="panel-page">
@@ -45,6 +49,17 @@ export default async function PanelPage() {
           </form>
         </div>
 
+        {session.role === "admin" && newSubmissionCount > 0 ? (
+          <Link
+            href="/panel/admin/zgloszenia?submissionStatus=new"
+            className="panel-admin-notice"
+          >
+            <span>Nowe zgłoszenia</span>
+            <strong>{newSubmissionCount}</strong>
+            <small>Otwórz panel zgłoszeń</small>
+          </Link>
+        ) : null}
+
         <div className="panel-layout">
           <aside className="panel-sidebar">
             <a href="#moje-kursy">Moje materiały</a>
@@ -53,7 +68,7 @@ export default async function PanelPage() {
               <Link href="/biblioteka">Biblioteka</Link>
             ) : null}
             {session.role === "admin" ? (
-              <Link href="/panel/admin/kody">Administracja</Link>
+              <Link href="/panel/admin/zgloszenia">Administracja</Link>
             ) : null}
           </aside>
 

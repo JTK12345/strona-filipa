@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
+import { HashScrollLink } from "@/components/HashScrollLink";
 import { contactData } from "@/content/contact";
 import { siteConfig } from "@/content/site";
 
@@ -35,9 +36,9 @@ export async function Footer() {
             <Link className="block hover:text-[var(--foreground)]" href="/#faq">
               FAQ
             </Link>
-            <Link className="block hover:text-[var(--foreground)]" href="/#kontakt">
+            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#kontakt">
               Kontakt
-            </Link>
+            </HashScrollLink>
             {session ? (
               <Link className="block hover:text-[var(--foreground)]" href="/panel">
                 Panel

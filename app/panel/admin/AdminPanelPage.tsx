@@ -289,6 +289,9 @@ export async function AdminPanelPage({
 
     return matchesSearch && matchesStatus;
   });
+  const newSubmissionCount = submissions.filter(
+    (submission) => submission.status === "new",
+  ).length;
 
   return (
     <section className="admin-page">
@@ -308,11 +311,27 @@ export async function AdminPanelPage({
           </Link>
         </header>
 
+        {newSubmissionCount > 0 ? (
+          <Link
+            href="/panel/admin/zgloszenia?submissionStatus=new"
+            className="admin-notice-bubble"
+          >
+            <span>Nowe zgłoszenia z formularza</span>
+            <strong>{newSubmissionCount}</strong>
+            <small>Przejdź do obsługi</small>
+          </Link>
+        ) : null}
+
         <nav className="admin-tabs" aria-label="Sekcje administracyjne">
           <Link href="/panel/admin/kody">Kody dostępu</Link>
           <Link href="/panel/admin/kursy">Kursy</Link>
           <Link href="/panel/admin/materialy">Materiały</Link>
-          <Link href="/panel/admin/zgloszenia">Zgłoszenia</Link>
+          <Link href="/panel/admin/zgloszenia">
+            Zgłoszenia
+            {newSubmissionCount > 0 ? (
+              <span className="admin-tab-badge">{newSubmissionCount}</span>
+            ) : null}
+          </Link>
           <Link href="/panel/admin/uzytkownicy">Użytkownicy</Link>
           <Link href="/panel/admin/dostepy">Nadaj dostęp</Link>
           <Link href="/panel/admin/audyt">Audyt</Link>

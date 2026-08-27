@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 const statusMessages: Record<string, string> = {
-  sent: "Zgłoszenie zostało zapisane. Odpowiem na podany kontakt.",
+  sent: "Zgłoszenie zostało wysłane. Odpowiedź przyjdzie na podany kontakt.",
   invalid: "Sprawdź formularz i spróbuj ponownie.",
   name: "Wpisz imię lub krótką nazwę kontaktu.",
   email: "Wpisz poprawny adres e-mail.",
@@ -88,9 +88,16 @@ export default async function AppointmentPage(
                 </p>
               </div>
               {statusMessage ? (
-                <p className={status === "sent" ? "auth-notice" : "auth-error"}>
-                  {statusMessage}
-                </p>
+                status === "sent" ? (
+                  <div className="appointment-success" role="status">
+                    <strong>Zgłoszenie wysłane</strong>
+                    <p>{statusMessage}</p>
+                  </div>
+                ) : (
+                  <p className="auth-error" role="alert">
+                    {statusMessage}
+                  </p>
+                )
               ) : null}
               <label>
                 <span>Imię</span>
