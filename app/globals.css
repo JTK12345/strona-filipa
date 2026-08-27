@@ -2336,6 +2336,40 @@ header nav a:hover::after {
   background: #ffffff;
 }
 
+.error-page {
+  display: grid;
+  min-height: calc(100vh - 92px);
+  align-items: center;
+  padding: 5rem 0;
+}
+
+.error-page__content {
+  max-width: 680px;
+}
+
+.error-page__content h1 {
+  margin: 0;
+  max-width: 620px;
+  font-size: clamp(2.35rem, 6vw, 4.35rem);
+  font-weight: 900;
+  line-height: 1.04;
+}
+
+.error-page__content p {
+  max-width: 620px;
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.error-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
 .legal-document {
   max-width: 850px;
 }
@@ -2790,6 +2824,21 @@ select:focus {
 
   .appointment-contact-list .button-primary,
   .appointment-contact-list .button-secondary {
+    width: 100%;
+  }
+
+  .error-page {
+    min-height: calc(100vh - 76px);
+    padding: 3.5rem 0;
+  }
+
+  .error-page__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .error-page__actions .button-primary,
+  .error-page__actions .button-secondary {
     width: 100%;
   }
 

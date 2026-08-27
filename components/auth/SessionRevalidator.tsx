@@ -33,10 +33,7 @@ export function SessionRevalidator() {
       const data = (await response.json()) as { authenticated?: boolean };
       const authenticated = Boolean(data.authenticated);
 
-      if (
-        lastState.current !== authenticated &&
-        (lastState.current !== null || !authenticated)
-      ) {
+      if (lastState.current !== null && lastState.current !== authenticated) {
         router.refresh();
       }
 
