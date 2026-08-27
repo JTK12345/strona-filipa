@@ -21,21 +21,21 @@ export async function Footer() {
         <div>
           <p className="font-semibold">Strona</p>
           <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-            <Link className="block hover:text-[var(--foreground)]" href="/">
+            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/">
               Start
-            </Link>
-            <Link className="block hover:text-[var(--foreground)]" href="/#uslugi">
+            </HashScrollLink>
+            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#uslugi">
               Usługi
-            </Link>
+            </HashScrollLink>
             <Link className="block hover:text-[var(--foreground)]" href="/kursy">
               Materiały
             </Link>
-            <Link className="block hover:text-[var(--foreground)]" href="/#o-mnie">
+            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#o-mnie">
               O mnie
-            </Link>
-            <Link className="block hover:text-[var(--foreground)]" href="/#faq">
+            </HashScrollLink>
+            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#faq">
               FAQ
-            </Link>
+            </HashScrollLink>
             <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#kontakt">
               Kontakt
             </HashScrollLink>

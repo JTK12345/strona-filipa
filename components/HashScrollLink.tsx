@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 
 type HashScrollLinkProps = ComponentProps<typeof Link> & {
-  href: `/${string}#${string}` | `#${string}`;
+  href: ComponentProps<typeof Link>["href"];
 };
 
 export function HashScrollLink({
@@ -22,10 +22,21 @@ export function HashScrollLink({
           return;
         }
 
-        const hrefValue = String(href);
+        if (typeof href !== "string") {
+          return;
+        }
+
+        const hrefValue = href;
         const [targetPath, hash] = hrefValue.split("#");
         const currentPath = window.location.pathname;
         const normalizedTargetPath = targetPath || currentPath;
+
+        if (!hash && normalizedTargetPath === currentPath) {
+          event.preventDefault();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.history.pushState(null, "", currentPath);
+          return;
+        }
 
         if (hash && normalizedTargetPath === currentPath) {
           event.preventDefault();

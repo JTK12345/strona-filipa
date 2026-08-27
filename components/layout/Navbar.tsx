@@ -40,7 +40,7 @@ export async function Navbar() {
           {links.map((link) => (
             <HashScrollLink
               key={link.href}
-              href={link.href as `/${string}#${string}`}
+              href={link.href}
               className="whitespace-nowrap text-[0.92rem] font-semibold text-[var(--foreground)] transition-opacity hover:opacity-70"
             >
               {link.label}
