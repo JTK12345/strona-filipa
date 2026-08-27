@@ -1,9 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  getCourseStatusLabel,
-  getPublishedCourses,
-} from "@/app/lib/courses";
+import { getPublishedCourses } from "@/app/lib/courses";
 import { services } from "@/content/services";
 
 export async function Services() {
@@ -76,13 +73,10 @@ export async function Services() {
           <div className="grid gap-4 lg:grid-cols-3">
             {courses.map((course) => (
               <article key={course.slug} className="course-mini-card">
-                <p className="text-sm font-bold text-[var(--accent)]">
-                  {getCourseStatusLabel(course)}
-                </p>
                 <h4 className="mt-3 text-xl font-bold">{course.title}</h4>
                 <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{course.description}</p>
                 <p className="mt-5 text-sm font-bold">
-                  {course.duration} · {course.level} · dostęp po kodzie
+                  {course.duration} · {course.level}
                 </p>
               </article>
             ))}
