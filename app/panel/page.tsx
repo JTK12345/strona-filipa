@@ -10,7 +10,7 @@ import { listContactSubmissions } from "@/app/lib/contact-submissions";
 import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
-  title: "Panel materiałów | Świadomy Profil Ciała",
+  title: "Panel kursów | Świadomy Profil Ciała",
   description: "Panel dostępu do kursów, filmów i materiałów edukacyjnych.",
 };
 
@@ -35,8 +35,8 @@ export default async function PanelPage() {
         <BackHomeLink />
         <div className="panel-topbar">
           <div>
-            <span className="eyebrow">Panel materiałów</span>
-            <h1>Twoje materiały</h1>
+            <span className="eyebrow">Panel kursów</span>
+            <h1>Twoje kursy</h1>
             <p>
               Zalogowano jako <strong>{session.email}</strong>.
             </p>
@@ -62,10 +62,10 @@ export default async function PanelPage() {
 
         <div className="panel-layout">
           <aside className="panel-sidebar">
-            <a href="#moje-kursy">Moje materiały</a>
+            <a href="#moje-kursy">Moje kursy</a>
             <Link href="/dostep">Wpisz kod</Link>
             {session.hasLibraryAccess ? (
-              <Link href="/biblioteka">Biblioteka</Link>
+              <Link href="/biblioteka">Biblioteka materiałów</Link>
             ) : null}
             {session.role === "admin" ? (
               <Link href="/panel/admin/zgloszenia">Administracja</Link>
@@ -76,11 +76,11 @@ export default async function PanelPage() {
             <section id="moje-kursy">
               <div className="panel-section-heading">
                 <div>
-                  <p className="meta-label">Dostępne materiały</p>
-                  <h2>Moje kursy i materiały</h2>
+                  <p className="meta-label">Dostępne kursy</p>
+                  <h2>Moje kursy</h2>
                 </div>
                 <Link href="/kursy" className="button-secondary">
-                  Katalog materiałów
+                  Katalog kursów
                 </Link>
               </div>
 
@@ -112,7 +112,7 @@ export default async function PanelPage() {
                   <span className="eyebrow">Brak aktywnego dostępu</span>
                   <h2>Nie masz jeszcze aktywowanego kodu.</h2>
                   <p>
-                    Wpisz otrzymany kod dostępu. Po aktywacji materiały
+                    Wpisz otrzymany kod dostępu. Po aktywacji kursy
                     pojawią się tutaj automatycznie.
                   </p>
                   <Link href="/dostep" className="button-primary">

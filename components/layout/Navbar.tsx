@@ -7,7 +7,7 @@ const publicLinks = [
   { href: "/", label: "Start" },
   { href: "/#o-mnie", label: "O mnie" },
   { href: "/#uslugi", label: "Usługa" },
-  { href: "/kursy", label: "Materiały dla subskrybentów" },
+  { href: "/kursy", label: "Kursy dla subskrybentów" },
   { href: "/#faq", label: "FAQ" },
   { href: "/#kontakt", label: "Kontakt" },
 ];

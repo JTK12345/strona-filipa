@@ -28,7 +28,7 @@ export async function Footer() {
               Usługa
             </HashScrollLink>
             <Link className="block hover:text-[var(--foreground)]" href="/kursy">
-              Materiały dla subskrybentów
+              Kursy dla subskrybentów
             </Link>
             <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#o-mnie">
               O mnie

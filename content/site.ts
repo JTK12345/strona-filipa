@@ -15,7 +15,7 @@ export const siteConfig = {
       description: "Indywidualna analiza problemu, ruchu, stylu życia i plan działania dobrany do Twojej sytuacji.",
     },
     {
-      title: "Materiały dla subskrybentów",
+      title: "Kursy dla subskrybentów",
       description: "Programy o bólu, mobilności, oddechu i regeneracji dostępne po aktywacji kodu dostępu.",
     },
     {

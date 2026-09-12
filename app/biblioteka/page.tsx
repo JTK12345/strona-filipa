@@ -7,7 +7,7 @@ import { BackHomeLink } from "@/components/BackHomeLink";
 import { libraryTopics } from "@/content/courses";
 
 export const metadata: Metadata = {
-  title: "Biblioteka | Świadomy Profil Ciała",
+  title: "Biblioteka materiałów | Świadomy Profil Ciała",
   description: "Biblioteka materiałów o zdrowiu, ruchu, bólu i regeneracji.",
 };
 
@@ -66,7 +66,7 @@ export default async function LibraryPage(props: PageProps<"/biblioteka">) {
       <div className="container-main">
         <BackHomeLink />
         <div className="library-heading">
-          <span className="eyebrow">Twoje materiały</span>
+          <span className="eyebrow">Biblioteka materiałów</span>
           <h1>Filmy, instrukcje i pliki do pracy własnej.</h1>
         </div>
 
