@@ -2,15 +2,15 @@ import Image from "next/image";
 
 export function About() {
   return (
-    <section id="o-mnie" className="section">
-      <div className="container-main grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="about-panel">
+    <section id="o-mnie" className="section about-section">
+      <div className="container-main grid items-start gap-8 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="about-panel order-2 lg:order-1">
           <Image
             src="/files/filip-portrait.png"
             alt="Filip Proniewicz, lekarz i terapeuta manualny"
             fill
             unoptimized
-            className="object-cover"
+            className="object-cover object-top"
             sizes="(max-width: 1024px) 100vw, 38vw"
           />
           <div className="about-panel__caption">
@@ -21,17 +21,17 @@ export function About() {
           </div>
         </div>
 
-        <div>
-          <span className="eyebrow">O specjaliście</span>
+        <div className="order-1 lg:order-2">
+          <span className="eyebrow">O mnie</span>
           <h2 className="section-title">
             Szeroka analiza problemu, nie tylko miejsca bólu.
           </h2>
           <div className="space-y-5 text-[1.02rem] leading-8 text-[var(--muted)]">
             <p>
-              Filip pracuje na styku wiedzy lekarskiej, terapii manualnej i
-              treningu. Dzięki temu nie ogranicza się do miejsca bólu, tylko
-              sprawdza, co może stać za problemem: objawy, ruch, obciążenia,
-              styl życia i aktualne możliwości pacjenta.
+              Nazywam się Filip Proniewicz. Łączę wiedzę lekarską, terapię
+              manualną i trening, aby pomagać w świadomej pracy z bólem i
+              napięciem. Patrzę na objawy, ruch i codzienne nawyki, a plan
+              działania dopasowuję do Twoich potrzeb i możliwości.
             </p>
             <p>
               W praktyce oznacza to konkretny wywiad, ocenę funkcjonalną,

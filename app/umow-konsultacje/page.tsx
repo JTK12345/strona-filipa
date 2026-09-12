@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { BackHomeLink } from "@/components/BackHomeLink";
 import { contactData } from "@/content/contact";
 import { services } from "@/content/services";
@@ -21,6 +22,7 @@ const statusMessages: Record<string, string> = {
 
 const consultationOptions = services.slice(0, 2).map((service) => ({
   ...service,
+  id: service.title.includes("online") ? "online" : "gdynia",
   cta: service.title.includes("online") ? "Umów online" : "Umów wizytę",
 }));
 
@@ -49,7 +51,7 @@ export default async function AppointmentPage(
 
         <div className="appointment-options">
           {consultationOptions.map((option) => (
-            <article key={option.title} className="appointment-option-card">
+            <article key={option.title} id={option.id} className="appointment-option-card">
               <div>
                 <span className="eyebrow">{option.title}</span>
                 <h2>{option.price}</h2>
@@ -169,6 +171,16 @@ export default async function AppointmentPage(
             <section className="appointment-office">
               <span>Gabinet</span>
               <strong>{contactData.address}</strong>
+              <div className="appointment-office__image">
+                <Image
+                  src="/files/att.qkwcZ7RfE-UeEB5BKtBv70Mk58jeU0QHRcjtRAADtcQ.jpg"
+                  alt="Gabinet pracy z ciałem z planszą anatomiczną"
+                  fill
+                  unoptimized
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 360px"
+                />
+              </div>
             </section>
           </div>
         </div>

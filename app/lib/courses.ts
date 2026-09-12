@@ -97,7 +97,7 @@ export function getCourseStatusLabel(course: CourseCatalogItem) {
     return "Szkic";
   }
 
-  return "Po kodzie";
+  return "Dla subskrybentów";
 }
 
 export const getPublishedCourses = cache(async () => {

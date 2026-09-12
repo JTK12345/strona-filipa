@@ -18,7 +18,10 @@ export function HashScrollLink({
       onClick={(event) => {
         onClick?.(event);
 
-        if (event.defaultPrevented) {
+        if (
+          event.defaultPrevented || event.button !== 0 || event.metaKey ||
+          event.ctrlKey || event.shiftKey || event.altKey || props.target === "_blank"
+        ) {
           return;
         }
 
@@ -30,6 +33,14 @@ export function HashScrollLink({
         const [targetPath, hash] = hrefValue.split("#");
         const currentPath = window.location.pathname;
         const normalizedTargetPath = targetPath || currentPath;
+
+        if (hash && normalizedTargetPath !== currentPath) {
+          event.preventDefault();
+          // A fresh document keeps the destination fragment intact when returning
+          // to a route previously visited with a different fragment.
+          window.location.assign(hrefValue);
+          return;
+        }
 
         if (!hash && normalizedTargetPath === currentPath) {
           event.preventDefault();

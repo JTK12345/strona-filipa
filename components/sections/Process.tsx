@@ -14,7 +14,7 @@ const steps = [
   {
     title: "Autoterapia i edukacja",
     description:
-      "Dostajesz proste zalecenia oraz, gdy potrzeba, materiały online po kodzie, żeby wracać do instrukcji poza spotkaniem.",
+      "Dostajesz proste zalecenia oraz, gdy potrzeba, materiały dla subskrybentów, żeby wracać do instrukcji poza spotkaniem.",
   },
   {
     title: "Plan długofalowy",

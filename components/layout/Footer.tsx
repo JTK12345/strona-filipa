@@ -25,10 +25,10 @@ export async function Footer() {
               Start
             </HashScrollLink>
             <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#uslugi">
-              Usługi
+              Usługa
             </HashScrollLink>
             <Link className="block hover:text-[var(--foreground)]" href="/kursy">
-              Materiały
+              Materiały dla subskrybentów
             </Link>
             <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#o-mnie">
               O mnie

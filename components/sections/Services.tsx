@@ -11,13 +11,13 @@ export async function Services() {
       <div className="container-main">
         <div className="section-heading-row">
           <div>
-            <span className="eyebrow">Oferta</span>
+            <span className="eyebrow">Usługa</span>
             <h2 className="section-title max-w-3xl">
-              Współpraca 1:1, trening zdrowia i materiały edukacyjne po kodzie.
+              Współpraca 1:1, trening zdrowia i materiały dla subskrybentów.
             </h2>
           </div>
           <Link href="/kursy" className="button-secondary">
-            Materiały online
+            Materiały dla subskrybentów
           </Link>
         </div>
 
@@ -65,7 +65,7 @@ export async function Services() {
 
         <div className="mt-12 premium-panel">
           <div>
-            <span className="eyebrow">Materiały po kodzie</span>
+            <span className="eyebrow">Materiały dla subskrybentów</span>
             <h3 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">
               Filmy i instrukcje jako wsparcie pracy po konsultacji, treningu albo pakiecie.
             </h3>

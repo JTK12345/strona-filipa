@@ -4,7 +4,7 @@ import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
   title: "Logowanie | Świadomy Profil Ciała",
-  description: "Logowanie do panelu admina i materiałów po kodzie dostępu.",
+  description: "Logowanie do panelu admina i materiałów dla subskrybentów.",
 };
 
 const errorMessages: Record<string, string> = {

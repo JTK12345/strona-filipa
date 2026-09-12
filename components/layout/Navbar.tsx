@@ -5,9 +5,9 @@ import { siteConfig } from "@/content/site";
 
 const publicLinks = [
   { href: "/", label: "Start" },
-  { href: "/#uslugi", label: "Usługi" },
-  { href: "/kursy", label: "Materiały" },
   { href: "/#o-mnie", label: "O mnie" },
+  { href: "/#uslugi", label: "Usługa" },
+  { href: "/kursy", label: "Materiały dla subskrybentów" },
   { href: "/#faq", label: "FAQ" },
   { href: "/#kontakt", label: "Kontakt" },
 ];
@@ -24,7 +24,7 @@ export async function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(250,248,242,0.92)] backdrop-blur">
-      <div className="container-main flex min-h-[92px] flex-wrap items-center justify-between gap-x-4 gap-y-4 py-4 xl:flex-nowrap xl:py-0">
+      <div className="container-main flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-3">
         <HashScrollLink
           href="/"
           className="min-w-0 shrink no-underline xl:shrink-0"
@@ -39,7 +39,7 @@ export async function Navbar() {
           </div>
         </HashScrollLink>
 
-        <nav className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-3 xl:order-none xl:w-auto xl:flex-nowrap xl:gap-5">
+        <nav aria-label="Menu główne" className="order-3 flex w-full flex-wrap items-center gap-x-5 gap-y-2">
           {links.map((link) => (
             <HashScrollLink
               key={link.href}

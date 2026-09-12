@@ -26,7 +26,7 @@ export default function NotFound() {
               Wróć na stronę główną
             </Link>
             <Link href="/#uslugi" className="button-secondary">
-              Zobacz usługi
+              Poznaj usługę
             </Link>
           </div>
         </div>

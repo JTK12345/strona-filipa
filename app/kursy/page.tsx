@@ -10,7 +10,7 @@ import {
 import { BackHomeLink } from "@/components/BackHomeLink";
 
 export const metadata: Metadata = {
-  title: "Kursy wideo | Świadomy Profil Ciała",
+  title: "Materiały dla subskrybentów | Świadomy Profil Ciała",
   description: "Programy wideo o ruchu, bólu, mobilności i regeneracji.",
 };
 
@@ -29,9 +29,9 @@ export default async function CoursesPage() {
       <div className="container-main">
         <BackHomeLink />
         <div className="page-hero">
-          <span className="eyebrow">Materiały online</span>
+          <span className="eyebrow">Edukacja i praca własna</span>
           <h1 className="section-title max-w-4xl">
-            Materiały edukacyjne do pracy z ciałem, dostępne po wpisaniu kodu.
+            Materiały dla subskrybentów
           </h1>
           <p className="section-lead">
             Materiały online są dodatkiem do konsultacji, treningów i pakietów

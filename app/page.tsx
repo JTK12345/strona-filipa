@@ -15,16 +15,16 @@ export default function HomePage() {
         <Hero />
       </Reveal>
       <Reveal delayMs={80}>
-        <Problems />
+        <About />
       </Reveal>
       <Reveal delayMs={120}>
-        <Process />
+        <Problems />
       </Reveal>
       <Reveal delayMs={160}>
         <Services />
       </Reveal>
       <Reveal delayMs={200}>
-        <About />
+        <Process />
       </Reveal>
       <Reveal delayMs={240}>
         <Testimonials />
