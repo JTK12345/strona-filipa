@@ -11,7 +11,8 @@ import {
   ConfirmSubmitButton,
   CopyGeneratedCode,
 } from "@/components/admin/AdminActionControls";
-import { BackHomeLink } from "@/components/BackHomeLink";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
+import { CourseManager } from "@/components/admin/CourseManager";
 
 export const metadata: Metadata = {
   title: "Administracja | Świadomy Profil Ciała",
@@ -67,23 +68,6 @@ const roleMessages: Record<string, string> = {
   rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
 };
 
-const courseMessages: Record<string, string> = {
-  course_created: "Kurs został utworzony.",
-  course_updated: "Kurs został zaktualizowany.",
-  course_archived: "Kurs został usunięty ze strony.",
-  module_created: "Moduł został dodany.",
-  module_updated: "Moduł został zaktualizowany.",
-  module_deleted: "Moduł został usunięty.",
-  lesson_created: "Lekcja została dodana.",
-  lesson_updated: "Lekcja została zaktualizowana.",
-  lesson_deleted: "Lekcja została usunięta.",
-  invalid: "Sprawdź dane kursu, modułu albo lekcji.",
-  course_not_found: "Nie znaleziono kursu.",
-  module_not_found: "Nie znaleziono modułu.",
-  lesson_not_found: "Nie znaleziono lekcji.",
-  server: "Nie udało się zapisać zmian w kursie.",
-  rate: "Wykonano zbyt wiele operacji. Odczekaj kilka minut.",
-};
 
 function formatDate(value: Date | null) {
   return value
@@ -210,16 +194,11 @@ export async function AdminPanelPage({
   const roleResult =
     typeof resolvedSearchParams.role === "string" ? resolvedSearchParams.role : "";
   const roleMessage = roleMessages[roleResult];
-  const courseResult =
-    typeof resolvedSearchParams.course === "string" ? resolvedSearchParams.course : "";
-  const courseMessage = courseMessages[courseResult];
   const submissionResult =
     typeof resolvedSearchParams.submission === "string" ? resolvedSearchParams.submission : "";
   const submissionMessage = submissionMessages[submissionResult];
   const selectedCourseId =
     typeof resolvedSearchParams.editCourse === "string" ? resolvedSearchParams.editCourse : "";
-  const selectedCourse =
-    courseEditor.find((course) => course.id === selectedCourseId) ?? null;
   const selectedMaterialId =
     typeof resolvedSearchParams.editMaterial === "string"
       ? resolvedSearchParams.editMaterial
@@ -296,7 +275,7 @@ export async function AdminPanelPage({
   return (
     <section className="admin-page">
       <div className="container-main">
-        <BackHomeLink />
+        <PanelBackNavigation />
         <header className="admin-header">
           <div>
             <span className="eyebrow">Administracja platformą</span>
@@ -482,340 +461,14 @@ export async function AdminPanelPage({
           </div>
         </section>
 
-        <section
-          id="kursy-admin"
-          className="admin-section"
-          hidden={section !== "kursy"}
-        >
-          <div className="admin-section__heading">
-            <div>
-              <p className="meta-label">Zawartość kursów</p>
-              <h2>Kursy, moduły i lekcje</h2>
-            </div>
-            <span>{courseEditor.length} kursów</span>
-          </div>
-          {courseMessage ? (
-            <p
-              className={
-                courseResult === "invalid" ||
-                courseResult === "server" ||
-                courseResult.endsWith("_not_found") ||
-                courseResult === "rate"
-                  ? "auth-error"
-                  : "auth-notice"
-              }
-            >
-              {courseMessage}
-            </p>
-          ) : null}
-
-          <form
-            action="/api/admin/courses"
-            method="post"
-            className="admin-grant-form admin-course-create"
-          >
-            <input type="hidden" name="action" value="create-course" />
-            <label>
-              <span>Nazwa kursu</span>
-              <input name="title" required maxLength={160} />
-            </label>
-            <label>
-              <span>Opis kursu</span>
-              <textarea name="description" rows={4} maxLength={800} />
-            </label>
-            <label>
-              <span>Poziom</span>
-              <input name="levelLabel" placeholder="np. Start" maxLength={80} />
-            </label>
-            <label>
-              <span>Czas / liczba modułów</span>
-              <input name="durationLabel" placeholder="np. 4 moduły" maxLength={80} />
-            </label>
-            <label>
-              <span>Status</span>
-              <select name="status" defaultValue="draft">
-                <option value="draft">Szkic</option>
-                <option value="published">Opublikowany</option>
-              </select>
-            </label>
-            <button type="submit" className="button-primary">
-              Dodaj kurs
-            </button>
-          </form>
-
-          <div className="admin-course-picker">
+        {section === "kursy" && (
+          <section className="admin-section">
             <div className="admin-section__heading">
-              <div>
-                <p className="meta-label">Wybór edycji</p>
-                <h3>Wybierz kurs do edytowania</h3>
-              </div>
+              <div><p className="meta-label">Zawartość kursów</p><h2>Kursy, moduły i lekcje</h2></div>
             </div>
-            <div className="admin-table-wrap">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Kurs</th>
-                    <th>Status</th>
-                    <th>Moduły</th>
-                    <th>Akcja</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {courseEditor.map((course) => (
-                    <tr key={course.id}>
-                      <td>
-                        <strong>{course.title}</strong>
-                        <small>{course.description || "Bez opisu"}</small>
-                      </td>
-                      <td>{course.status}</td>
-                      <td>{course.modules.length}</td>
-                      <td>
-                        <Link
-                          href={`/panel/admin/kursy?editCourse=${course.id}`}
-                          className="button-secondary"
-                        >
-                          Edytuj
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {courseEditor.length === 0 ? (
-                <p className="admin-empty-row">Brak kursów.</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="admin-course-editor">
-            {!selectedCourse ? (
-              <p className="admin-empty-row">
-                Wybierz kurs z listy powyżej, żeby edytować jego moduły, lekcje
-                i filmy.
-              </p>
-            ) : null}
-            {(selectedCourse ? [selectedCourse] : []).map((course) => (
-              <article key={course.id} className="admin-course-block">
-                <div className="admin-course-block__heading">
-                  <div>
-                    <span className={`status-badge status-badge--${course.status}`}>
-                      {course.status}
-                    </span>
-                    <h3>{course.title}</h3>
-                    <p>{course.description}</p>
-                  </div>
-                  <form action="/api/admin/courses" method="post">
-                    <input type="hidden" name="action" value="archive-course" />
-                    <input type="hidden" name="courseId" value={course.id} />
-                    <ConfirmSubmitButton
-                      className="button-secondary"
-                      confirmMessage={`Usunąć kurs "${course.title}" ze strony?`}
-                    >
-                      Usuń kurs
-                    </ConfirmSubmitButton>
-                  </form>
-                </div>
-
-                <form action="/api/admin/courses" method="post" className="admin-inline-form">
-                  <input type="hidden" name="action" value="update-course" />
-                  <input type="hidden" name="editCourse" value={course.id} />
-                  <input type="hidden" name="courseId" value={course.id} />
-                  <label>
-                    <span>Nazwa</span>
-                    <input name="title" required maxLength={160} defaultValue={course.title} />
-                  </label>
-                  <label>
-                    <span>Opis</span>
-                    <textarea name="description" rows={3} maxLength={800} defaultValue={course.description} />
-                  </label>
-                  <label>
-                    <span>Poziom</span>
-                    <input name="levelLabel" maxLength={80} defaultValue={course.levelLabel} />
-                  </label>
-                  <label>
-                    <span>Czas</span>
-                    <input name="durationLabel" maxLength={80} defaultValue={course.durationLabel} />
-                  </label>
-                  <label>
-                    <span>Status</span>
-                    <select name="status" defaultValue={course.status === "draft" ? "draft" : "published"}>
-                      <option value="draft">Szkic</option>
-                      <option value="published">Opublikowany</option>
-                    </select>
-                  </label>
-                  <button type="submit" className="button-primary">
-                    Zapisz kurs
-                  </button>
-                </form>
-
-                <form action="/api/admin/courses" method="post" className="admin-inline-form">
-                  <input type="hidden" name="action" value="create-module" />
-                  <input type="hidden" name="editCourse" value={course.id} />
-                  <input type="hidden" name="courseId" value={course.id} />
-                  <label>
-                    <span>Nazwa modułu</span>
-                    <input name="title" required maxLength={160} />
-                  </label>
-                  <label>
-                    <span>Opis modułu</span>
-                    <input name="description" maxLength={500} />
-                  </label>
-                  <button type="submit" className="button-secondary">
-                    Dodaj moduł
-                  </button>
-                </form>
-
-                <div className="admin-module-list">
-                  {course.modules.map((courseModule) => (
-                    <section key={courseModule.id} className="admin-module-block">
-                      <div className="admin-module-block__heading">
-                        <div>
-                          <span>Moduł {courseModule.position}</span>
-                          <h4>{courseModule.title}</h4>
-                          {courseModule.description ? <p>{courseModule.description}</p> : null}
-                        </div>
-                        <form action="/api/admin/courses" method="post">
-                          <input type="hidden" name="action" value="delete-module" />
-                          <input type="hidden" name="editCourse" value={course.id} />
-                          <input type="hidden" name="moduleId" value={courseModule.id} />
-                          <ConfirmSubmitButton
-                            className="button-secondary"
-                            confirmMessage={`Usunąć moduł "${courseModule.title}" razem z lekcjami?`}
-                          >
-                            Usuń moduł
-                          </ConfirmSubmitButton>
-                        </form>
-                      </div>
-
-                      <form action="/api/admin/courses" method="post" className="admin-inline-form">
-                        <input type="hidden" name="action" value="update-module" />
-                        <input type="hidden" name="editCourse" value={course.id} />
-                        <input type="hidden" name="moduleId" value={courseModule.id} />
-                        <label>
-                          <span>Nazwa modułu</span>
-                          <input name="title" required maxLength={160} defaultValue={courseModule.title} />
-                        </label>
-                        <label>
-                          <span>Opis modułu</span>
-                          <input name="description" maxLength={500} defaultValue={courseModule.description} />
-                        </label>
-                        <button type="submit" className="button-secondary">
-                          Zapisz moduł
-                        </button>
-                      </form>
-
-                      <form
-                        action="/api/admin/courses"
-                        method="post"
-                        encType="multipart/form-data"
-                        className="admin-inline-form"
-                      >
-                        <input type="hidden" name="action" value="create-lesson" />
-                        <input type="hidden" name="editCourse" value={course.id} />
-                        <input type="hidden" name="moduleId" value={courseModule.id} />
-                        <label>
-                          <span>Tytuł lekcji</span>
-                          <input name="title" required maxLength={160} />
-                        </label>
-                        <label>
-                          <span>Krótki opis</span>
-                          <input name="summary" maxLength={400} />
-                        </label>
-                        <label>
-                          <span>Treść instrukcji</span>
-                          <textarea name="contentMarkdown" rows={5} />
-                        </label>
-                        <label>
-                          <span>Film lekcji</span>
-                          <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
-                        </label>
-                        <label>
-                          <span>Plik do pobrania</span>
-                          <input name="attachment" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" />
-                        </label>
-                        <label>
-                          <span>Status</span>
-                          <select name="status" defaultValue="draft">
-                            <option value="draft">Szkic</option>
-                            <option value="published">Opublikowana</option>
-                          </select>
-                        </label>
-                        <button type="submit" className="button-primary">
-                          Dodaj lekcję
-                        </button>
-                      </form>
-
-                      <div className="admin-lesson-list">
-                        {courseModule.lessons.map((lesson) => (
-                          <form
-                            key={lesson.id}
-                            action="/api/admin/courses"
-                            method="post"
-                            encType="multipart/form-data"
-                            className="admin-lesson-editor"
-                          >
-                            <input type="hidden" name="action" value="update-lesson" />
-                            <input type="hidden" name="editCourse" value={course.id} />
-                            <input type="hidden" name="lessonId" value={lesson.id} />
-                            <div className="admin-lesson-editor__heading">
-                              <strong>{lesson.position}. {lesson.title}</strong>
-                              <span>
-                                {lesson.hasVideo ? "film dodany" : "bez filmu"} ·{" "}
-                                {lesson.hasAttachment
-                                  ? lesson.attachmentFileName ?? "plik dodany"
-                                  : "bez pliku"}
-                              </span>
-                            </div>
-                            <label>
-                              <span>Tytuł</span>
-                              <input name="title" required maxLength={160} defaultValue={lesson.title} />
-                            </label>
-                            <label>
-                              <span>Krótki opis</span>
-                              <input name="summary" maxLength={400} defaultValue={lesson.summary} />
-                            </label>
-                            <label>
-                              <span>Treść instrukcji</span>
-                              <textarea name="contentMarkdown" rows={5} defaultValue={lesson.contentMarkdown} />
-                            </label>
-                            <label>
-                              <span>Podmień film</span>
-                              <input name="video" type="file" accept=".mp4,.webm,video/mp4,video/webm" />
-                            </label>
-                            <label>
-                              <span>Podmień plik do pobrania</span>
-                              <input name="attachment" type="file" accept=".pdf,.docx,.jpg,.jpeg,.png,application/pdf" />
-                            </label>
-                            <label>
-                              <span>Status</span>
-                              <select name="status" defaultValue={lesson.status}>
-                                <option value="draft">Szkic</option>
-                                <option value="published">Opublikowana</option>
-                              </select>
-                            </label>
-                            <div className="admin-form-actions">
-                              <button type="submit" className="button-primary">
-                                Zapisz lekcję
-                              </button>
-                              <ConfirmSubmitButton
-                                name="action"
-                                value="delete-lesson"
-                                className="button-secondary"
-                                confirmMessage={`Usunąć lekcję "${lesson.title}"?`}
-                              >
-                                Usuń lekcję
-                              </ConfirmSubmitButton>
-                            </div>
-                          </form>
-                        ))}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+            <CourseManager initialCourses={courseEditor} initialCourseId={selectedCourseId} />
+          </section>
+        )}
 
         <section
           id="materialy"

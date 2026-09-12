@@ -6,6 +6,7 @@ import {
   isUuid,
 } from "@/app/lib/course-content";
 import { LessonWorkspace } from "@/components/course/LessonWorkspace";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 
 export default async function LessonPage(
   props: PageProps<"/panel/kursy/[courseSlug]/lekcje/[lessonId]">,
@@ -36,13 +37,15 @@ export default async function LessonPage(
   return (
     <section className="lesson-page">
       <div className="container-main">
-        <Link
-          href={`/panel/kursy/${lesson.courseSlug}`}
-          className="back-home-button"
-        >
-          <span aria-hidden="true">←</span>
-          <span>Wróć do kursu</span>
-        </Link>
+        <PanelBackNavigation>
+          <Link
+            href={`/panel/kursy/${lesson.courseSlug}`}
+            className="back-home-button"
+          >
+            <span aria-hidden="true">←</span>
+            <span>Wróć do kursu</span>
+          </Link>
+        </PanelBackNavigation>
         <LessonWorkspace lesson={lesson} />
       </div>
     </section>

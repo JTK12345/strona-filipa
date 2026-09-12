@@ -186,7 +186,7 @@ export async function createAdminCourse(input: {
     "SELECT COALESCE(MAX(position), 0) + 1 AS position FROM courses",
   );
 
-  await queryDatabase(
+  const result = await queryDatabase<{ id: string }>(
     `INSERT INTO courses (
        slug,
        title,
@@ -197,7 +197,8 @@ export async function createAdminCourse(input: {
        level_label,
        duration_label
      )
-     VALUES ($1, $2, $3, $4, $5, CASE WHEN $4 = 'published' THEN now() ELSE NULL END, $6, $7)`,
+     VALUES ($1, $2, $3, $4, $5, CASE WHEN $4 = 'published' THEN now() ELSE NULL END, $6, $7)
+     RETURNING id`,
     [
       `${slugifyLibraryTitle(input.title)}-${Date.now().toString(36)}`,
       input.title,
@@ -208,6 +209,7 @@ export async function createAdminCourse(input: {
       input.durationLabel.slice(0, 80),
     ],
   );
+  return result.rows[0].id;
 }
 
 export async function updateAdminCourse(input: {
@@ -274,7 +276,7 @@ export async function createAdminModule(input: {
     throw new AdminCourseEditorError("invalid");
   }
 
-  await withDatabaseTransaction(async (client) => {
+  return withDatabaseTransaction(async (client) => {
     const courseResult = await client.query(
       `SELECT 1
        FROM courses
@@ -295,9 +297,9 @@ export async function createAdminModule(input: {
       [input.courseId],
     );
 
-    await client.query(
+    const result = await client.query<{ id: string }>(
       `INSERT INTO course_modules (course_id, title, description, position)
-       VALUES ($1, $2, $3, $4)`,
+       VALUES ($1, $2, $3, $4) RETURNING id`,
       [
         input.courseId,
         input.title,
@@ -305,6 +307,7 @@ export async function createAdminModule(input: {
         positionResult.rows[0]?.position ?? 1,
       ],
     );
+    return result.rows[0].id;
   });
 }
 
@@ -357,7 +360,7 @@ export async function createAdminLesson(input: {
     throw new AdminCourseEditorError("invalid");
   }
 
-  await withDatabaseTransaction(async (client) => {
+  return withDatabaseTransaction(async (client) => {
     const moduleResult = await client.query(
       `SELECT 1
        FROM course_modules
@@ -379,7 +382,7 @@ export async function createAdminLesson(input: {
       [input.moduleId],
     );
 
-    await client.query(
+    const result = await client.query<{ id: string }>(
       `INSERT INTO lessons (
          module_id,
          slug,
@@ -394,7 +397,7 @@ export async function createAdminLesson(input: {
          status,
          position
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
       [
         input.moduleId,
         `${slugifyLibraryTitle(input.title)}-${Date.now().toString(36)}`,
@@ -410,6 +413,7 @@ export async function createAdminLesson(input: {
         positionResult.rows[0]?.position ?? 1,
       ],
     );
+    return result.rows[0].id;
   });
 }
 

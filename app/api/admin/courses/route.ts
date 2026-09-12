@@ -12,6 +12,7 @@ import {
   deleteAdminModule,
   getAdminLessonVideoKey,
   getAdminLessonAttachmentKey,
+  getAdminCourseEditor,
   updateAdminCourse,
   updateAdminLesson,
   updateAdminModule,
@@ -21,6 +22,7 @@ import { isSameOriginFormRequest } from "@/app/lib/auth";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
 import { resolveVideoStoragePath } from "@/app/lib/video-storage";
+import { isCourseEditorSuccess } from "@/app/lib/course-editor-feedback";
 
 export const runtime = "nodejs";
 
@@ -34,7 +36,28 @@ const allowedAttachmentTypes = new Set([
   "image/png",
 ]);
 
-function redirectToAdmin(result: string, editCourseId = "") {
+async function respondToAdmin(request: Request, result: string, editCourseId = "", entityId?: string) {
+  if (request.headers.get("accept")?.includes("application/json")) {
+    const success = isCourseEditorSuccess(result);
+    // Keep successful writes distinct from a failed read-back, so the UI never
+    // invites the administrator to create the same item a second time.
+    let courses;
+    if (success) {
+      try {
+        courses = await getAdminCourseEditor();
+      } catch {
+        console.error("Course saved, but the editor could not reload its data.");
+      }
+    }
+    return NextResponse.json(
+      { result, courseId: editCourseId, entityId, courses, refreshRequired: success && !courses },
+      {
+        status: success ? 200 : result === "rate" ? 429 : result === "server" ? 500 : result.endsWith("_not_found") ? 404 : 400,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
+
   const searchParams = new URLSearchParams({ course: result });
 
   if (editCourseId) {
@@ -146,7 +169,7 @@ export async function POST(request: Request) {
   });
 
   if (!rateLimit.allowed) {
-    return redirectToAdmin("rate");
+    return respondToAdmin(request, "rate");
   }
 
   let formData: FormData;
@@ -154,25 +177,25 @@ export async function POST(request: Request) {
   try {
     formData = await request.formData();
   } catch {
-    return redirectToAdmin("invalid");
+    return respondToAdmin(request, "invalid");
   }
 
   const actionValues = formData.getAll("action");
   const action = String(actionValues.at(-1) ?? "");
   const editCourseId = String(formData.get("editCourse") ?? "");
-  const redirectToCourseEditor = (result: string) =>
-    redirectToAdmin(result, editCourseId);
+  const redirectToCourseEditor = (result: string, entityId?: string) =>
+    respondToAdmin(request, result, editCourseId, entityId);
 
   try {
     if (action === "create-course") {
-      await createAdminCourse({
+      const courseId = await createAdminCourse({
         title: String(formData.get("title") ?? "").trim(),
         description: String(formData.get("description") ?? "").trim(),
         levelLabel: String(formData.get("levelLabel") ?? "").trim(),
         durationLabel: String(formData.get("durationLabel") ?? "").trim(),
         status: normalizeStatus(formData.get("status")),
       });
-      return redirectToAdmin("course_created");
+      return respondToAdmin(request, "course_created", "", courseId);
     }
 
     if (action === "update-course") {
@@ -189,16 +212,16 @@ export async function POST(request: Request) {
 
     if (action === "archive-course") {
       await archiveAdminCourse(String(formData.get("courseId") ?? ""));
-      return redirectToAdmin("course_archived");
+      return respondToAdmin(request, "course_archived");
     }
 
     if (action === "create-module") {
-      await createAdminModule({
+      const moduleId = await createAdminModule({
         courseId: String(formData.get("courseId") ?? ""),
         title: String(formData.get("title") ?? "").trim(),
         description: String(formData.get("description") ?? "").trim(),
       });
-      return redirectToCourseEditor("module_created");
+      return redirectToCourseEditor("module_created", moduleId);
     }
 
     if (action === "update-module") {
@@ -244,7 +267,7 @@ export async function POST(request: Request) {
       const videoStorageKey = await saveVideo(formData.get("video"));
       const attachment = await saveAttachment(formData.get("attachment"));
 
-      await createAdminLesson({
+      const lessonId = await createAdminLesson({
         moduleId: String(formData.get("moduleId") ?? ""),
         title: String(formData.get("title") ?? "").trim(),
         summary: String(formData.get("summary") ?? "").trim(),
@@ -253,7 +276,7 @@ export async function POST(request: Request) {
         videoStorageKey,
         attachment,
       });
-      return redirectToCourseEditor("lesson_created");
+      return redirectToCourseEditor("lesson_created", lessonId);
     }
 
     if (action === "update-lesson") {

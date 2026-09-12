@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAccessibleCourse } from "@/app/lib/course-content";
-import { BackHomeLink } from "@/components/BackHomeLink";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 
 export default async function CoursePage(
   props: PageProps<"/panel/kursy/[courseSlug]">,
@@ -39,7 +39,7 @@ export default async function CoursePage(
   return (
     <section className="course-workspace">
       <div className="container-main">
-        <BackHomeLink />
+        <PanelBackNavigation />
         <div className="course-workspace__header">
           <div>
             <span className="eyebrow">Twoje materiały</span>

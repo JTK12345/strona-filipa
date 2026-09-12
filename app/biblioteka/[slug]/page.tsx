@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAccessibleLibraryItemBySlug } from "@/app/lib/library";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 
 export const metadata: Metadata = {
   title: "Materiał biblioteki | Świadomy Profil Ciała",
@@ -53,10 +54,12 @@ export default async function LibraryItemPage(
   return (
     <section className="library-detail-page">
       <div className="container-main">
-        <Link href="/biblioteka" className="back-home-button">
-          <span aria-hidden="true">←</span>
-          <span>Wróć do biblioteki</span>
-        </Link>
+        <PanelBackNavigation>
+          <Link href="/biblioteka" className="back-home-button">
+            <span aria-hidden="true">←</span>
+            <span>Wróć do biblioteki</span>
+          </Link>
+        </PanelBackNavigation>
 
         <article className="library-detail">
           <header className="library-detail__header">

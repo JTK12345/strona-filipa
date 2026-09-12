@@ -8,6 +8,7 @@ import {
   getPublishedCourses,
 } from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 
 export const metadata: Metadata = {
   title: "Kursy dla subskrybentów | Świadomy Profil Ciała",
@@ -27,7 +28,7 @@ export default async function CoursesPage() {
   return (
     <section className="section bg-white">
       <div className="container-main">
-        <BackHomeLink />
+        {session ? <PanelBackNavigation /> : <BackHomeLink />}
         <div className="page-hero">
           <span className="eyebrow">Edukacja i praca własna</span>
           <h1 className="section-title max-w-4xl">

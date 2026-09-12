@@ -1,7 +1,7 @@
 import { Hero } from "@/components/sections/Hero";
 import { Problems } from "@/components/sections/Problems";
 import { Process } from "@/components/sections/Process";
-import { Services } from "@/components/sections/Services";
+import { ServiceExtras, Services } from "@/components/sections/Services";
 import { About } from "@/components/sections/About";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { FAQ } from "@/components/sections/FAQ";
@@ -24,16 +24,19 @@ export default function HomePage() {
         <Services />
       </Reveal>
       <Reveal delayMs={200}>
-        <Process />
-      </Reveal>
-      <Reveal delayMs={240}>
         <Testimonials />
       </Reveal>
+      <Reveal delayMs={240}>
+        <ContactCTA />
+      </Reveal>
       <Reveal delayMs={280}>
-        <FAQ />
+        <ServiceExtras />
       </Reveal>
       <Reveal delayMs={320}>
-        <ContactCTA />
+        <Process />
+      </Reveal>
+      <Reveal delayMs={360}>
+        <FAQ />
       </Reveal>
     </>
   );

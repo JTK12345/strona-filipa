@@ -3,9 +3,7 @@ import Link from "next/link";
 import { getPublishedCourses } from "@/app/lib/courses";
 import { services } from "@/content/services";
 
-export async function Services() {
-  const courses = await getPublishedCourses();
-
+export function Services() {
   return (
     <section id="uslugi" className="section bg-white">
       <div className="container-main">
@@ -40,6 +38,17 @@ export async function Services() {
             </article>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+export async function ServiceExtras() {
+  const courses = await getPublishedCourses();
+
+  return (
+    <section className="section bg-white">
+      <div className="container-main">
 
         <div className="stationary-consultation-highlight">
           <div>

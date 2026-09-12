@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAccessibleCourses } from "@/app/lib/courses";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 
 export const metadata: Metadata = {
   title: "Kod dostępu | Świadomy Profil Ciała",
@@ -37,7 +38,7 @@ export default async function AccessPage(props: PageProps<"/dostep">) {
   return (
     <section className="access-page">
       <div className="container-main">
-        <BackHomeLink />
+        {session ? <PanelBackNavigation /> : <BackHomeLink />}
 
         <div className="access-activation-card">
           {!session ? (

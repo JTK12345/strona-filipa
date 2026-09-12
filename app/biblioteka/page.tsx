@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { getAccessibleLibraryItems } from "@/app/lib/library";
-import { BackHomeLink } from "@/components/BackHomeLink";
+import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 import { libraryTopics } from "@/content/courses";
 
 export const metadata: Metadata = {
@@ -64,7 +64,7 @@ export default async function LibraryPage(props: PageProps<"/biblioteka">) {
   return (
     <section className="library-page">
       <div className="container-main">
-        <BackHomeLink />
+        <PanelBackNavigation />
         <div className="library-heading">
           <span className="eyebrow">Biblioteka materiałów</span>
           <h1>Filmy, instrukcje i pliki do pracy własnej.</h1>
