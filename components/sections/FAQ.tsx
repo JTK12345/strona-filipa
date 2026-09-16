@@ -1,22 +1,18 @@
 import { faqItems } from "@/content/faq";
-
+import styles from "./landing.module.css";
 export function FAQ() {
   return (
-    <section id="faq" className="section">
-      <div className="container-main">
-        <span className="eyebrow">FAQ</span>
-        <h2 className="section-title max-w-2xl">
-          Najczęstsze pytania o konsultacje, materiały i dostęp.
-        </h2>
-
-        <div className="faq-list mt-10">
+    <section id="faq" className={styles.section}>
+      <div className={`${styles.wrap} ${styles.faq}`}>
+        <div>
+          <span className={styles.eyebrow}>Pytania i odpowiedzi</span>
+          <h2 className={styles.title}>Wszystko jasno.</h2>
+        </div>
+        <div className={styles.faqList}>
           {faqItems.map((item) => (
-            <details key={item.question} className="faq-item">
-              <summary>
-                <span>{item.question}</span>
-                <span className="faq-item__icon" aria-hidden="true" />
-              </summary>
-              <p className="mt-4 max-w-4xl leading-7 text-[var(--muted)]">{item.answer}</p>
+            <details key={item.question}>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
             </details>
           ))}
         </div>

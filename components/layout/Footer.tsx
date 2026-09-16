@@ -3,11 +3,13 @@ import { getCurrentAccessSession } from "@/app/lib/access";
 import { HashScrollLink } from "@/components/HashScrollLink";
 import { contactData } from "@/content/contact";
 import { siteConfig } from "@/content/site";
+import { HomeChrome } from "./HomeChrome";
+import { LandingFooter } from "./LandingFooter";
 
 export async function Footer() {
   const session = await getCurrentAccessSession();
 
-  return (
+  const legacy = (
     <footer className="border-t border-[var(--border)] bg-white">
       <div className="container-main grid gap-10 py-12 md:grid-cols-[1.2fr_0.8fr_0.8fr]">
         <div>
@@ -21,30 +23,54 @@ export async function Footer() {
         <div>
           <p className="font-semibold">Strona</p>
           <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/">
+            <HashScrollLink
+              className="block hover:text-[var(--foreground)]"
+              href="/"
+            >
               Start
             </HashScrollLink>
-            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#uslugi">
+            <HashScrollLink
+              className="block hover:text-[var(--foreground)]"
+              href="/#uslugi"
+            >
               Usługa
             </HashScrollLink>
-            <Link className="block hover:text-[var(--foreground)]" href="/kursy">
+            <Link
+              className="block hover:text-[var(--foreground)]"
+              href="/kursy"
+            >
               Kursy dla subskrybentów
             </Link>
-            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#o-mnie">
+            <HashScrollLink
+              className="block hover:text-[var(--foreground)]"
+              href="/#o-mnie"
+            >
               O mnie
             </HashScrollLink>
-            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#faq">
+            <HashScrollLink
+              className="block hover:text-[var(--foreground)]"
+              href="/#faq"
+            >
               FAQ
             </HashScrollLink>
-            <HashScrollLink className="block hover:text-[var(--foreground)]" href="/#kontakt">
+            <HashScrollLink
+              className="block hover:text-[var(--foreground)]"
+              href="/#kontakt"
+            >
               Kontakt
             </HashScrollLink>
             {session ? (
-              <Link className="block hover:text-[var(--foreground)]" href="/panel">
+              <Link
+                className="block hover:text-[var(--foreground)]"
+                href="/panel"
+              >
                 Panel
               </Link>
             ) : null}
-            <Link className="block hover:text-[var(--foreground)]" href="/regulamin">
+            <Link
+              className="block hover:text-[var(--foreground)]"
+              href="/regulamin"
+            >
               Regulamin
             </Link>
             <Link
@@ -59,19 +85,34 @@ export async function Footer() {
         <div>
           <p className="font-semibold">Kontakt</p>
           <div className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-            <a className="block hover:text-[var(--foreground)]" href={`tel:${contactData.phoneRaw}`}>
+            <a
+              className="block hover:text-[var(--foreground)]"
+              href={`tel:${contactData.phoneRaw}`}
+            >
               {contactData.phone}
             </a>
-            <a className="block hover:text-[var(--foreground)]" href={`mailto:${contactData.email}`}>
+            <a
+              className="block hover:text-[var(--foreground)]"
+              href={`mailto:${contactData.email}`}
+            >
               {contactData.email}
             </a>
             <span className="block">{contactData.address}</span>
-            <a className="block hover:text-[var(--foreground)]" href={contactData.instagramUrl}>
+            <a
+              className="block hover:text-[var(--foreground)]"
+              href={contactData.instagramUrl}
+            >
               Instagram
             </a>
           </div>
         </div>
       </div>
     </footer>
+  );
+  return (
+    <HomeChrome
+      home={<LandingFooter loggedIn={Boolean(session)} />}
+      fallback={legacy}
+    />
   );
 }

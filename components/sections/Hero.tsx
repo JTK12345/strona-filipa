@@ -1,62 +1,52 @@
+import Image from "next/image";
 import Link from "next/link";
-import { HashScrollLink } from "@/components/HashScrollLink";
 import { siteConfig } from "@/content/site";
-
-const shortcuts = [
-  {
-    title: "Praca z bólem",
-    description: "Poznaj podejście i wybierz formę współpracy.",
-    action: "Poznaj usługę",
-    href: "/#uslugi",
-  },
-  {
-    title: "Konsultacja online",
-    description: "Rozmowa i plan działania z dowolnego miejsca.",
-    action: "Sprawdź konsultację online",
-    href: "/umow-konsultacje#online",
-  },
-  {
-    title: "Wizyta w Gdyni",
-    description: "Ocena ruchu i indywidualna praca w gabinecie.",
-    action: "Sprawdź wizytę w gabinecie",
-    href: "/umow-konsultacje#gdynia",
-  },
-];
-
+import styles from "./landing.module.css";
 export function Hero() {
   return (
-    <section className="hero-section overflow-hidden">
-      <div className="container-main relative z-10">
-        <span className="eyebrow hero-name">Filip Proniewicz</span>
-        <p className="hero-credentials">
-          Lekarz · terapeuta manualny · trener zdrowia · trener personalny
-        </p>
-        <h1 className="hero-title">
-          Świadoma praca z bólem, napięciem i ruchem.
-        </h1>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted)] md:text-lg">
-          {siteConfig.heroDescription}
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href={siteConfig.bookingUrl} className="button-primary">
-            Umów konsultację
-          </Link>
-          <HashScrollLink href="/#uslugi" className="button-secondary">
-            Poznaj usługę
-          </HashScrollLink>
+    <>
+      <section className={styles.hero}>
+        <div className={`${styles.wrap} ${styles.heroGrid}`}>
+          <div className={styles.heroCopy}>
+            <span className={styles.eyebrow}>
+              Analiza zdrowia · zalecenia zdrowotne · edukacja
+            </span>
+            <h1>
+              Żyj dłużej
+              <br />
+              <em>w zdrowiu.</em>
+            </h1>
+            <p>
+              Pomagam nie tylko leczyć choroby, ale też im zapobiegać.
+              Konsultacje online i stacjonarne oparte na medycynie rodzinnej,
+              ruchu, śnie i żywieniu.
+            </p>
+            <Link href={siteConfig.bookingUrl} className={styles.button}>
+              Umów analizę zdrowia <b aria-hidden="true">→</b>
+            </Link>
+          </div>
+          <figure className={styles.person}>
+            <Image
+              src="/files/filip-portrait.png"
+              alt="Lekarz Filip Proniewicz"
+              fill
+              unoptimized
+              preload
+              sizes="(max-width: 800px) 100vw, 45vw"
+            />
+            <figcaption>Lek. Filip Proniewicz</figcaption>
+          </figure>
         </div>
-        <div className="hero-shortcuts">
-          {shortcuts.map((item) => (
-            <HashScrollLink key={item.href} href={item.href} className="hero-shortcut">
-              <span className="hero-shortcut__title">{item.title}</span>
-              <span className="hero-shortcut__description">{item.description}</span>
-              <span className="hero-shortcut__action">
-                <span>{item.action}</span><span aria-hidden="true">↗</span>
-              </span>
-            </HashScrollLink>
-          ))}
+      </section>
+      <div className={styles.strip}>
+        <div className={styles.wrap}>
+          <strong>Lekarz · trener zdrowia · edukator zdrowotny</strong>
+          <p>
+            Analiza zdrowia, realny plan działania i materiały do dalszej pracy
+            — w Twoim tempie.
+          </p>
         </div>
       </div>
-    </section>
+    </>
   );
 }

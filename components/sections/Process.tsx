@@ -1,4 +1,5 @@
 import Image from "next/image";
+import styles from "./landing.module.css";
 
 const steps = [
   {
@@ -43,25 +44,25 @@ const processPhotos = [
 
 export function Process() {
   return (
-    <section className="section">
-      <div className="container-main">
-        <span className="eyebrow">Jak wygląda współpraca</span>
-        <h2 className="section-title max-w-3xl">
+    <section className={`${styles.section} ${styles.process}`}>
+      <div className={styles.wrap}>
+        <span className={styles.eyebrow}>Jak wygląda współpraca</span>
+        <h2 className={`${styles.title} ${styles.processTitle}`}>
           Prosty proces: od rozpoznania problemu do planu, który da się wdrożyć.
         </h2>
-        <div className="process-timeline mt-10">
+        <div className={styles.processRow}>
           {steps.map((step, index) => (
-            <article key={step.title} className="process-card">
-              <p className="text-sm font-bold text-[var(--accent)]">0{index + 1}</p>
-              <h3 className="mt-4 text-xl font-bold leading-snug">{step.title}</h3>
-              <p className="mt-3 leading-7 text-[var(--muted)]">{step.description}</p>
+            <article key={step.title} className={styles.processStep}>
+              <span className={styles.eyebrow}>0{index + 1}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
             </article>
           ))}
         </div>
-        <div className="process-photo-grid">
+        <div className={styles.photoCards}>
           {processPhotos.map((photo) => (
-            <figure key={photo.src} className="process-photo-card">
-              <div className="process-photo-card__image">
+            <figure key={photo.src} className={styles.photoCard}>
+              <div className={styles.photoImage}>
                 <Image
                   src={photo.src}
                   alt={photo.alt}

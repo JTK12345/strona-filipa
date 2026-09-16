@@ -1,0 +1,151 @@
+.document {
+  margin: 0;
+  background: #faf9f5;
+  color: #17261f;
+}
+.screen {
+  box-sizing: border-box;
+  min-height: 70vh;
+  display: grid;
+  align-items: center;
+  padding: 72px 28px;
+  background: #faf9f5;
+  color: #17261f;
+  font-family: var(--landing-body), Arial, sans-serif;
+}
+.document .screen {
+  min-height: 100vh;
+}
+.panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1114px;
+  margin: 0 auto;
+  padding: clamp(32px, 6vw, 80px);
+  background: #e4ebe0;
+  border-radius: 4px;
+}
+.panel::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 450px;
+  height: 450px;
+  border-radius: 50%;
+  background: #d4ee89;
+  right: -160px;
+  bottom: -310px;
+}
+.eyebrow {
+  display: block;
+  color: #396f5c;
+  font:
+    500 10px/1.8 var(--landing-mono),
+    monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+.screen .title {
+  position: relative;
+  max-width: 750px;
+  margin: 0;
+  font:
+    700 clamp(36px, 5vw, 64px) / 1.06 var(--landing-heading),
+    Georgia,
+    serif;
+  letter-spacing: -0.05em;
+}
+.screen .description {
+  max-width: 600px;
+  margin: 24px 0 0;
+  color: #456056;
+  font-size: 15px;
+  line-height: 1.8;
+}
+.actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 32px;
+}
+.primary,
+.secondary {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 48px;
+  border: 1px solid #17261f;
+  border-radius: 99px;
+  padding: 13px 21px;
+  font:
+    800 12px/1.5 var(--landing-body),
+    Arial,
+    sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.primary {
+  background: #17261f;
+  color: #fff;
+}
+.primary:hover {
+  background: #396f5c;
+}
+.secondary {
+  background: transparent;
+  color: #17261f;
+  border-color: #a4b5a6;
+}
+.secondary:hover {
+  background: #faf9f5;
+}
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 3px solid #396f5c;
+  outline-offset: 4px;
+}
+.primary span {
+  color: #d4ee89;
+  font-size: 18px;
+}
+.code {
+  position: absolute;
+  z-index: -1;
+  right: 24px;
+  top: -25px;
+  color: #17261f08;
+  font:
+    700 clamp(120px, 20vw, 260px) / 1 var(--landing-heading),
+    Georgia,
+    serif;
+}
+@media (max-width: 800px) {
+  .screen {
+    padding: 40px 20px;
+  }
+  .panel {
+    padding: 36px 24px;
+  }
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .code {
+    top: 0;
+    right: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary {
+    transition: none;
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
+import { ErrorScreen } from "@/components/errors/ErrorScreen";
 
 export default function ErrorPage({
   error,
@@ -13,31 +13,12 @@ export default function ErrorPage({
   useEffect(() => {
     console.error("Application route error.", error);
   }, [error]);
-
   return (
-    <section className="error-page">
-      <div className="container-main">
-        <div className="error-page__content">
-          <span className="eyebrow">Błąd</span>
-          <h1>Coś poszło nie tak</h1>
-          <p>
-            Nie udało się poprawnie wyświetlić tej strony. Spróbuj ponownie lub
-            wróć na stronę główną.
-          </p>
-          <div className="error-page__actions">
-            <button
-              type="button"
-              className="button-primary"
-              onClick={() => unstable_retry()}
-            >
-              Spróbuj ponownie
-            </button>
-            <Link href="/" className="button-secondary">
-              Wróć na stronę główną
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
+    <ErrorScreen
+      code="500"
+      title="Potrzebujemy chwili."
+      description="Nie udało się poprawnie wyświetlić tej strony. Spróbuj ponownie lub wróć na stronę główną."
+      onRetry={unstable_retry}
+    />
   );
 }

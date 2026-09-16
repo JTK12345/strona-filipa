@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { sanitizeAuthDestination } from "@/app/lib/auth-destination";
 
 export const metadata: Metadata = {
   title: "Rejestracja | Świadomy Profil Ciała",
@@ -17,12 +18,7 @@ const errorMessages: Record<string, string> = {
 
 export default async function RegisterPage(props: PageProps<"/rejestracja">) {
   const searchParams = await props.searchParams;
-  const requestedNext =
-    searchParams.next === "/biblioteka" ||
-    searchParams.next === "/panel" ||
-    searchParams.next === "/dostep"
-      ? searchParams.next
-      : "/panel";
+  const requestedNext = sanitizeAuthDestination(searchParams.next);
   const errorMessage =
     typeof searchParams.error === "string" ? errorMessages[searchParams.error] : null;
 
@@ -38,7 +34,7 @@ export default async function RegisterPage(props: PageProps<"/rejestracja">) {
               Konto pozwala bezpiecznie logować się do panelu. Dostęp do
               materiałów pojawi się po wpisaniu kodu albo nadaniu uprawnienia.
             </p>
-            <Link href="/logowanie" className="button-secondary mt-8">
+            <Link href={`/logowanie?next=${requestedNext}`} className="button-secondary mt-8">
               Mam już konto
             </Link>
           </div>

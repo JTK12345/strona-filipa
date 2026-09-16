@@ -2,6 +2,9 @@ import Link from "next/link";
 import { getCurrentAccessSession } from "@/app/lib/access";
 import { HashScrollLink } from "@/components/HashScrollLink";
 import { siteConfig } from "@/content/site";
+import { HomeChrome } from "./HomeChrome";
+import { LandingHeader } from "./LandingHeader";
+import { landingFonts } from "@/components/sections/landing-fonts";
 
 const publicLinks = [
   { href: "/", label: "Start" },
@@ -22,7 +25,7 @@ export async function Navbar() {
       : []),
   ];
 
-  return (
+  const legacy = (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(250,248,242,0.92)] backdrop-blur">
       <div className="container-main flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-3">
         <HashScrollLink
@@ -39,7 +42,10 @@ export async function Navbar() {
           </div>
         </HashScrollLink>
 
-        <nav aria-label="Menu główne" className="order-3 flex w-full flex-wrap items-center gap-x-5 gap-y-2">
+        <nav
+          aria-label="Menu główne"
+          className="order-3 flex w-full flex-wrap items-center gap-x-5 gap-y-2"
+        >
           {links.map((link) => (
             <HashScrollLink
               key={link.href}
@@ -63,11 +69,26 @@ export async function Navbar() {
               Logowanie
             </Link>
           )}
-          <Link href={siteConfig.bookingUrl} className="button-primary nav-booking">
+          <Link
+            href={siteConfig.bookingUrl}
+            className="button-primary nav-booking"
+          >
             Konsultacja
           </Link>
         </div>
       </div>
     </header>
+  );
+  return (
+    <HomeChrome
+      home={
+        <LandingHeader
+          loggedIn={Boolean(session)}
+          isAdmin={session?.role === "admin"}
+          fontClass={landingFonts}
+        />
+      }
+      fallback={legacy}
+    />
   );
 }

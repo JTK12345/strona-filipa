@@ -8,6 +8,8 @@ import { TurnstileScript } from "@/components/TurnstileScript";
 import { SessionRevalidator } from "@/components/auth/SessionRevalidator";
 import { HashScroller } from "@/components/HashScroller";
 import { siteConfig } from "@/content/site";
+import { PublicPage } from "@/components/layout/PublicPage";
+import { landingFonts } from "@/components/sections/landing-fonts";
 
 export const metadata: Metadata = {
   title: siteConfig.metaTitle,
@@ -31,7 +33,7 @@ export default async function RootLayout({
   await connection();
 
   return (
-    <html lang="pl">
+    <html lang="pl" data-scroll-behavior="smooth">
       <body>
         <TurnstileScript />
         <ScrollProgress />
@@ -39,7 +41,7 @@ export default async function RootLayout({
           <Navbar />
           <SessionRevalidator />
           <HashScroller />
-          <main>{children}</main>
+          <PublicPage fontClass={landingFonts}>{children}</PublicPage>
           <Footer />
         </div>
       </body>

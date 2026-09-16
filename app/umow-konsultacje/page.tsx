@@ -17,7 +17,8 @@ const statusMessages: Record<string, string> = {
   phone: "Wpisz poprawny numer telefonu albo zostaw to pole puste.",
   message: "Wiadomość musi mieć minimum 3 znaki.",
   rate: "Wysłano zbyt wiele zgłoszeń. Odczekaj kilka minut.",
-  server: "Nie udało się zapisać zgłoszenia. Spróbuj ponownie albo napisz bezpośrednio.",
+  server:
+    "Nie udało się zapisać zgłoszenia. Spróbuj ponownie albo napisz bezpośrednio.",
 };
 
 const consultationOptions = services.slice(0, 2).map((service) => ({
@@ -30,7 +31,8 @@ export default async function AppointmentPage(
   props: PageProps<"/umow-konsultacje">,
 ) {
   const searchParams = await props.searchParams;
-  const status = typeof searchParams.status === "string" ? searchParams.status : "";
+  const status =
+    typeof searchParams.status === "string" ? searchParams.status : "";
   const statusMessage = statusMessages[status];
 
   return (
@@ -40,8 +42,12 @@ export default async function AppointmentPage(
 
         <div className="appointment-hero">
           <div className="appointment-copy">
-            <span className="eyebrow">Wybór konsultacji</span>
-            <h1>Umów konsultację online albo w gabinecie.</h1>
+            <span className="eyebrow">Zacznij od analizy zdrowia</span>
+            <h1>
+              Twój pierwszy krok
+              <br />
+              do lepszego zdrowia.
+            </h1>
             <p>
               Wybierz formę spotkania, która pasuje do Twojej sytuacji. Jeśli
               nie wiesz, od czego zacząć, napisz krótko, z czym się zgłaszasz.
@@ -51,10 +57,14 @@ export default async function AppointmentPage(
 
         <div className="appointment-options">
           {consultationOptions.map((option) => (
-            <article key={option.title} id={option.id} className="appointment-option-card">
+            <article
+              key={option.title}
+              id={option.id}
+              className="appointment-option-card"
+            >
               <div>
-                <span className="eyebrow">{option.title}</span>
-                <h2>{option.price}</h2>
+                <h2>{option.title}</h2>
+                <p className="appointment-price">{option.price}</p>
                 <p>{option.description}</p>
               </div>
               <ul>
@@ -103,7 +113,12 @@ export default async function AppointmentPage(
               ) : null}
               <label>
                 <span>Imię</span>
-                <input name="name" required maxLength={120} autoComplete="name" />
+                <input
+                  name="name"
+                  required
+                  maxLength={120}
+                  autoComplete="name"
+                />
               </label>
               <label>
                 <span>E-mail</span>
@@ -147,7 +162,10 @@ export default async function AppointmentPage(
             <section>
               <span>Telefon</span>
               <strong>{contactData.phone}</strong>
-              <a href={`tel:${contactData.phoneRaw}`} className="button-secondary">
+              <a
+                href={`tel:${contactData.phoneRaw}`}
+                className="button-secondary"
+              >
                 Zadzwoń
               </a>
             </section>
@@ -155,7 +173,10 @@ export default async function AppointmentPage(
             <section>
               <span>E-mail</span>
               <strong>{contactData.email}</strong>
-              <a href={`mailto:${contactData.email}`} className="button-secondary">
+              <a
+                href={`mailto:${contactData.email}`}
+                className="button-secondary"
+              >
                 Napisz e-mail
               </a>
             </section>

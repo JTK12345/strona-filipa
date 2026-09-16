@@ -1,95 +1,35 @@
-import Image from "next/image";
 import Link from "next/link";
-import { getPublishedCourses } from "@/app/lib/courses";
 import { services } from "@/content/services";
-
+import { siteConfig } from "@/content/site";
+import styles from "./landing.module.css";
 export function Services() {
   return (
-    <section id="uslugi" className="section bg-white">
-      <div className="container-main">
-        <div className="section-heading-row">
-          <div>
-            <span className="eyebrow">Usługa</span>
-            <h2 className="section-title max-w-3xl">
-              Współpraca 1:1, trening zdrowia i kursy dla subskrybentów.
-            </h2>
-          </div>
-          <Link href="/kursy" className="button-secondary">
-            Kursy dla subskrybentów
-          </Link>
+    <section id="uslugi" className={styles.section}>
+      <div className={styles.wrap}>
+        <div id="oferta" className={styles.offersHead}>
+          <span className={styles.eyebrow}>Formy współpracy</span>
+          <h2 className={styles.title}>Wybierz formę współpracy.</h2>
+          <p>
+            Analiza zdrowia, indywidualne prowadzenie i edukacja. W gabinecie
+            lub online.
+          </p>
         </div>
-
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
+        <div className={styles.offerGrid}>
           {services.map((service) => (
-            <article key={service.title} className="offer-card">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <h3 className="text-2xl font-semibold">{service.title}</h3>
-                <span className="price-pill">{service.price}</span>
-              </div>
-              <p className="mt-4 leading-7 text-[var(--muted)]">{service.description}</p>
-              <ul className="mt-5 grid gap-3 text-sm leading-6 text-[var(--muted)]">
+            <article className={styles.offer} key={service.title}>
+              <h3>{service.title}</h3>
+              <div className={styles.price}>{service.price}</div>
+              <p>{service.description}</p>
+              <ul>
                 {service.bullets.map((bullet) => (
-                  <li key={bullet} className="check-row">{bullet}</li>
+                  <li key={bullet}>{bullet}</li>
                 ))}
               </ul>
-              <Link href="/umow-konsultacje" className="button-primary mt-6">
-                Umów konsultację
+              <Link href={siteConfig.bookingUrl} className={styles.button}>
+                Umów konsultację <b aria-hidden="true">→</b>
               </Link>
             </article>
           ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export async function ServiceExtras() {
-  const courses = await getPublishedCourses();
-
-  return (
-    <section className="section bg-white">
-      <div className="container-main">
-
-        <div className="stationary-consultation-highlight">
-          <div>
-            <span className="eyebrow">Konsultacja stacjonarna</span>
-            <h3>Praca manualna wtedy, gdy wynika z badania i celu spotkania.</h3>
-            <p>
-              Spotkanie w gabinecie pozwala połączyć wywiad, ocenę ruchu,
-              badanie fizykalne i pracę manualną z planem ćwiczeń do
-              samodzielnego wdrożenia.
-            </p>
-          </div>
-          <div className="stationary-consultation-highlight__image">
-            <Image
-              src="/files/filip-manual-therapy.jpg"
-              alt="Terapia manualna podczas konsultacji stacjonarnej"
-              fill
-              unoptimized
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 42vw"
-            />
-          </div>
-        </div>
-
-        <div className="mt-12 premium-panel">
-          <div>
-            <span className="eyebrow">Kursy dla subskrybentów</span>
-            <h3 className="mt-4 text-3xl font-bold leading-tight md:text-4xl">
-              Filmy i instrukcje jako wsparcie pracy po konsultacji, treningu albo pakiecie.
-            </h3>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {courses.map((course) => (
-              <article key={course.slug} className="course-mini-card">
-                <h4 className="mt-3 text-xl font-bold">{course.title}</h4>
-                <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{course.description}</p>
-                <p className="mt-5 text-sm font-bold">
-                  {course.duration} · {course.level}
-                </p>
-              </article>
-            ))}
-          </div>
         </div>
       </div>
     </section>

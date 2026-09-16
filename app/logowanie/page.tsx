@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BackHomeLink } from "@/components/BackHomeLink";
+import { sanitizeAuthDestination } from "@/app/lib/auth-destination";
 
 export const metadata: Metadata = {
   title: "Logowanie | Świadomy Profil Ciała",
@@ -19,16 +20,8 @@ const resetMessages: Record<string, string> = {
 
 export default async function LoginPage(props: PageProps<"/logowanie">) {
   const searchParams = await props.searchParams;
-  const requestedNext =
-    searchParams.next === "/biblioteka" ||
-    searchParams.next === "/panel" ||
-    searchParams.next === "/dostep"
-      ? searchParams.next
-      : "/panel";
-  const requiresLogin =
-    searchParams.next === "/biblioteka" ||
-    searchParams.next === "/panel" ||
-    searchParams.next === "/dostep";
+  const requestedNext = sanitizeAuthDestination(searchParams.next);
+  const requiresLogin = searchParams.next === requestedNext;
   const errorMessage =
     typeof searchParams.error === "string" ? errorMessages[searchParams.error] : null;
   const resetMessage =

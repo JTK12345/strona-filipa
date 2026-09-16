@@ -22,14 +22,7 @@ export function isValidPassword(password: string) {
   return password.length >= 10 && password.length <= 128;
 }
 
-export function sanitizeAuthDestination(value: FormDataEntryValue | string | null) {
-  const destination = String(value ?? "");
-  return destination === "/biblioteka" ||
-    destination === "/panel" ||
-    destination === "/dostep"
-    ? destination
-    : "/panel";
-}
+export { sanitizeAuthDestination } from "./auth-destination";
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, passwordRounds);

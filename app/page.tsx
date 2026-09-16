@@ -1,43 +1,24 @@
 import { Hero } from "@/components/sections/Hero";
-import { Problems } from "@/components/sections/Problems";
 import { Process } from "@/components/sections/Process";
-import { ServiceExtras, Services } from "@/components/sections/Services";
+import { Services } from "@/components/sections/Services";
 import { About } from "@/components/sections/About";
+import { HelpWays } from "@/components/sections/HelpWays";
+import { Academy } from "@/components/sections/Academy";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { FAQ } from "@/components/sections/FAQ";
-import { ContactCTA } from "@/components/sections/ContactCTA";
-import { Reveal } from "@/components/Reveal";
-
+import { landingFonts } from "@/components/sections/landing-fonts";
+import styles from "@/components/sections/landing.module.css";
 export default function HomePage() {
   return (
-    <>
-      <Reveal>
-        <Hero />
-      </Reveal>
-      <Reveal delayMs={80}>
-        <About />
-      </Reveal>
-      <Reveal delayMs={120}>
-        <Problems />
-      </Reveal>
-      <Reveal delayMs={160}>
-        <Services />
-      </Reveal>
-      <Reveal delayMs={200}>
-        <Testimonials />
-      </Reveal>
-      <Reveal delayMs={240}>
-        <ContactCTA />
-      </Reveal>
-      <Reveal delayMs={280}>
-        <ServiceExtras />
-      </Reveal>
-      <Reveal delayMs={320}>
-        <Process />
-      </Reveal>
-      <Reveal delayMs={360}>
-        <FAQ />
-      </Reveal>
-    </>
+    <div className={`${styles.theme} ${landingFonts}`}>
+      <Hero />
+      <About />
+      <HelpWays />
+      <Services />
+      <Testimonials />
+      <Process />
+      <Academy />
+      <FAQ />
+    </div>
   );
 }

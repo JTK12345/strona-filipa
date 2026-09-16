@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* Keep Next Image fill sizing compatible with CSP style-src-attr 'none'. */
+img[data-nimg="fill"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: transparent;
+}
+
 :root {
   --background: #f7f5ef;
   --foreground: #20251f;

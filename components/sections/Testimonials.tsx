@@ -1,22 +1,23 @@
 import { testimonials } from "@/content/testimonials";
-
+import styles from "./landing.module.css";
 export function Testimonials() {
   return (
-    <section className="section bg-white">
-      <div className="container-main">
-        <span className="eyebrow">Opinie</span>
-        <h2 className="section-title max-w-2xl">
-          Zaufanie buduje praktyka, jasne wyjaśnienia i realna praca między spotkaniami.
-        </h2>
-        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+    <section className={`${styles.section} ${styles.testimonials}`}>
+      <div className={styles.wrap}>
+        <span className={styles.eyebrow}>Opinie</span>
+        <h2 className={styles.title}>Zaufanie buduje praktyka.</h2>
+        <div className={styles.testimonialGrid}>
           {testimonials.map((testimonial, index) => (
-            <article key={`${testimonial.author}-${index}`} className="card-surface p-7">
-              <q className="block text-lg leading-8 text-[var(--foreground)]">
-                {testimonial.text}
-              </q>
-              <p className="mt-6 font-semibold">{testimonial.author}</p>
-              <p className="text-sm text-[var(--muted)]">{testimonial.role}</p>
-            </article>
+            <figure key={`${testimonial.author}-${index}`}>
+              <span className={styles.quoteMark} aria-hidden="true">
+                “
+              </span>
+              <blockquote>{testimonial.text}</blockquote>
+              <figcaption>
+                <strong>{testimonial.author}</strong>
+                <span>{testimonial.role}</span>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>
