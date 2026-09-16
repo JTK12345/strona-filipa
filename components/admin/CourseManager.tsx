@@ -141,6 +141,7 @@ export function CourseManager({
                     <div className="course-manager__actions">
                       <button type="button" className="course-text-button" onClick={() => edit({ kind: "module", courseId: course.id, moduleId: module.id })}>Edytuj moduł</button>
                       <button type="button" className="button-secondary" onClick={() => edit({ kind: "lesson", courseId: course.id, moduleId: module.id })}>+ Dodaj lekcję</button>
+                      <button type="button" className="course-text-button course-delete-button" aria-label={`Usuń moduł: ${module.title}`} onClick={() => edit({ kind: "module", courseId: course.id, moduleId: module.id, remove: true })}>Usuń moduł</button>
                     </div>
                   </div>
                   <div id={`module-lessons-${module.id}`} hidden={!expanded} className="course-editor-module__body">
@@ -155,12 +156,14 @@ export function CourseManager({
                             {lesson.summary && <p>{lesson.summary}</p>}
                             <span>{lesson.status === "published" ? "Opublikowana" : "Szkic"} · {lesson.hasVideo ? "Film dodany" : "Bez filmu"}{lesson.hasAttachment ? " · Załącznik dodany" : ""}</span>
                           </div>
-                          <button type="button" className="button-secondary" aria-label={`Edytuj lekcję: ${lesson.title}`} onClick={() => edit({ kind: "lesson", courseId: course.id, moduleId: module.id, lessonId: lesson.id })}>Edytuj lekcję</button>
+                          <div className="course-editor-lesson__actions">
+                            <button type="button" className="button-secondary" aria-label={`Edytuj lekcję: ${lesson.title}`} onClick={() => edit({ kind: "lesson", courseId: course.id, moduleId: module.id, lessonId: lesson.id })}>Edytuj lekcję</button>
+                            <button type="button" className="course-text-button course-delete-button" aria-label={`Usuń lekcję: ${lesson.title}`} onClick={() => edit({ kind: "lesson", courseId: course.id, moduleId: module.id, lessonId: lesson.id, remove: true })}>Usuń lekcję</button>
+                          </div>
                         </li>
                       ))}
                     </ol>
                     {!module.lessons.length && <p className="course-manager__empty">Ten moduł nie ma jeszcze lekcji. Użyj „Dodaj lekcję” w nagłówku modułu.</p>}
-                    <button type="button" className="course-text-button" onClick={() => edit({ kind: "module", courseId: course.id, moduleId: module.id, remove: true })}>Usuń moduł</button>
                   </div>
                 </section>
               );
@@ -302,7 +305,7 @@ function CourseEditorDialog({ initialTarget, courses, onSaved, onClose }: {
       <form onSubmit={submit} onChange={() => { setDirty(true); setResult(""); }} className="course-dialog__form">
         <div className="course-dialog__body">
           {!deleted && <fieldset key={revision} disabled={busy || refreshRequired} className="course-dialog__fields">
-            {removing ? <p>Potwierdź usunięcie „{existing?.title}”. {target.kind === "module" ? "Zostaną usunięte także wszystkie lekcje i pliki tego modułu." : target.kind === "lesson" ? "Zostaną usunięte także pliki tej lekcji." : "Kurs przestanie być widoczny na stronie."}</p> : <>
+            {removing ? <p role="alert">Potwierdź usunięcie „{existing?.title}”. {target.kind === "module" ? "Zostaną usunięte także wszystkie lekcje i pliki tego modułu." : target.kind === "lesson" ? "Zostaną usunięte także pliki tej lekcji." : "Kurs przestanie być widoczny na stronie."}</p> : <>
               <label><span>{target.kind === "course" ? "Nazwa kursu" : target.kind === "module" ? "Nazwa modułu" : "Tytuł lekcji"} <small>(wymagane)</small></span><input name="title" required minLength={3} maxLength={160} defaultValue={existing?.title ?? ""} /></label>
               {target.kind === "course" && <CourseFields course={course} />}
               {target.kind === "module" && <ModuleFields module={currentModule} />}
@@ -316,7 +319,7 @@ function CourseEditorDialog({ initialTarget, courses, onSaved, onClose }: {
           {refreshRequired && <p role="alert">Zmiany zapisano, ale nie udało się odczytać nowej listy. <button type="button" className="course-text-button" onClick={() => window.location.reload()}>Odśwież dane</button></p>}
           <div className="course-dialog__actions">
             <button type="button" className="button-secondary" disabled={busy} onClick={close}>{result ? "Gotowe" : "Anuluj"}</button>
-            {!deleted && !refreshRequired && <button type="submit" className="button-primary" disabled={busy}>{busy ? "Zapisywanie…" : saveLabel}</button>}
+            {!deleted && !refreshRequired && <button type="submit" className={removing ? "button-primary course-delete-confirm" : "button-primary"} disabled={busy}>{busy ? "Zapisywanie…" : saveLabel}</button>}
             {!refreshRequired && result === "course_created" && <button type="button" className="button-secondary" onClick={() => next({ kind: "module", courseId: target.courseId })}>Dodaj pierwszy moduł</button>}
             {!refreshRequired && result === "module_created" && <button type="button" className="button-secondary" onClick={() => next({ kind: "lesson", courseId: target.courseId, moduleId: target.moduleId })}>Dodaj lekcję do modułu</button>}
             {!refreshRequired && result === "lesson_created" && <button type="button" className="button-secondary" onClick={() => next({ kind: "lesson", courseId: target.courseId, moduleId: target.moduleId })}>Dodaj kolejną lekcję</button>}

@@ -337,7 +337,10 @@ export async function deleteAdminModule(moduleId: string) {
     throw new AdminCourseEditorError("invalid");
   }
 
-  await queryDatabase("DELETE FROM course_modules WHERE id = $1", [moduleId]);
+  const result = await queryDatabase("DELETE FROM course_modules WHERE id = $1", [moduleId]);
+  if (result.rowCount === 0) {
+    throw new AdminCourseEditorError("module_not_found");
+  }
 }
 
 export async function createAdminLesson(input: {
@@ -504,5 +507,8 @@ export async function deleteAdminLesson(lessonId: string) {
     throw new AdminCourseEditorError("invalid");
   }
 
-  await queryDatabase("DELETE FROM lessons WHERE id = $1", [lessonId]);
+  const result = await queryDatabase("DELETE FROM lessons WHERE id = $1", [lessonId]);
+  if (result.rowCount === 0) {
+    throw new AdminCourseEditorError("lesson_not_found");
+  }
 }

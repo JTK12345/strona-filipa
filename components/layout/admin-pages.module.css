@@ -326,6 +326,17 @@
   background: var(--accent);
   border-color: var(--accent);
 }
+.content :global(.course-delete-button) {
+  color: #913d32;
+}
+.content :global(.button-primary.course-delete-confirm) {
+  background: #913d32;
+  border-color: #913d32;
+}
+.content :global(.button-primary.course-delete-confirm):hover {
+  background: #6f2e26;
+  border-color: #6f2e26;
+}
 .content :global(.button-secondary) {
   background: transparent;
   border: 1px solid #a4b5a6;
