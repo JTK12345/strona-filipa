@@ -294,7 +294,8 @@
   gap: 17px;
 }
 .way {
-  background: var(--cream);
+  background: var(--ink);
+  color: white;
   padding: 25px 25px 64px;
   min-height: 255px;
   position: relative;
@@ -305,7 +306,7 @@
   transform: translateY(-4px);
 }
 .way .eyebrow {
-  color: var(--green);
+  color: var(--lime);
 }
 .way h3 {
   font:
@@ -319,7 +320,7 @@
 .way p {
   font-size: 12px;
   line-height: 1.65;
-  color: #607168;
+  color: #ced9d2;
 }
 .wayArrow {
   position: absolute;
@@ -328,24 +329,10 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: var(--ink);
-  color: white;
-  display: grid;
-  place-items: center;
-}
-.way:nth-child(2) {
-  background: var(--ink);
-  color: white;
-}
-.way:nth-child(2) p {
-  color: #b9c9c0;
-}
-.way:nth-child(2) .eyebrow {
-  color: var(--lime);
-}
-.way:nth-child(2) .wayArrow {
   background: var(--lime);
   color: var(--ink);
+  display: grid;
+  place-items: center;
 }
 .offersHead {
   max-width: 650px;
@@ -361,8 +348,10 @@
   gap: 18px;
 }
 .offer {
-  border: 1px solid var(--line);
+  border: 1px solid var(--ink);
   border-radius: 4px;
+  background: var(--ink);
+  color: white;
   padding: 27px;
   min-height: 334px;
   display: flex;
@@ -380,14 +369,14 @@
   font:
     500 13px/1.6 var(--landing-mono),
     monospace;
-  color: var(--green);
+  color: var(--lime);
   margin: 12px 0 16px;
   text-transform: uppercase;
 }
 .offer > p {
   font-size: 12px;
   line-height: 1.6;
-  color: #607168;
+  color: #ced9d2;
   margin: 0 0 15px;
 }
 .offer ul {
@@ -396,33 +385,25 @@
   font-size: 11px;
   line-height: 1.85;
   margin: 0 0 20px;
-  color: #40574c;
+  color: #ced9d2;
 }
 .offer li::before {
   content: "✓";
-  color: var(--green);
+  color: var(--lime);
   font-weight: 800;
   margin-right: 7px;
 }
 .offer .button {
   margin-top: auto;
-}
-.offer:nth-child(2) {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: white;
-}
-.offer:nth-child(2) .price,
-.offer:nth-child(2) li::before {
-  color: var(--lime);
-}
-.offer:nth-child(2) > p,
-.offer:nth-child(2) ul {
-  color: #ced9d2;
-}
-.offer:nth-child(2) .button {
   background: var(--lime);
   color: var(--ink) !important;
+}
+.offer .button b {
+  background: var(--ink);
+  color: var(--lime);
+}
+.offer .button:hover {
+  background: #e4f5b5;
 }
 .testimonials {
   border-top: 1px solid var(--line);
