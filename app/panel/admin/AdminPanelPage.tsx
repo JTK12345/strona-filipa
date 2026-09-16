@@ -11,7 +11,6 @@ import {
   ConfirmSubmitButton,
   CopyGeneratedCode,
 } from "@/components/admin/AdminActionControls";
-import { PanelBackNavigation } from "@/components/PanelBackNavigation";
 import { CourseManager } from "@/components/admin/CourseManager";
 
 export const metadata: Metadata = {
@@ -154,6 +153,16 @@ export type AdminSection =
   | "audyt"
   | "zgloszenia";
 
+const adminSections: Record<AdminSection, { title: string; description: string }> = {
+  zgloszenia: { title: "Zgłoszenia", description: "Rozmowy, od których zaczyna się współpraca. Odpowiadaj na wiadomości i śledź ich status." },
+  kursy: { title: "Kursy", description: "Wiedza uporządkowana krok po kroku. Zarządzaj kursami, modułami i lekcjami." },
+  materialy: { title: "Materiały", description: "Biblioteka do codziennej pracy. Dodawaj filmy, instrukcje i pliki dla uczestników." },
+  kody: { title: "Kody dostępu", description: "Zapraszaj do materiałów. Twórz kody i sprawdzaj, jak są wykorzystywane." },
+  uzytkownicy: { title: "Użytkownicy", description: "Osoby na Twojej platformie. Zarządzaj kontami i uprawnieniami." },
+  dostepy: { title: "Dostępy", description: "Właściwe materiały dla właściwych osób. Nadawaj i kontroluj dostęp do platformy." },
+  audyt: { title: "Historia zmian", description: "Przegląd działań administracyjnych. Sprawdź, co i kiedy zostało zmienione." },
+};
+
 export async function AdminPanelPage({
   section,
   searchParams,
@@ -275,15 +284,11 @@ export async function AdminPanelPage({
   return (
     <section className="admin-page">
       <div className="container-main">
-        <PanelBackNavigation />
         <header className="admin-header">
           <div>
             <span className="eyebrow">Administracja platformą</span>
-            <h1>Kody dostępu i materiały</h1>
-            <p>
-              Płatności są pominięte. Administrator tworzy kody, dodaje pliki i
-              filmy, a użytkownik po wpisaniu kodu widzi bibliotekę.
-            </p>
+            <h1>{adminSections[section].title}<span aria-hidden="true">.</span></h1>
+            <p>{adminSections[section].description}</p>
           </div>
           <Link href="/panel" className="button-secondary">
             Panel użytkownika
@@ -302,18 +307,12 @@ export async function AdminPanelPage({
         ) : null}
 
         <nav className="admin-tabs" aria-label="Sekcje administracyjne">
-          <Link href="/panel/admin/kody">Kody dostępu</Link>
-          <Link href="/panel/admin/kursy">Kursy</Link>
-          <Link href="/panel/admin/materialy">Materiały</Link>
-          <Link href="/panel/admin/zgloszenia">
-            Zgłoszenia
-            {newSubmissionCount > 0 ? (
-              <span className="admin-tab-badge">{newSubmissionCount}</span>
-            ) : null}
-          </Link>
-          <Link href="/panel/admin/uzytkownicy">Użytkownicy</Link>
-          <Link href="/panel/admin/dostepy">Nadaj dostęp</Link>
-          <Link href="/panel/admin/audyt">Audyt</Link>
+          {(Object.entries(adminSections) as [AdminSection, { title: string }][]).map(([key, item]) => (
+            <Link key={key} href={`/panel/admin/${key}`} aria-current={section === key ? "page" : undefined}>
+              {item.title}
+              {key === "zgloszenia" && newSubmissionCount > 0 && <span className="admin-tab-badge">{newSubmissionCount}</span>}
+            </Link>
+          ))}
         </nav>
 
         <section
@@ -805,7 +804,7 @@ export async function AdminPanelPage({
           </form>
           <div className="admin-submission-list">
             {filteredSubmissions.map((submission) => (
-              <article key={submission.id} className="admin-submission-card">
+              <article key={submission.id} className="admin-submission-card" data-status={submission.status}>
                 <div className="admin-submission-card__header">
                   <div>
                     <p className="meta-label">
