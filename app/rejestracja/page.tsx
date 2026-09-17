@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 const errorMessages: Record<string, string> = {
   invalid: "Podaj poprawny adres e-mail i hasło mające co najmniej 10 znaków.",
   mismatch: "Wpisane hasła nie są takie same.",
-  exists: "Konto z tym adresem e-mail już istnieje. Zaloguj się.",
   rate: "Zbyt wiele prób rejestracji. Odczekaj kilka minut i spróbuj ponownie.",
   server: "Nie udało się utworzyć konta. Spróbuj ponownie.",
 };

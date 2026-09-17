@@ -20,15 +20,19 @@ type RateLimitOptions = {
 
 const rateLimitStore = new Map<string, RateLimitStoreRecord>();
 const maximumStoreEntries = 5000;
+const cleanupIntervalMs = 30_000;
+let lastCleanupAt = 0;
 
 function sha256(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function cleanupExpiredEntries(now: number) {
-  if (rateLimitStore.size < maximumStoreEntries) {
+function cleanupExpiredEntries(now: number, force = false) {
+  if (!force && now - lastCleanupAt < cleanupIntervalMs) {
     return;
   }
+
+  lastCleanupAt = now;
 
   for (const [key, record] of rateLimitStore) {
     if (record.resetAt <= now) {
@@ -39,7 +43,10 @@ function cleanupExpiredEntries(now: number) {
 
 function increment(namespace: string, fingerprint: string, windowMs: number) {
   const now = Date.now();
-  cleanupExpiredEntries(now);
+  // This is intentionally an in-process limiter. Production deployments with
+  // multiple application instances must also enforce limits at Cloudflare or
+  // Nginx (or use a shared store such as Redis).
+  cleanupExpiredEntries(now, rateLimitStore.size >= maximumStoreEntries);
 
   const key = `${namespace}:${fingerprint}`;
   const current = rateLimitStore.get(key);
@@ -59,6 +66,22 @@ function increment(namespace: string, fingerprint: string, windowMs: number) {
 
   current.count += 1;
   return current;
+}
+
+/** Test-only observability; do not expose this through an HTTP route. */
+export function getRateLimitStoreSize() {
+  return rateLimitStore.size;
+}
+
+/** Test-only reset to keep unit tests independent. */
+export function resetRateLimitStoreForTests() {
+  rateLimitStore.clear();
+  lastCleanupAt = 0;
+}
+
+/** Test-only forced cleanup for deterministic expiry checks. */
+export function cleanupRateLimitStoreForTests() {
+  cleanupExpiredEntries(Date.now(), true);
 }
 
 export function getRateLimitFingerprint(ip: string, _userAgent: string) {

@@ -12,6 +12,10 @@ import {
 } from "@/app/api/_utils/rateLimiter";
 import { sendPasswordResetEmail } from "@/app/lib/email";
 import { createPasswordResetToken } from "@/app/lib/password-reset";
+import {
+  getPasswordResetBaseUrl,
+  PasswordResetUrlConfigError,
+} from "@/app/lib/password-reset-url";
 
 export const runtime = "nodejs";
 
@@ -22,35 +26,20 @@ function redirectToReset() {
   });
 }
 
-function getPublicBaseUrl(request: Request) {
-  const configuredAppUrl = process.env.APP_URL?.trim();
-
-  if (configuredAppUrl) {
-    try {
-      return new URL(configuredAppUrl).origin;
-    } catch (error) {
-      console.error("APP_URL is invalid.", error);
-    }
-  }
-
-  const forwardedHost =
-    request.headers.get("x-forwarded-host") ?? request.headers.get("host");
-  const host = forwardedHost?.split(",")[0]?.trim();
-
-  if (host && host !== "0.0.0.0:3000") {
-    const forwardedProto =
-      request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
-      "https";
-
-    return `${forwardedProto}://${host}`;
-  }
-
-  return new URL(request.url).origin;
-}
-
 export async function POST(request: Request) {
   if (!isSameOriginFormRequest(request)) {
     return new Response("Forbidden", { status: 403 });
+  }
+
+  let baseUrl: string;
+  try {
+    baseUrl = getPasswordResetBaseUrl(request);
+  } catch (error) {
+    if (error instanceof PasswordResetUrlConfigError) {
+      console.error("Password reset is unavailable because APP_URL is not configured safely.");
+      return new Response("Service unavailable", { status: 503 });
+    }
+    throw error;
   }
 
   const clientIp = getClientIp(request);
@@ -80,7 +69,7 @@ export async function POST(request: Request) {
   });
 
   if (token) {
-    const resetUrl = new URL("/reset-hasla/nowe", getPublicBaseUrl(request));
+    const resetUrl = new URL("/reset-hasla/nowe", baseUrl);
     resetUrl.searchParams.set("token", token);
     await sendPasswordResetEmail({ to: email, resetUrl: resetUrl.toString() }).catch(
       (error) => {

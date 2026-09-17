@@ -1,5 +1,5 @@
 import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { dirname, extname } from "node:path";
+import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { queryDatabase, withDatabaseTransaction } from "@/app/lib/db";
@@ -10,17 +10,11 @@ import {
 import { isSameOriginFormRequest } from "@/app/lib/auth";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
+import { validateUpload } from "@/app/lib/upload-validation";
 
 export const runtime = "nodejs";
 
 const maxUploadBytes = 1024 * 1024 * 600;
-const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
-const allowedAttachmentTypes = new Set([
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-]);
 
 type StoredUpload = {
   storageKey: string;
@@ -55,16 +49,6 @@ function storageRoot() {
   return process.env.LIBRARY_STORAGE_PATH ?? process.env.VIDEO_STORAGE_PATH ?? "/data/videos";
 }
 
-function safeExtension(fileName: string) {
-  const extension = extname(fileName).toLowerCase();
-
-  if (/^\.[a-z0-9]{1,8}$/.test(extension)) {
-    return extension;
-  }
-
-  return "";
-}
-
 async function saveUpload(
   upload: FormDataEntryValue | null,
   kind: "video" | "attachment",
@@ -73,15 +57,14 @@ async function saveUpload(
     return null;
   }
 
-  const allowedTypes =
-    kind === "video" ? allowedVideoTypes : allowedAttachmentTypes;
+  const validated = await validateUpload(upload, kind, maxUploadBytes);
 
-  if (upload.size > maxUploadBytes || !allowedTypes.has(upload.type)) {
+  if (!validated) {
     return null;
   }
 
   const folder = kind === "video" ? "library/videos" : "library/files";
-  const key = `${folder}/${randomUUID()}${safeExtension(upload.name)}`;
+  const key = `${folder}/${randomUUID()}${validated.extension}`;
   const targetPath = resolveLibraryStoragePath(storageRoot(), key);
 
   if (!targetPath) {
@@ -89,13 +72,13 @@ async function saveUpload(
   }
 
   await mkdir(dirname(targetPath), { recursive: true });
-  await writeFile(targetPath, Buffer.from(await upload.arrayBuffer()));
+  await writeFile(targetPath, validated.buffer);
 
   return {
     storageKey: key,
-    fileName: upload.name.slice(0, 180),
-    mimeType: upload.type,
-    fileSizeBytes: upload.size,
+    fileName: validated.safeFileName,
+    mimeType: validated.mimeType,
+    fileSizeBytes: validated.buffer.length,
   } satisfies StoredUpload;
 }
 
@@ -197,6 +180,9 @@ export async function POST(request: Request) {
 
   if (action === "archive") {
     const itemId = String(formData.get("itemId") ?? "");
+    if (!isUuid(itemId)) {
+      return redirectToAdmin("invalid");
+    }
     const existing = await queryDatabase<{
       video_storage_key: string | null;
       attachment_storage_key: string | null;
@@ -255,6 +241,9 @@ export async function POST(request: Request) {
 
   if (action === "update") {
     const itemId = String(formData.get("itemId") ?? "");
+    if (!isUuid(itemId)) {
+      return redirectToAdmin("invalid");
+    }
     const existing = await queryDatabase<{
       video_storage_key: string | null;
       attachment_storage_key: string | null;

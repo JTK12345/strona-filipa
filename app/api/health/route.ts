@@ -10,7 +10,6 @@ export async function GET() {
     return Response.json(
       {
         status: "ok",
-        database: "connected",
       },
       {
         headers: {
@@ -21,8 +20,7 @@ export async function GET() {
   } catch {
     return Response.json(
       {
-        status: "degraded",
-        database: "unavailable",
+        status: "unavailable",
       },
       {
         status: 503,

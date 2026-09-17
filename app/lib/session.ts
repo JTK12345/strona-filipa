@@ -3,11 +3,16 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import type { ResponseCookie } from "next/dist/compiled/@edge-runtime/cookies";
 import { queryDatabase } from "@/app/lib/db";
+import {
+  clearSessionCookie as buildClearSessionCookie,
+  createSessionCookie as buildSessionCookie,
+  getSessionCookieName,
+} from "@/app/lib/session-cookie";
 
-export const sessionCookieName = "spc_session";
-const sessionDurationSeconds = 60 * 60 * 24 * 30;
+export const sessionCookieName = getSessionCookieName(
+  process.env.NODE_ENV === "production",
+);
 
 export type UserRole = "user" | "admin";
 
@@ -33,28 +38,12 @@ function hashSessionToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-export function createSessionCookie(token: string): ResponseCookie {
-  return {
-    name: sessionCookieName,
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: sessionDurationSeconds,
-  };
+export function createSessionCookie(token: string) {
+  return buildSessionCookie(token, process.env.NODE_ENV === "production");
 }
 
-export function clearSessionCookie(): ResponseCookie {
-  return {
-    name: sessionCookieName,
-    value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  };
+export function clearSessionCookie() {
+  return buildClearSessionCookie(process.env.NODE_ENV === "production");
 }
 
 export async function createUserSession(userId: string) {

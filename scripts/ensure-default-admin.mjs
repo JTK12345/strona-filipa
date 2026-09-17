@@ -1,6 +1,6 @@
 import process from "node:process";
-import bcrypt from "bcryptjs";
 import pg from "pg";
+import { createAdminIfMissing } from "./admin-bootstrap.mjs";
 
 const { Pool } = pg;
 
@@ -18,34 +18,18 @@ if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
   throw new Error("DEFAULT_ADMIN_EMAIL must be a valid email address.");
 }
 
-if (password.length < 8 || password.length > 128) {
-  throw new Error(
-    "DEFAULT_ADMIN_PASSWORD must be set in .env and have 8 to 128 characters.",
-  );
-}
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 1,
 });
 
 try {
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  await pool.query(
-    `INSERT INTO users (email, password_hash, role, status, email_verified_at)
-     VALUES ($1, $2, 'admin', 'active', now())
-     ON CONFLICT (lower(email))
-     DO UPDATE SET
-       password_hash = EXCLUDED.password_hash,
-       role = 'admin',
-       status = 'active',
-       email_verified_at = COALESCE(users.email_verified_at, now()),
-       updated_at = now()`,
-    [email, passwordHash],
+  const result = await createAdminIfMissing(pool, email, password);
+  console.log(
+    result.created
+      ? "Default administrator account created."
+      : "Default administrator already exists; no changes made.",
   );
-
-  console.log(`Default admin account is ready: ${email}`);
 } finally {
   await pool.end();
 }

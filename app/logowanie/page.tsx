@@ -18,6 +18,10 @@ const resetMessages: Record<string, string> = {
   changed: "Hasło zostało zmienione. Możesz się zalogować.",
 };
 
+const verificationMessages: Record<string, string> = {
+  verified: "Adres e-mail został potwierdzony. Możesz się zalogować.",
+};
+
 export default async function LoginPage(props: PageProps<"/logowanie">) {
   const searchParams = await props.searchParams;
   const requestedNext = sanitizeAuthDestination(searchParams.next);
@@ -26,6 +30,10 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
     typeof searchParams.error === "string" ? errorMessages[searchParams.error] : null;
   const resetMessage =
     typeof searchParams.reset === "string" ? resetMessages[searchParams.reset] : null;
+  const verificationMessage =
+    typeof searchParams.verification === "string"
+      ? verificationMessages[searchParams.verification]
+      : null;
 
   return (
     <section className="auth-page">
@@ -52,6 +60,7 @@ export default async function LoginPage(props: PageProps<"/logowanie">) {
 
             {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
             {resetMessage ? <p className="auth-notice">{resetMessage}</p> : null}
+            {verificationMessage ? <p className="auth-notice">{verificationMessage}</p> : null}
 
             {requiresLogin && !errorMessage ? (
               <p className="auth-notice">

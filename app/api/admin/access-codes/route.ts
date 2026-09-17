@@ -7,6 +7,7 @@ import {
 import { isSameOriginFormRequest } from "@/app/lib/auth";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
+import { isUuid } from "@/app/lib/course-content";
 
 export const runtime = "nodejs";
 
@@ -50,7 +51,11 @@ export async function POST(request: Request) {
   const action = String(formData.get("action") ?? "");
 
   if (action === "revoke") {
-    await revokeAccessCode(String(formData.get("codeId") ?? ""));
+    const codeId = String(formData.get("codeId") ?? "");
+    if (!isUuid(codeId)) {
+      return redirectToAdmin({ accessCode: "invalid" });
+    }
+    await revokeAccessCode(codeId);
     return redirectToAdmin({ accessCode: "revoked" });
   }
 
@@ -64,7 +69,7 @@ export async function POST(request: Request) {
     !Number.isInteger(maxUses) ||
     maxUses < 1 ||
     maxUses > 500 ||
-    (scope === "course" && !courseId) ||
+    (scope === "course" && (!courseId || !isUuid(courseId))) ||
     (expiresAt && Number.isNaN(expiresAt.getTime()))
   ) {
     return redirectToAdmin({ accessCode: "invalid" });

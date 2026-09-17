@@ -20,6 +20,7 @@ type UserRow = {
   id: string;
   password_hash: string | null;
   status: string;
+  email_verified_at: Date | null;
 };
 
 const dummyPasswordHash =
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   const password = String(formData.get("password") ?? "");
   try {
     const result = await queryDatabase<UserRow>(
-      `SELECT id, password_hash, status
+      `SELECT id, password_hash, status, email_verified_at
        FROM users
        WHERE lower(email) = $1
        LIMIT 1`,
@@ -88,6 +89,15 @@ export async function POST(request: Request) {
         status: 303,
         headers,
       });
+    }
+
+    if (!user.email_verified_at) {
+      const headers = new Headers(rateLimit.headers);
+      headers.set(
+        "Location",
+        `/potwierdz-email?${new URLSearchParams({ resend: "1", next: destination })}`,
+      );
+      return new NextResponse(null, { status: 303, headers });
     }
 
     const token = await createUserSession(user.id);

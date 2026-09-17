@@ -14,7 +14,12 @@ import {
   getRateLimitFingerprint,
 } from "@/app/api/_utils/rateLimiter";
 import { queryDatabase } from "@/app/lib/db";
-import { createSessionCookie, createUserSession } from "@/app/lib/session";
+import { createEmailVerificationToken } from "@/app/lib/email-verification";
+import { sendEmailVerificationEmail } from "@/app/lib/email";
+import {
+  getPublicAppBaseUrl,
+  PasswordResetUrlConfigError,
+} from "@/app/lib/password-reset-url";
 
 export const runtime = "nodejs";
 
@@ -27,6 +32,14 @@ function registrationRedirect(error: string, destination: string) {
   return new NextResponse(null, {
     status: 303,
     headers: { Location: `/rejestracja?${searchParams.toString()}` },
+  });
+}
+
+function verificationRedirect(destination: string) {
+  const searchParams = new URLSearchParams({ sent: "1", next: destination });
+  return new NextResponse(null, {
+    status: 303,
+    headers: { Location: `/potwierdz-email?${searchParams.toString()}` },
   });
 }
 
@@ -73,6 +86,17 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = await hashPassword(password);
+  let baseUrl: string;
+
+  try {
+    baseUrl = getPublicAppBaseUrl(request);
+  } catch (error) {
+    if (error instanceof PasswordResetUrlConfigError) {
+      console.error("Registration is unavailable because APP_URL is not configured safely.");
+      return registrationRedirect("server", destination);
+    }
+    throw error;
+  }
 
   try {
     const result = await queryDatabase<CreatedUserRow>(
@@ -85,19 +109,26 @@ export async function POST(request: Request) {
     );
 
     if (!result.rows[0]) {
-      return registrationRedirect("exists", destination);
+      return verificationRedirect(destination);
     }
 
-    const token = await createUserSession(result.rows[0].id);
-    const response = new NextResponse(null, {
-      status: 303,
-      headers: { Location: destination },
-    });
-    response.cookies.set(createSessionCookie(token));
-    return response;
+    const token = await createEmailVerificationToken(result.rows[0].id);
+
+    if (token) {
+      const verificationUrl = new URL("/potwierdz-email", baseUrl);
+      verificationUrl.searchParams.set("token", token);
+      await sendEmailVerificationEmail({
+        to: email,
+        verificationUrl: verificationUrl.toString(),
+      }).catch(() => {
+        console.error("Email verification email failed.");
+      });
+    }
+
+    return verificationRedirect(destination);
   } catch (error) {
     if ((error as { code?: string }).code === "23505") {
-      return registrationRedirect("exists", destination);
+      return verificationRedirect(destination);
     }
 
     return registrationRedirect("server", destination);

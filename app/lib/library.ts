@@ -128,6 +128,10 @@ const libraryGroupBy = `
     library_items.created_at
 `;
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i.test(value);
+}
+
 function mapLibraryItem(row: LibraryItemRow): LibraryItem {
   return {
     id: row.id,
@@ -297,6 +301,10 @@ export async function getLibraryItemMedia(
   isAdmin: boolean,
   hasLibraryAccess: boolean,
 ) {
+  if (!isUuid(itemId) || !isUuid(userId)) {
+    return null;
+  }
+
   const result = await queryDatabase<{
     storage_key: string;
     file_name: string | null;

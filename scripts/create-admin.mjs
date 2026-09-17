@@ -1,6 +1,6 @@
 import process from "node:process";
-import bcrypt from "bcryptjs";
 import pg from "pg";
+import { createAdminIfMissing } from "./admin-bootstrap.mjs";
 
 const { Pool } = pg;
 const emailArgumentIndex = process.argv.indexOf("--email");
@@ -28,11 +28,6 @@ for await (const chunk of process.stdin) {
 
 password = password.replace(/[\r\n]+$/, "");
 
-if (password.length < 10 || password.length > 128) {
-  console.error("Hasło administratora musi mieć od 10 do 128 znaków.");
-  process.exit(1);
-}
-
 if (!process.env.DATABASE_URL) {
   console.error("Brak zmiennej DATABASE_URL.");
   process.exit(1);
@@ -44,22 +39,19 @@ const pool = new Pool({
 });
 
 try {
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  await pool.query(
-    `INSERT INTO users (email, password_hash, role, status, email_verified_at)
-     VALUES ($1, $2, 'admin', 'active', now())
-     ON CONFLICT (lower(email))
-     DO UPDATE SET
-       password_hash = EXCLUDED.password_hash,
-       role = 'admin',
-       status = 'active',
-       email_verified_at = COALESCE(users.email_verified_at, now()),
-       updated_at = now()`,
-    [email, passwordHash],
+  const result = await createAdminIfMissing(pool, email, password);
+  console.log(
+    result.created
+      ? "Konto administratora zostało utworzone."
+      : "Konto administratora już istnieje; nie wprowadzono zmian.",
   );
-
-  console.log(`Konto administratora ${email} jest gotowe.`);
+} catch (error) {
+  if (error instanceof Error && error.message.startsWith("Administrator password")) {
+    console.error("Hasło administratora musi mieć 12-128 znaków oraz małą i wielką literę, cyfrę i symbol.");
+    process.exitCode = 1;
+  } else {
+    throw error;
+  }
 } finally {
   await pool.end();
 }

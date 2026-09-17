@@ -2,7 +2,7 @@
 
 ## Zastosowane kontrole
 
-- sesje w losowym cookie `HttpOnly`, `SameSite=Lax`, `Secure` na produkcji,
+- sesje w losowym cookie `HttpOnly`, `SameSite=Strict`, `Secure` na produkcji; produkcja uzywa prefiksu `__Host-`,
 - w bazie jest tylko SHA-256 tokenu sesji,
 - hasla sa hashowane bcrypt z kosztem 12,
 - scisle sprawdzanie Host i Origin dla operacji przegladarki,
@@ -19,6 +19,21 @@
 - oddzielenie grantu administratora od aktywacji kodem,
 - dziennik `admin_audit_events` dla recznych grantow.
 
+## Zmienne produkcyjne i administrator
+
+W produkcji wymagane sa co najmniej: `DATABASE_URL`, `APP_URL`,
+`ALLOWED_ORIGINS`, `TRUSTED_PROXY_SECRET`, `LOG_SALT`,
+`DEFAULT_ADMIN_EMAIL` i `DEFAULT_ADMIN_PASSWORD`. `APP_URL` musi byc
+poprawnym originem HTTPS i musi dokladnie wystepowac w `ALLOWED_ORIGINS`.
+W przeciwnym razie wysylka linkow resetowania hasla jest bezpiecznie blokowana.
+Naglowki `Host`, `X-Forwarded-Host` i `X-Forwarded-Proto` nie sa uzywane do
+budowania linkow produkcyjnych.
+
+Bootstrap administratora jest idempotentny: przy starcie kontenera tworzy konto
+tylko wtedy, gdy adres e-mail jeszcze nie istnieje. Istniejace konto, jego haslo,
+rola i status nigdy nie sa automatycznie zmieniane. Haslo pierwszego konta musi
+miec 12-128 znakow oraz mala i wielka litere, cyfre i symbol.
+
 ## Upload plikow
 
 Panel administratora przyjmuje tylko wybrane typy:
@@ -33,9 +48,27 @@ Panel administratora przyjmuje tylko wybrane typy:
 Limit pojedynczego uploadu wynosi 600 MB. Pliki sa zapisywane pod
 `LIBRARY_STORAGE_PATH`, a gdy ta zmienna jest pusta, pod `VIDEO_STORAGE_PATH`.
 Sciezka jest normalizowana i sprawdzana tak, aby nie wyjsc poza katalog storage.
+Nazwa magazynowa zawsze zawiera losowy UUID. Rozszerzenie, zadeklarowany MIME
+oraz sygnatura pliku musza byc zgodne; DOCX jest sprawdzany jako pakiet Office
+ZIP, a uszkodzone pliki sa odrzucane. Nazwy pobieran plikow sa oczyszczane i
+wysylane przez bezpieczny `Content-Disposition` z `filename*`.
 
 Materialy nie sa w `public`. Pobranie pliku i odtworzenie filmu wymaga aktywnej
 sesji oraz dostepu do biblioteki.
+
+## Health check
+
+Publiczny endpoint `/api/health` zwraca tylko `{ "status": "ok" }` albo
+ogolny status niedostepnosci z HTTP 503. Nie ujawnia nazw hostow, portow,
+polaczenia z baza ani szczegolow bledow.
+
+## Weryfikacja e-mail
+
+Rejestracja nie tworzy sesji. Wysyla jednorazowy link aktywacyjny wazny przez
+24 godziny; w bazie przechowywany jest wyłącznie SHA-256 tokenu. Ponowne
+wyslanie uniewaznia poprzedni link, a login jest blokowany do czasu ustawienia
+`email_verified_at`. Endpoint ponownej wysylki zawsze zwraca ten sam komunikat,
+aby nie ujawniac, czy adres ma konto.
 
 ## Kody dostepu
 
@@ -69,8 +102,16 @@ naglowek `X-Trusted-Proxy-Secret`.
 
 Limiter aplikacyjny dziala w pamieci jednego procesu i ma limit liczby wpisow.
 Resetuje sie po restarcie kontenera. Jest poprawny dla obecnej pojedynczej
-instancji, ale nie zastapi limitow na brzegu. Przed wiekszym ruchem dodaj limity
-w Nginx/Cloudflare albo wspoldzielony magazyn dla wielu instancji.
+instancji, ale nie zastapi limitow na brzegu. Cloudflare lub Nginx musi rowniez
+egzekwowac limity produkcyjne; przy wielu instancjach wymagany jest wspoldzielony
+magazyn (np. Redis).
+
+## Backup i odtwarzanie
+
+Wykonuj szyfrowane kopie PostgreSQL oraz katalogow `VIDEO_STORAGE_PATH` /
+`LIBRARY_STORAGE_PATH` poza VPS-em. Ogranicz do nich dostep, okresl retencje i
+regularnie testuj odtworzenie w odizolowanym srodowisku. Backup nie powinien
+trafiac do Git ani do publicznego katalogu aplikacji.
 
 ## Audyt zaleznosci
 

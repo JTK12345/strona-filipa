@@ -101,7 +101,7 @@ export async function sendMail(input: MailInput) {
   const config = readSmtpConfig();
 
   if (!config) {
-    console.warn("SMTP is not configured. Password reset email was not sent.");
+    console.warn("SMTP is not configured. An authentication email was not sent.");
     return false;
   }
 
@@ -166,6 +166,25 @@ export async function sendPasswordResetEmail(input: {
       "",
       "Link jest ważny przez 60 minut i działa tylko raz.",
       "Jeśli to nie Ty prosisz o reset hasła, zignoruj tę wiadomość.",
+    ].join("\n"),
+  });
+}
+
+export async function sendEmailVerificationEmail(input: {
+  to: string;
+  verificationUrl: string;
+}) {
+  return sendMail({
+    to: input.to,
+    subject: "Potwierdź adres e-mail | Świadomy Profil Ciała",
+    text: [
+      "Potwierdź swój adres e-mail, aby aktywować konto w serwisie Świadomy Profil Ciała.",
+      "",
+      "Otwórz link, a następnie potwierdź aktywację konta:",
+      input.verificationUrl,
+      "",
+      "Link jest ważny przez 24 godziny i działa tylko raz.",
+      "Jeśli nie zakładasz konta, zignoruj tę wiadomość.",
     ].join("\n"),
   });
 }

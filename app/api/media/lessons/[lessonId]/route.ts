@@ -8,6 +8,7 @@ import {
   parseSingleRange,
   resolveVideoStoragePath,
 } from "@/app/lib/video-storage";
+import { createContentDisposition } from "@/app/lib/content-disposition";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,6 +60,7 @@ async function serveLessonMedia(
     "Accept-Ranges": "bytes",
     "Cache-Control": "private, no-store",
     "Content-Type": contentType,
+    "Content-Disposition": createContentDisposition("inline", "lesson-video"),
     "X-Content-Type-Options": "nosniff",
   };
 

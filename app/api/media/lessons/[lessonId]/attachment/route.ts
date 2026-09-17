@@ -4,6 +4,7 @@ import { Readable } from "node:stream";
 import { getAccessibleLessonAttachment, isUuid } from "@/app/lib/course-content";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { resolveVideoStoragePath } from "@/app/lib/video-storage";
+import { createContentDisposition } from "@/app/lib/content-disposition";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -56,9 +57,7 @@ async function serveLessonAttachment(
     status: 200,
     headers: {
       "Cache-Control": "private, no-store",
-      "Content-Disposition": attachment.file_name
-        ? `attachment; filename="${encodeURIComponent(attachment.file_name)}"`
-        : "attachment",
+      "Content-Disposition": createContentDisposition("attachment", attachment.file_name),
       "Content-Length": String(fileStats.size),
       "Content-Type": attachment.mime_type ?? "application/octet-stream",
       "X-Content-Type-Options": "nosniff",

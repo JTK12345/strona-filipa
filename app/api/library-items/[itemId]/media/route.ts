@@ -5,6 +5,8 @@ import { NextResponse } from "next/server";
 import { getLibraryItemMedia, resolveLibraryStoragePath } from "@/app/lib/library";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { parseSingleRange } from "@/app/lib/video-storage";
+import { createContentDisposition } from "@/app/lib/content-disposition";
+import { isUuid } from "@/app/lib/course-content";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +27,9 @@ async function serveLibraryMedia(
   }
 
   const { itemId } = await context.params;
+  if (!isUuid(itemId)) {
+    return new NextResponse(null, { status: 404 });
+  }
   const url = new URL(request.url);
   const kind =
     url.searchParams.get("kind") === "attachment" ? "attachment" : "video";
@@ -52,6 +57,10 @@ async function serveLibraryMedia(
     "Accept-Ranges": contentType.startsWith("video/") ? "bytes" : "none",
     "Cache-Control": "private, no-store",
     "Content-Type": contentType,
+    "Content-Disposition": createContentDisposition(
+      contentType.startsWith("video/") ? "inline" : "attachment",
+      media.file_name,
+    ),
     "X-Content-Type-Options": "nosniff",
   };
 
@@ -93,9 +102,6 @@ async function serveLibraryMedia(
     headers: {
       ...commonHeaders,
       "Content-Length": String(fileStats.size),
-      "Content-Disposition": media.file_name
-        ? `inline; filename="${encodeURIComponent(media.file_name)}"`
-        : "inline",
     },
   });
 }

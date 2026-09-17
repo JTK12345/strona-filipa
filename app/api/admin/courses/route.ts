@@ -1,5 +1,5 @@
 import { mkdir, unlink, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
@@ -23,18 +23,13 @@ import { getCurrentUserSession } from "@/app/lib/session";
 import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
 import { resolveVideoStoragePath } from "@/app/lib/video-storage";
 import { isCourseEditorSuccess } from "@/app/lib/course-editor-feedback";
+import { validateUpload } from "@/app/lib/upload-validation";
+import { isUuid } from "@/app/lib/course-content";
 
 export const runtime = "nodejs";
 
 const maxVideoBytes = 1024 * 1024 * 1200;
 const maxAttachmentBytes = 1024 * 1024 * 200;
-const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
-const allowedAttachmentTypes = new Set([
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "image/jpeg",
-  "image/png",
-]);
 
 async function respondToAdmin(request: Request, result: string, editCourseId = "", entityId?: string) {
   if (request.headers.get("accept")?.includes("application/json")) {
@@ -78,27 +73,19 @@ function videoStorageRoot() {
   return process.env.VIDEO_STORAGE_PATH ?? "/data/videos";
 }
 
-function safeExtension(fileName: string) {
-  const extension = extname(fileName).toLowerCase();
-
-  if (/^\.[a-z0-9]{1,8}$/.test(extension)) {
-    return extension;
-  }
-
-  return "";
-}
-
 async function saveVideo(upload: FormDataEntryValue | null) {
   if (!(upload instanceof File) || upload.size === 0) {
     return null;
   }
 
-  if (upload.size > maxVideoBytes || !allowedVideoTypes.has(upload.type)) {
+  const validated = await validateUpload(upload, "video", maxVideoBytes);
+
+  if (!validated) {
     throw new AdminCourseEditorError("invalid");
   }
 
   const folder = "lessons";
-  const key = `${folder}/${randomUUID()}${safeExtension(upload.name)}`;
+  const key = `${folder}/${randomUUID()}${validated.extension}`;
   const targetPath = resolveVideoStoragePath(videoStorageRoot(), key);
 
   if (!targetPath) {
@@ -106,7 +93,7 @@ async function saveVideo(upload: FormDataEntryValue | null) {
   }
 
   await mkdir(join(videoStorageRoot(), folder), { recursive: true });
-  await writeFile(targetPath, Buffer.from(await upload.arrayBuffer()));
+  await writeFile(targetPath, validated.buffer);
 
   return key;
 }
@@ -116,15 +103,14 @@ async function saveAttachment(upload: FormDataEntryValue | null) {
     return null;
   }
 
-  if (
-    upload.size > maxAttachmentBytes ||
-    !allowedAttachmentTypes.has(upload.type)
-  ) {
+  const validated = await validateUpload(upload, "attachment", maxAttachmentBytes);
+
+  if (!validated) {
     throw new AdminCourseEditorError("invalid");
   }
 
   const folder = "lesson-files";
-  const key = `${folder}/${randomUUID()}${safeExtension(upload.name)}`;
+  const key = `${folder}/${randomUUID()}${validated.extension}`;
   const targetPath = resolveVideoStoragePath(videoStorageRoot(), key);
 
   if (!targetPath) {
@@ -132,13 +118,13 @@ async function saveAttachment(upload: FormDataEntryValue | null) {
   }
 
   await mkdir(join(videoStorageRoot(), folder), { recursive: true });
-  await writeFile(targetPath, Buffer.from(await upload.arrayBuffer()));
+  await writeFile(targetPath, validated.buffer);
 
   return {
     storageKey: key,
-    fileName: upload.name.slice(0, 180),
-    mimeType: upload.type,
-    fileSizeBytes: upload.size,
+    fileName: validated.safeFileName,
+    mimeType: validated.mimeType,
+    fileSizeBytes: validated.buffer.length,
   };
 }
 
@@ -235,6 +221,9 @@ export async function POST(request: Request) {
 
     if (action === "delete-module") {
       const moduleId = String(formData.get("moduleId") ?? "");
+      if (!isUuid(moduleId)) {
+        return redirectToCourseEditor("invalid");
+      }
       const videoKeys = await queryDatabase<{ video_storage_key: string | null }>(
         `SELECT video_storage_key
          FROM lessons
@@ -281,6 +270,9 @@ export async function POST(request: Request) {
 
     if (action === "update-lesson") {
       const lessonId = String(formData.get("lessonId") ?? "");
+      if (!isUuid(lessonId)) {
+        return redirectToCourseEditor("invalid");
+      }
       const oldVideoKey = await getAdminLessonVideoKey(lessonId);
       const oldAttachmentKey = await getAdminLessonAttachmentKey(lessonId);
       const videoStorageKey = await saveVideo(formData.get("video"));
@@ -309,6 +301,9 @@ export async function POST(request: Request) {
 
     if (action === "delete-lesson") {
       const lessonId = String(formData.get("lessonId") ?? "");
+      if (!isUuid(lessonId)) {
+        return redirectToCourseEditor("invalid");
+      }
       const videoKey = await getAdminLessonVideoKey(lessonId);
       const attachmentKey = await getAdminLessonAttachmentKey(lessonId);
 

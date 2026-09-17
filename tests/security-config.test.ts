@@ -26,3 +26,25 @@ test("ignores forwarded IP headers from an untrusted request", () => {
     source: "unknown",
   });
 });
+
+test("accepts forwarded IP headers only with the configured proxy secret", () => {
+  const request = new Request("https://example.com/api/contact", {
+    headers: {
+      host: "example.com",
+      "x-forwarded-for": "198.51.100.20, 10.0.0.1",
+      "x-real-ip": "198.51.100.21",
+      "x-trusted-proxy-secret": "proxy-secret",
+    },
+  });
+
+  assert.deepEqual(getClientIp(request, "proxy-secret"), {
+    ip: "198.51.100.21",
+    isTrustedProxy: true,
+    source: "x-real-ip",
+  });
+  assert.deepEqual(getClientIp(request, "wrong-secret"), {
+    ip: "unknown",
+    isTrustedProxy: false,
+    source: "unknown",
+  });
+});

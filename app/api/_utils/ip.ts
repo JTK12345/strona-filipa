@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { isIP } from "node:net";
 import {
   isLocalHost,
@@ -42,7 +43,7 @@ function parseForwardedFor(headerValue: string | null) {
     .filter(Boolean);
 }
 
-function isTrustedProxyRequest(request: Request) {
+function isTrustedProxyRequest(request: Request, trustedSecretOverride?: string) {
   if (process.env.NODE_ENV !== "production") {
     const host = request.headers.get("host") ?? "";
     if (isLocalHost(host)) {
@@ -50,10 +51,14 @@ function isTrustedProxyRequest(request: Request) {
     }
   }
 
-  const trustedSecret = securityConfig.trustedProxySecret;
+  const trustedSecret = trustedSecretOverride ?? securityConfig.trustedProxySecret;
   if (trustedSecret) {
     const providedSecret = request.headers.get("x-trusted-proxy-secret")?.trim();
-    if (providedSecret === trustedSecret) {
+    if (
+      providedSecret &&
+      providedSecret.length === trustedSecret.length &&
+      timingSafeEqual(Buffer.from(providedSecret), Buffer.from(trustedSecret))
+    ) {
       return true;
     }
   }
@@ -65,9 +70,12 @@ export function isValidIp(value: string) {
   return normalizeIpCandidate(value) !== "";
 }
 
-export function getClientIp(request: Request): ClientIpResult {
+export function getClientIp(
+  request: Request,
+  trustedProxySecret?: string,
+): ClientIpResult {
   const forwardedChain = parseForwardedFor(request.headers.get("x-forwarded-for"));
-  const trustedProxy = isTrustedProxyRequest(request);
+  const trustedProxy = isTrustedProxyRequest(request, trustedProxySecret);
 
   if (process.env.NODE_ENV !== "production") {
     const host = request.headers.get("host") ?? "";

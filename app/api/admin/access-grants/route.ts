@@ -12,6 +12,7 @@ import {
 } from "@/app/lib/auth";
 import { getCurrentUserSession } from "@/app/lib/session";
 import { checkRateLimit } from "@/app/api/_utils/rateLimiter";
+import { isUuid } from "@/app/lib/course-content";
 
 export const runtime = "nodejs";
 
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
   const scope = String(formData.get("scope") ?? "") === "course" ? "course" : "all_access";
   const courseId = String(formData.get("courseId") ?? "");
 
-  if (!isValidEmail(targetEmail) || (scope === "course" && !courseId)) {
+  if (!isValidEmail(targetEmail) || (scope === "course" && !isUuid(courseId))) {
     return redirectToAdmin("invalid");
   }
 
